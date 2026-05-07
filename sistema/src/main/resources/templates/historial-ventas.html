@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Ventas - HatunVet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+</head>
+<body>
+
+<div class="d-flex">
+    <div th:replace="~{sidebar :: sidebar(activeUri='/ventas/historial')}"></div>
+
+    <main class="main-content w-100 p-4">
+        <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <h2 class="h4 mb-0 fw-bold" style="color: var(--vet-blue)">Historial de Ventas y Comprobantes</h2>
+        </header>
+
+        <div class="card card-custom mb-4 bg-white p-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Fecha Inicio:</label>
+                    <input type="date" id="filtroFechaInicio" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Fecha Fin:</label>
+                    <input type="date" id="filtroFechaFin" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <button id="btnLimpiarFiltros" class="btn btn-sm btn-outline-secondary w-100">Limpiar Filtros</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-custom p-4 bg-white">
+            <table id="tablaVentas" class="table table-hover w-100 align-middle">
+                <thead class="table-light">
+                <tr>
+                    <th>Fecha y Hora</th>
+                    <th>Comprobante</th>
+                    <th>Cliente</th>
+                    <th>Doc. Identidad</th>
+                    <th>Total (S/)</th>
+                    <th>Estado</th>
+                    <th class="text-center">SUNAT / Acciones</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<div class="modal fade" id="modalDetalleVenta" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: var(--vet-blue); color: white;">
+                <h5 class="modal-title">Detalle del Comprobante <span id="lblModalComprobante" class="fw-bold text-warning"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <table class="table table-sm table-striped m-0">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Cód.</th>
+                        <th>Producto</th>
+                        <th class="text-center">Cant.</th>
+                        <th class="text-end">P. Unitario</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbodyDetalles"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer d-flex justify-content-between bg-light">
+                <div class="text-muted fw-bold">Total Venta: S/ <span id="lblModalTotal" class="text-danger fs-5"></span></div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script th:src="@{/js/historial-ventas.js}"></script>
+
+</body>
+</html>
