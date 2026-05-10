@@ -6,36 +6,102 @@
     <title>Acceso - HatunVet</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        :root { --vet-blue: #0A3D91; --vet-red: #D32F2F; }
-        body { font-family: 'Inter', sans-serif; background-color: #f4f7f9; }
-        .login-container { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .login-card { max-width: 420px; width: 100%; border-radius: 1rem; border: none; box-shadow: 0 10px 30px rgba(10, 61, 145, 0.15); border-top: 6px solid var(--vet-blue); }
-        .btn-login { background-color: var(--vet-red); color: white; border: none; font-weight: 600; padding: 12px; }
-        .btn-login:hover { background-color: #b71c1c; color: white; }
-        .form-control:focus { border-color: var(--vet-blue); box-shadow: 0 0 0 0.25rem rgba(10, 61, 145, 0.2); }
-        .vet-brand { color: var(--vet-blue); font-weight: 700; }
+        :root{--vet-blue:#0A3D91;--vet-red:#D32F2F}
+        body{font-family:'Inter',sans-serif;background:var(--vet-blue);overflow:hidden}
+        .login-hero{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;position:relative;z-index:1}
+        .bg-icons{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+        .bg-icon{position:absolute;top:-20vh;left:0;color:rgba(255,255,255,0.34);font-size:58px;animation-name:floatScatter;animation-timing-function:linear;animation-iteration-count:infinite;filter:drop-shadow(0 0 12px rgba(255,255,255,0.2))}
+        .bg-icon.soft{color:rgba(255,255,255,0.28);font-size:48px}
+        .bg-icon.small{font-size:38px;opacity:.3}
+        .bg-icon.big{font-size:78px;opacity:.28}
+        @keyframes floatScatter{
+            0%{transform:translate3d(0,-12vh,0) rotate(0deg);opacity:0}
+            10%{opacity:.34}
+            30%{transform:translate3d(22px,24vh,0) rotate(8deg)}
+            50%{transform:translate3d(-18px,52vh,0) rotate(-4deg);opacity:.3}
+            70%{transform:translate3d(28px,78vh,0) rotate(10deg)}
+            100%{transform:translate3d(-10px,120vh,0) rotate(18deg);opacity:0}
+        }
+        .login-left{color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+        .login-left .brand{display:flex;flex-direction:column;align-items:center;gap:18px}
+        .logo-icon{width:110px;height:110px;border-radius:16px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:44px;color:white}
+        .brand h2{font-size:28px;margin:0;font-weight:800}
+        .brand small{opacity:.9}
+        .login-right{display:flex;align-items:center;justify-content:center;padding:60px}
+        .card-login{width:100%;max-width:460px;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,0.12);overflow:hidden;min-height:520px;background:rgba(255,255,255,0.86);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.45)}
+        .card-body{padding:50px 36px}
+        .title{font-weight:800;color:var(--vet-blue);margin-bottom:6px;text-align:center}
+        .subtitle{color:#6b7280;margin-bottom:18px}
+        .form-check-label a{float:right;color:#e11d48;text-decoration:none}
+        .btn-sign{display:flex;align-items:center;justify-content:center;gap:10px;background:white;color:var(--vet-blue);border-radius:8px;border:2px solid var(--vet-blue);padding:12px 18px;font-weight:700}
+        .btn-sign i{background:var(--vet-blue);color:white;padding:6px;border-radius:6px}
+        .form-control:focus{box-shadow:0 0 0 .2rem rgba(10,61,145,0.15);border-color:var(--vet-blue)}
+        .brand h2{font-size:40px;line-height:1;margin:0;font-weight:900;letter-spacing:-0.03em}
+        .brand small{font-size:14px;letter-spacing:0.22em}
+        .vet-word{color:var(--vet-red)}
+        @media(max-width:900px){.login-hero{grid-template-columns:1fr}.login-left{padding:30px;text-align:center}.login-right{padding:30px}.brand h2{font-size:34px}}
     </style>
 </head>
 <body>
-<div class="login-container">
-    <div class="card login-card p-4">
-        <div class="card-body">
-            <div class="text-center mb-4">
-                <h1 class="h2 vet-brand">HatunVet</h1>
-                <p class="text-muted">Ingresa tus credenciales</p>
+<div class="bg-icons" aria-hidden="true">
+    <i class="fa-solid fa-paw bg-icon" style="left:4%;animation-duration:19s;animation-delay:-3s;"></i>
+    <i class="fa-solid fa-heart-pulse bg-icon soft" style="left:11%;animation-duration:23s;animation-delay:-10s;"></i>
+    <i class="fa-solid fa-bone bg-icon small" style="left:19%;animation-duration:17s;animation-delay:-7s;"></i>
+    <i class="fa-solid fa-clinic-medical bg-icon big" style="left:27%;animation-duration:25s;animation-delay:-15s;"></i>
+    <i class="fa-solid fa-paw bg-icon soft" style="left:36%;animation-duration:20s;animation-delay:-5s;"></i>
+    <i class="fa-solid fa-syringe bg-icon small" style="left:43%;animation-duration:22s;animation-delay:-12s;"></i>
+    <i class="fa-solid fa-heart bg-icon" style="left:51%;animation-duration:18s;animation-delay:-4s;"></i>
+    <i class="fa-solid fa-shield-dog bg-icon soft" style="left:58%;animation-duration:24s;animation-delay:-9s;"></i>
+    <i class="fa-solid fa-paw bg-icon big" style="left:66%;animation-duration:26s;animation-delay:-16s;"></i>
+    <i class="fa-solid fa-bone bg-icon small" style="left:73%;animation-duration:16s;animation-delay:-2s;"></i>
+    <i class="fa-solid fa-clinic-medical bg-icon soft" style="left:81%;animation-duration:21s;animation-delay:-11s;"></i>
+    <i class="fa-solid fa-paw bg-icon small" style="left:88%;animation-duration:27s;animation-delay:-14s;"></i>
+    <i class="fa-solid fa-heart bg-icon" style="left:94%;animation-duration:19s;animation-delay:-6s;"></i>
+    <i class="fa-solid fa-bone bg-icon" style="left:14%;animation-duration:28s;animation-delay:-18s;"></i>
+    <i class="fa-solid fa-shield-dog bg-icon small" style="left:47%;animation-duration:23s;animation-delay:-13s;"></i>
+    <i class="fa-solid fa-heart-pulse bg-icon soft" style="left:78%;animation-duration:20s;animation-delay:-8s;"></i>
+</div>
+<div class="login-hero">
+    <div class="login-left">
+        <div class="brand">
+            <div class="logo-icon"><i class="fa-solid fa-clinic-medical"></i></div>
+            <h2>Hatun <span class="vet-word">Vet</span></h2>
+            <small>CLÍNICA VETERINARIA</small>
+        </div>
+    </div>
+
+    <div class="login-right">
+        <div class="card card-login">
+            <div class="card-body">
+                <h3 class="title">Bienvenido de vuelta</h3>
+                <p class="subtitle">Ingresa tus credenciales para acceder al sistema</p>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small">Usuario / Correo</label>
+                        <input type="text" name="usuario" class="form-control" placeholder="usuario@hatunvet.pe" required autofocus>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase small">Contraseña</label>
+                        <input type="password" name="clave" class="form-control" placeholder="••••••••" required>
+                    </div>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="remember">
+                            <label class="form-check-label small" for="remember">Recordarme</label>
+                        </div>
+                        <div class="ms-auto"><a href="#" class="small">¿Olvidaste tu contraseña?</a></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-sign w-100"><i class="fa-solid fa-right-to-bracket"></i> INGRESAR</button>
+                </form>
+
+                <div class="text-center mt-3 text-muted small">© 2026 <strong>Hatun Vet</strong> - Todos los derechos reservados</div>
             </div>
-            <form th:action="@{/login}" method="post">
-                <div class="mb-3">
-                    <label class="form-label">Nombre de Usuario</label>
-                    <input type="text" name="usuario" class="form-control" placeholder="Ej: admin" required autofocus>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label">Contraseña</label>
-                    <input type="password" name="clave" class="form-control" placeholder="••••••••" required>
-                </div>
-                <button type="submit" class="btn btn-login w-100">Iniciar Sesión</button>
-            </form>
         </div>
     </div>
 </div>

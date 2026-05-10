@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HatunVet - Clínica Veterinaria</title>
+
+    <link rel="stylesheet" href="/css/pagina_principal.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Swiper Slider -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+
+    <div class="topbar">
+        <div class="topbar-left">
+            <span><i class="fa-solid fa-phone"></i> <span th:text="${config.telefono}">+51 987 654 321</span></span>
+            <span><i class="fa-solid fa-location-dot"></i> <span th:text="${config.direccion}">Av. Principal 123, Lima</span></span>
+        </div>
+
+        <div class="topbar-right">
+            <span><i class="fa-regular fa-clock"></i> <span th:text="${config.subtituloHero}">Lun - Sáb: 8:00 AM - 8:00 PM</span></span>
+        </div>
+    </div>
+
+    <div class="navbar">
+
+        <div class="logo-container">
+            <img th:if="${config.logo != null and !#strings.isEmpty(config.logo)}" th:src="@{/uploads/{file}(file=${config.logo})}" alt="HatunVet Logo" class="logo">
+            <img th:unless="${config.logo != null and !#strings.isEmpty(config.logo)}" src="/img/logo.png" alt="HatunVet Logo" class="logo">
+        </div>
+
+        <nav class="nav-menu">
+            <a href="#inicio">Inicio</a>
+            <a href="#promociones">Promociones</a>
+            <a href="#servicios">Servicios</a>
+            <a href="#nosotros">Nosotros</a>
+            <a href="#horario">Horario</a>
+            <a href="#contacto">Contacto</a>
+        </nav>
+
+        <a href="/login" class="btn-outline btn-login">
+            Iniciar sesión
+        </a>
+
+        <button class="btn-cita" id="openModal">
+            Agendar Cita
+        </button>
+
+    </div>
+
+</header>
+
+<!-- HERO -->
+<section id="inicio" class="hero">
+
+    <div class="hero-bg-icons" aria-hidden="true">
+        <i class="fa-solid fa-paw hero-bg-icon" style="left:6%;animation-duration:24s;animation-delay:-3s;"></i>
+        <i class="fa-solid fa-heart-pulse hero-bg-icon soft" style="left:18%;animation-duration:28s;animation-delay:-10s;"></i>
+        <i class="fa-solid fa-bone hero-bg-icon small" style="left:30%;animation-duration:22s;animation-delay:-6s;"></i>
+        <i class="fa-solid fa-clinic-medical hero-bg-icon" style="left:44%;animation-duration:26s;animation-delay:-12s;"></i>
+        <i class="fa-solid fa-paw hero-bg-icon soft" style="left:58%;animation-duration:20s;animation-delay:-4s;"></i>
+        <i class="fa-solid fa-syringe hero-bg-icon small" style="left:72%;animation-duration:23s;animation-delay:-9s;"></i>
+        <i class="fa-solid fa-heart hero-bg-icon" style="left:86%;animation-duration:21s;animation-delay:-7s;"></i>
+    </div>
+
+    <div class="hero-content">
+
+        <div class="hero-badge">
+            <span th:text="${config.nombreVeterinaria}">HatunVet</span>
+        </div>
+
+        <h1>
+            <span th:text="${config.textoHero}">Bienvenidos a HatunVet</span>
+        </h1>
+
+        <p>
+            <span th:text="${config.subtituloHero}">Tu clínica veterinaria de confianza. Ofrecemos atención profesional y amorosa para el bienestar de tus compañeros más fieles.</span>
+        </p>
+
+        <div class="hero-buttons">
+            <button class="btn-red" id="openModalHero">
+                Agendar Cita
+            </button>
+
+            <a href="#servicios" class="btn-outline">
+                Ver Servicios
+            </a>
+        </div>
+
+        <div class="hero-stats">
+
+            <div class="stat-card">
+                <h2>15+</h2>
+                <span>Años de Experiencia</span>
+            </div>
+
+            <div class="stat-card">
+                <h2>5000+</h2>
+                <span>Mascotas Atendidas</span>
+            </div>
+
+            <div class="stat-card">
+                <h2>24/7</h2>
+                <span>Emergencias</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- GALERÍA -->
+<section id="galeria" class="section" th:if="${landingImages != null and !#lists.isEmpty(landingImages)}">
+
+    <div class="section-title">
+        <h2>Galería Principal</h2>
+        <p>Imágenes destacadas de nuestra veterinaria</p>
+    </div>
+
+    <div class="swiper landingSwiper">
+
+        <div class="swiper-wrapper">
+
+            <div class="swiper-slide" th:each="imagen : ${landingImages}">
+                <div class="landing-card">
+                    <img th:if="${imagen.imagen != null and !#strings.isEmpty(imagen.imagen)}" th:src="@{/uploads/{file}(file=${imagen.imagen})}" th:alt="${imagen.tipo}">
+                    <div class="landing-card-caption">
+                        <strong th:text="${imagen.tipo}">Galería</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="swiper-pagination"></div>
+
+    </div>
+
+</section>
+
+<!-- PROMOCIONES -->
+<section id="promociones" class="section">
+
+    <div class="section-title">
+        <h2>Promociones Especiales</h2>
+        <p>Aprovecha nuestras ofertas exclusivas</p>
+    </div>
+
+    <div class="swiper promocionesSwiper">
+
+        <div class="swiper-wrapper">
+
+            <div class="swiper-slide">
+                <div class="promo-card blue">
+                    <span class="discount">20% OFF</span>
+                    <h3>Vacunación Completa</h3>
+                    <p>Protege a tu mascota con nuestro paquete completo de vacunas</p>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="promo-card red">
+                    <span class="discount">15% OFF</span>
+                    <h3>Baño y Corte</h3>
+                    <p>Servicio de peluquería completo para tu mejor amigo</p>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="promo-card purple">
+                    <span class="discount">30% OFF</span>
+                    <h3>Consulta Veterinaria</h3>
+                    <p>Primera consulta con descuento especial</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- SERVICIOS -->
+<section id="servicios" class="section bg-light">
+
+    <div class="section-title">
+        <h2>Nuestros Servicios</h2>
+        <p>Atención integral para tu mascota</p>
+    </div>
+
+    <div class="swiper serviciosSwiper">
+
+        <div class="swiper-wrapper">
+
+            <div class="swiper-slide">
+                <div class="service-card">
+                    <i class="fa-solid fa-stethoscope"></i>
+                    <h3>Consultas Veterinarias</h3>
+                    <p>Atención médica profesional para tu mascota.</p>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="service-card">
+                    <i class="fa-solid fa-scissors"></i>
+                    <h3>Peluquería Canina</h3>
+                    <p>Baño, corte y estilizado profesional.</p>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="service-card">
+                    <i class="fa-solid fa-syringe"></i>
+                    <h3>Vacunación</h3>
+                    <p>Programa completo de vacunas.</p>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="service-card">
+                    <i class="fa-solid fa-heart"></i>
+                    <h3>Cirugías</h3>
+                    <p>Procedimientos seguros y modernos.</p>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="service-card">
+                    <i class="fa-solid fa-truck-medical"></i>
+                    <h3>Emergencias 24/7</h3>
+                    <p>Atención de emergencia disponible.</p>
+                </div>
+            </div>
+
+            <div class="swiper-slide">
+                <div class="service-card">
+                    <i class="fa-solid fa-bowl-food"></i>
+                    <h3>Asesoría Nutricional</h3>
+                    <p>Planes alimenticios personalizados.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="swiper-pagination"></div>
+
+    </div>
+
+</section>
+
+<!-- MISION Y VISION -->
+<section id="nosotros" class="mission-section">
+
+    <div class="section-title white">
+        <h2>Sobre HatunVet</h2>
+    </div>
+
+    <div class="mission-grid">
+
+        <div class="mission-card">
+            <h3>Misión</h3>
+            <p th:text="${config.mision}">Brindar servicios veterinarios de excelencia, con amor y profesionalismo.</p>
+        </div>
+
+        <div class="mission-card">
+            <h3>Visión</h3>
+            <p th:text="${config.vision}">Ser la veterinaria líder en la región, reconocida por nuestra excelencia.</p>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- HORARIO -->
+<section id="horario" class="section">
+
+    <div class="section-title">
+        <h2>Horario de Atención</h2>
+    </div>
+
+    <div class="schedule-container">
+
+        <div class="schedule-item">
+            <span>Lunes - Viernes</span>
+            <strong>8:00 AM - 8:00 PM</strong>
+        </div>
+
+        <div class="schedule-item">
+            <span>Sábado</span>
+            <strong>9:00 AM - 6:00 PM</strong>
+        </div>
+
+        <div class="schedule-item closed">
+            <span>Domingo</span>
+            <strong>Cerrado</strong>
+        </div>
+
+    </div>
+
+</section>
+
+<!-- FOOTER -->
+<footer id="contacto" class="footer">
+
+    <div class="footer-grid">
+
+        <div>
+            <img th:if="${config.logo != null and !#strings.isEmpty(config.logo)}" th:src="@{/uploads/{file}(file=${config.logo})}" class="footer-logo" alt="Logo">
+            <img th:unless="${config.logo != null and !#strings.isEmpty(config.logo)}" src="/img/logo.png" class="footer-logo" alt="Logo">
+            <p>
+                <span th:text="${config.subtituloHero}">Cuidando a tus mascotas con amor y profesionalismo.</span>
+            </p>
+        </div>
+
+        <div>
+            <h4>Contacto</h4>
+            <p th:text="${config.telefono}">+51 987 654 321</p>
+            <p th:text="${config.correo}">contacto@hatunvet.com</p>
+        </div>
+
+        <div>
+            <h4>Redes Sociales</h4>
+
+            <div class="socials">
+                <a th:if="${config.facebook != null and !#strings.isEmpty(config.facebook)}" th:href="${config.facebook}" target="_blank" rel="noopener"><i class="fab fa-facebook"></i></a>
+                <a th:if="${config.instagram != null and !#strings.isEmpty(config.instagram)}" th:href="${config.instagram}" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+                <a th:if="${config.whatsapp != null and !#strings.isEmpty(config.whatsapp)}" th:href="${config.whatsapp}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i></a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 HatunVet - Todos los derechos reservados
+    </div>
+
+</footer>
+
+<!-- MODAL -->
+<div class="modal" id="appointmentModal">
+
+    <div class="modal-content">
+
+        <span class="close-modal" id="closeModal">&times;</span>
+
+        <h2>Agendar Cita</h2>
+
+        <form id="appointmentForm">
+
+            <input type="text" placeholder="Nombre del dueño" required>
+
+            <input type="text" placeholder="Nombre de la mascota" required>
+
+            <input type="tel" placeholder="Teléfono" required>
+
+            <input type="email" placeholder="Correo electrónico">
+
+            <select required>
+                <option value="">Seleccione un servicio</option>
+                <option>Consulta Veterinaria</option>
+                <option>Vacunación</option>
+                <option>Peluquería</option>
+                <option>Cirugía</option>
+            </select>
+
+            <input type="date" required>
+
+            <select required>
+                <option value="">Seleccione una hora</option>
+                <option>8:00 AM</option>
+                <option>9:00 AM</option>
+                <option>10:00 AM</option>
+            </select>
+
+            <button type="submit" class="btn-submit">
+                Confirmar Cita
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script src="/js/pagina_principal.js"></script>
+
+</body>
+</html>
