@@ -15,6 +15,8 @@ import java.util.List;
 public class DataLoader implements ApplicationRunner {
 
     private static final String OPCION_ID = "e1c51161-4bf2-11f1-980a-8d0986850898";
+    private static final String PROVEEDORES_ID = "4aee659b-4c37-11f1-baf2-f0bfed632bab";
+    private static final String INVENTARIO_ID = "4aee9e82-4c37-11f1-baf2-f0bfed632bab";
 
     private final OpcionRepository opcionRepository;
     private final PerfilRepository perfilRepository;
@@ -27,18 +29,9 @@ public class DataLoader implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) throws Exception {
-        // Crear la opción si no existe
-        if (!opcionRepository.existsById(OPCION_ID)) {
-            Opcion opcion = new Opcion();
-            opcion.setId(OPCION_ID);
-            opcion.setNombre("Configuración");
-            opcion.setRuta("/configuracion");
-            opcion.setIcono("bi bi-gear-fill");
-            opcionRepository.save(opcion);
-        }
-
-        Opcion opcion = opcionRepository.findById(OPCION_ID).orElse(null);
-        if (opcion == null) return;
+        Opcion configuracion = upsertOpcion(OPCION_ID, "Configuración", "/configuracion", "bi bi-gear-fill");
+        Opcion proveedores = upsertOpcion(PROVEEDORES_ID, "Proveedores", "/proveedores/listar", "bi bi-truck");
+        Opcion inventario = upsertOpcion(INVENTARIO_ID, "Inventario", "/inventario", "bi bi-boxes");
 
         // Buscar un perfil administrador o el primer perfil activo
         List<Perfil> perfilesActivos = perfilRepository.findByEstadoTrue();
@@ -57,11 +50,31 @@ public class DataLoader implements ApplicationRunner {
         }
 
         if (perfilAsignado != null) {
-            boolean ya = perfilAsignado.getOpciones().stream().anyMatch(o -> OPCION_ID.equals(o.getId()));
-            if (!ya) {
-                perfilAsignado.getOpciones().add(opcion);
+            boolean cambio = false;
+            if (perfilAsignado.getOpciones().stream().noneMatch(o -> OPCION_ID.equals(o.getId()))) {
+                perfilAsignado.getOpciones().add(configuracion);
+                cambio = true;
+            }
+            if (perfilAsignado.getOpciones().stream().noneMatch(o -> PROVEEDORES_ID.equals(o.getId()))) {
+                perfilAsignado.getOpciones().add(proveedores);
+                cambio = true;
+            }
+            if (perfilAsignado.getOpciones().stream().noneMatch(o -> INVENTARIO_ID.equals(o.getId()))) {
+                perfilAsignado.getOpciones().add(inventario);
+                cambio = true;
+            }
+            if (cambio) {
                 perfilRepository.save(perfilAsignado);
             }
         }
+    }
+
+    private Opcion upsertOpcion(String id, String nombre, String ruta, String icono) {
+        Opcion opcion = opcionRepository.findById(id).orElseGet(Opcion::new);
+        opcion.setId(id);
+        opcion.setNombre(nombre);
+        opcion.setRuta(ruta);
+        opcion.setIcono(icono);
+        return opcionRepository.save(opcion);
     }
 }
