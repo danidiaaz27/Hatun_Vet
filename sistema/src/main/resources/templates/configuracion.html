@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración - HatunVet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+</head>
+<body>
+
+<div class="d-flex">
+    <div th:replace="~{sidebar :: sidebar(activeUri='/configuracion')}"></div>
+
+    <main class="main-content w-100">
+        <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <div>
+                <h2 class="h4 mb-0 fw-bold" style="color: var(--vet-blue)">Configuración General</h2>
+                <small class="text-muted">Variables universales de la página principal</small>
+            </div>
+            <button id="btnGuardarConfiguracion" class="btn fw-bold" style="background-color: var(--vet-red); color: white;">
+                <i class="bi bi-save me-1"></i> Guardar Cambios
+            </button>
+        </header>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card card-custom p-4 bg-white h-100">
+                    <h5 class="fw-bold mb-3" style="color: var(--vet-blue)">Datos de la veterinaria</h5>
+                    <form id="formConfiguracion" class="row g-3">
+                        <input type="hidden" id="id" name="id">
+                        <input type="hidden" id="logoActual" name="logo">
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted">Nombre de la veterinaria</label>
+                            <input type="text" id="nombreVeterinaria" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">Teléfono</label>
+                            <input type="text" id="telefono" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">Correo</label>
+                            <input type="email" id="correo" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted">Dirección</label>
+                            <input type="text" id="direccion" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">Facebook</label>
+                            <input type="text" id="facebook" class="form-control" placeholder="URL completa o usuario">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">Instagram</label>
+                            <input type="text" id="instagram" class="form-control" placeholder="URL completa o usuario">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">WhatsApp</label>
+                            <input type="text" id="whatsapp" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">Logo</label>
+                            <input type="file" id="logoFile" class="form-control" accept="image/*">
+                            <small class="text-muted">Si no subes uno nuevo, se conserva el actual.</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted">Texto hero</label>
+                            <textarea id="textoHero" class="form-control" rows="2" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted">Subtítulo hero</label>
+                            <textarea id="subtituloHero" class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted">Misión</label>
+                            <textarea id="mision" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted">Visión</label>
+                            <textarea id="vision" class="form-control" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card card-custom p-4 bg-white mb-4">
+                    <h5 class="fw-bold mb-3" style="color: var(--vet-blue)">Vista previa del logo</h5>
+                    <div class="border rounded p-3 text-center bg-light">
+                        <img id="logoPreview" src="" alt="Logo" class="img-fluid" style="max-height: 160px; display: none;">
+                        <div id="logoPlaceholder" class="text-muted py-4">
+                            Sin logo cargado
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-4 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color: var(--vet-blue)">Imágenes del landing</h5>
+                            <small class="text-muted">Gestión de imágenes para la página pública</small>
+                        </div>
+                        <button id="btnNuevaImagen" class="btn btn-sm" style="background-color: var(--vet-red); color: white;">
+                            <i class="bi bi-image-add me-1"></i> Nueva
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Imagen</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="landingImagesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal fade" id="landingImagenModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background-color: var(--vet-blue); color: white;">
+                <h5 class="modal-title" id="landingModalTitle">Nueva Imagen</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formLandingImagen" class="row g-3">
+                    <input type="hidden" id="landingId" name="id">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted">Tipo</label>
+                        <input type="text" id="tipo" class="form-control" placeholder="Hero / Galería / Promoción" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted">Estado</label>
+                        <select id="estado" class="form-select">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-bold text-muted">Imagen</label>
+                        <input type="file" id="imagenFile" class="form-control" accept="image/*">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="formLandingImagen" class="btn" style="background-color: var(--vet-blue); color: white;">Guardar Imagen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/configuracion.js}"></script>
+
+</body>
+</html>
