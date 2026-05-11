@@ -33,6 +33,10 @@ public class Producto {
     @JoinColumn(name = "id_categoria", nullable = false)
     private CategoriaProducto categoria;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "proveedor_id")
+    private Proveedor proveedor;
+
     @Column(nullable = false)
     private boolean estado = true;
 
@@ -53,6 +57,8 @@ public class Producto {
     public void setImagen(String imagen) { this.imagen = imagen; }
     public CategoriaProducto getCategoria() { return categoria; }
     public void setCategoria(CategoriaProducto categoria) { this.categoria = categoria; }
+    public Proveedor getProveedor() { return proveedor; }
+    public void setProveedor(Proveedor proveedor) { this.proveedor = proveedor; }
     public boolean isEstado() { return estado; }
     public void setEstado(boolean estado) { this.estado = estado; }
 }

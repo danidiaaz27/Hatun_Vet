@@ -14,7 +14,7 @@ import java.util.Map;
 public class FacturacionService {
 
     private final String API_URL = "https://miapi.cloud/apifact/invoice/create";
-    private final String CLAVE_SECRETA = "miap-2th-mjy-xxm";
+    private final String CLAVE_SECRETA = "miap-7ci-u47-raa";
 
     public Map<String, Object> enviarAMiapicloud(Map<String, Object> payload) {
         // Mantenemos la clave en el cuerpo por si acaso

@@ -13,7 +13,7 @@ import java.util.Map;
 public class ClienteConsultaService {
 
     // Tu Token JWT de Miapicloud para Consultas
-    private final String TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozNTcsImV4cCI6MTc2MDM4MzM5MX0.lezap0_4CCz9OW8bkz06_iwwF1xts58v-DH2XpEsvEE";
+    private final String TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjo1NTksImV4cCI6MTc2NTQyNTYxNn0.bZHwZbaPuD0g3IzJjQdAyGC4id2I4Vf6e_RxrpLdY9s";
 
     public Map<String, Object> consultarDocumento(String tipoDoc, String numero) {
         RestTemplate restTemplate = new RestTemplate();
