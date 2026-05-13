@@ -17,6 +17,21 @@ $(document).ready(function() {
             });
     }
 
+    // Cargar proveedores en el Select
+    function cargarProveedores() {
+        fetch('/proveedores/api/listar')
+            .then(r => r.json())
+            .then(res => {
+                if(res.data) {
+                    const select = $('#proveedor_id');
+                    select.find('option:not(:first)').remove();
+                    res.data.filter(p => p.estado).forEach(p => {
+                        select.append(`<option value="${p.id}">${p.nombre}</option>`);
+                    });
+                }
+            });
+    }
+
     // Inicializar DataTable
     let dataTable = $('#tablaProductos').DataTable({
         ajax: { url: `${API_BASE}/listar`, dataSrc: 'data' },
@@ -72,6 +87,7 @@ $(document).ready(function() {
 
     const productoModal = new bootstrap.Modal(document.getElementById('productoModal'));
     cargarCategorias();
+    cargarProveedores();
 
     // Botón Nuevo
     $('#btnNuevoRegistro').click(() => {
@@ -95,6 +111,11 @@ $(document).ready(function() {
         formData.append("precio", $('#precio').val());
         formData.append("stock", $('#stock').val());
         formData.append("categoria.id", $('#id_categoria').val());
+        
+        const proveedorId = $('#proveedor_id').val();
+        if (proveedorId) {
+            formData.append("proveedor.id", proveedorId);
+        }
 
         // Agregamos el archivo si el usuario seleccionó uno
         let fileInput = document.getElementById('imagenFile');
@@ -129,6 +150,7 @@ $(document).ready(function() {
                     $('#precio').val(p.precio);
                     $('#stock').val(p.stock);
                     $('#id_categoria').val(p.categoria ? p.categoria.id : '');
+                    $('#proveedor_id').val(p.proveedor ? p.proveedor.id : '');
 
                     $('#imagenFile').val('');
 
