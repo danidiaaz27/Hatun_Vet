@@ -4,8 +4,8 @@ import com.hatunvet.sistema.model.Perfil;
 import com.hatunvet.sistema.service.PerfilService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -19,15 +19,8 @@ public class PerfilController {
         this.perfilService = perfilService;
     }
 
-    // 1. Devuelve la vista HTML
     @GetMapping("/listar")
-    public String vistaPerfiles() {
-        return "perfiles";
-    }
-
-    // ==========================================
-    // ENDPOINTS API PARA AJAX (DataTables y JS)
-    // ==========================================
+    public String vistaPerfiles() { return "perfiles"; }
 
     @GetMapping("/api/listar")
     @ResponseBody
@@ -44,7 +37,6 @@ public class PerfilController {
         perfilService.obtenerPorId(id).ifPresentOrElse(
                 perfil -> {
                     response.put("success", true);
-                    // Extraemos solo los IDs de las opciones para facilitar la lectura en JS
                     Map<String, Object> perfilMap = new HashMap<>();
                     perfilMap.put("id", perfil.getId());
                     perfilMap.put("nombre", perfil.getNombre());
@@ -53,10 +45,7 @@ public class PerfilController {
                     perfilMap.put("opciones", perfil.getOpciones().stream().map(o -> o.getId()).collect(Collectors.toList()));
                     response.put("data", perfilMap);
                 },
-                () -> {
-                    response.put("success", false);
-                    response.put("message", "Perfil no encontrado");
-                }
+                () -> { response.put("success", false); response.put("message", "Perfil no encontrado"); }
         );
         return response;
     }
@@ -66,12 +55,34 @@ public class PerfilController {
     public Map<String, Object> apiGuardar(@RequestBody Perfil perfil) {
         Map<String, Object> response = new HashMap<>();
         try {
+            // Sanitización
+            perfil.setNombre(perfil.getNombre() != null ? perfil.getNombre().trim() : "");
+            perfil.setDescripcion(perfil.getDescripcion() != null ? perfil.getDescripcion().trim() : "");
+
+            if (perfil.getNombre().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "El nombre del perfil es obligatorio.");
+                return response;
+            }
+
+            // Validación de duplicidad
+            List<Perfil> existentes = perfilService.listarTodos();
+            boolean duplicado = existentes.stream()
+                    .anyMatch(p -> p.getNombre().equalsIgnoreCase(perfil.getNombre())
+                            && (perfil.getId() == null || !p.getId().equals(perfil.getId())));
+
+            if (duplicado) {
+                response.put("success", false);
+                response.put("message", "Ya existe un perfil con ese nombre.");
+                return response;
+            }
+
             perfilService.guardar(perfil);
             response.put("success", true);
             response.put("message", "Perfil guardado correctamente");
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al guardar: " + e.getMessage());
+            response.put("message", "Error al procesar: " + e.getMessage());
         }
         return response;
     }

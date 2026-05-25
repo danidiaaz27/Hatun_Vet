@@ -5,13 +5,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional; // <-- Importación necesaria para el Optional
+import java.util.Optional;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, String> {
 
-    // Ahora sí, envuelto en Optional para que el VentaService sea feliz
     Optional<Producto> findByCodigo(String codigo);
+
+    // VALIDACIÓN 2: Para buscar duplicados ignorando mayúsculas/minúsculas
+    Optional<Producto> findByCodigoIgnoreCase(String codigo);
 
     List<Producto> findAllByOrderByNombreAsc();
 

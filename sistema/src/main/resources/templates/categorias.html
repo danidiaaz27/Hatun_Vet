@@ -22,7 +22,7 @@
         </header>
 
         <div class="card card-custom p-4 bg-white">
-            <table id="tablaCategorias" class="table table-hover w-100">
+            <table id="tablaCategorias" class="table table-hover w-100 align-middle">
                 <thead class="table-light">
                 <tr>
                     <th>Nombre</th>
@@ -39,27 +39,27 @@
 
 <div class="modal fade" id="categoriaModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header" style="background-color: var(--vet-blue); color: white;">
                 <h5 class="modal-title" id="modalTitle">Agregar Categoría</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body bg-light p-4">
                 <form id="formCategoria">
                     <input type="hidden" id="id" name="id">
                     <div class="mb-3">
-                        <label class="form-label text-muted">Nombre de la Categoría:</label>
-                        <input type="text" id="nombre" class="form-control" required>
+                        <label class="form-label small fw-bold text-muted">Nombre de la Categoría *</label>
+                        <input type="text" id="nombre" class="form-control" maxlength="100" placeholder="Ej. Alimentos Medicados" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-muted">Descripción:</label>
-                        <textarea id="descripcion" class="form-control" rows="3"></textarea>
+                        <label class="form-label small fw-bold text-muted">Descripción (Opcional)</label>
+                        <textarea id="descripcion" class="form-control" rows="3" maxlength="255" placeholder="Detalle breve sobre los productos..."></textarea>
                     </div>
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer bg-white border-top-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formCategoria" class="btn" style="background-color: var(--vet-blue); color: white;">Guardar</button>
+                <button type="submit" form="formCategoria" class="btn px-4" style="background-color: var(--vet-blue); color: white;" id="btnSubmitCategoria">Guardar</button>
             </div>
         </div>
     </div>

@@ -8,6 +8,8 @@ import com.hatunvet.sistema.repository.VentaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -27,8 +29,6 @@ public class VentaService {
         this.facturacionService = facturacionService;
     }
 
-    // El @Transactional asegura que si algo falla (como Miapicloud),
-    // la base de datos no guarde nada a medias y el stock regrese a su lugar.
     @Transactional
     public Map<String, Object> procesarVentaYFacturar(Map<String, Object> payload) {
         Map<String, Object> comprobante = (Map<String, Object>) payload.get("comprobante");
@@ -37,16 +37,13 @@ public class VentaService {
 
         String tipoDoc = (String) comprobante.get("tipoDoc");
         String serie = tipoDoc.equals("01") ? "F001" : "B001";
-
         int correlativo = (int) ventaRepository.count() + 1;
 
-        // 1. Completar JSON para Miapicloud
         comprobante.put("serie", serie);
         comprobante.put("correlativo", String.valueOf(correlativo));
         comprobante.put("fechaEmision", LocalDate.now().toString());
         comprobante.put("horaEmision", LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
 
-        // 2. Preparar la Venta
         Venta venta = new Venta();
         venta.setTipoComprobante(tipoDoc);
         venta.setSerie(serie);
@@ -54,9 +51,11 @@ public class VentaService {
         venta.setClienteDocumento((String) cliente.get("numDoc"));
         venta.setClienteNombre((String) cliente.get("rznSocial"));
 
-        double totalVenta = 0, totalIgv = 0, totalBase = 0;
+        // Inicializamos totales con BigDecimal
+        BigDecimal totalVenta = BigDecimal.ZERO;
+        BigDecimal totalIgv = BigDecimal.ZERO;
+        BigDecimal totalBase = BigDecimal.ZERO;
 
-        // 3. Preparar los Detalles
         for (Map<String, Object> itemData : items) {
             String codProd = (String) itemData.get("codProducto");
             Producto p = productoRepository.findByCodigo(codProd)
@@ -64,23 +63,36 @@ public class VentaService {
 
             int cantidad = (Integer) itemData.get("cantidad");
 
-            // ¡EL CAMBIO ESTÁ AQUÍ! Solo actualizamos en memoria.
-            // Quitamos el save() manual. Hibernate lo guardará solo al final.
+            // VALIDACIÓN 2: Doble Validación de Stock en tiempo real
+            if (p.getStock() < cantidad) {
+                throw new RuntimeException("Stock insuficiente para: " + p.getNombre() + ". Stock actual: " + p.getStock());
+            }
+
+            // VALIDACIÓN 1: Verificación de Precios Directo de BD
+            // CORRECCIÓN: Como p.getPrecio() ya es BigDecimal, lo asignamos directamente
+            BigDecimal precioReal = p.getPrecio();
+            BigDecimal cantidadBd = new BigDecimal(cantidad);
+
+            // Cálculos precisos de IGV
+            BigDecimal valorUnitarioReal = precioReal.divide(new BigDecimal("1.18"), 2, RoundingMode.HALF_UP);
+            BigDecimal importeTotal = precioReal.multiply(cantidadBd);
+            BigDecimal baseItem = valorUnitarioReal.multiply(cantidadBd);
+            BigDecimal igvItem = importeTotal.subtract(baseItem);
+
+            // Actualizamos stock en memoria
             p.setStock(p.getStock() - cantidad);
 
             VentaDetalle detalle = new VentaDetalle();
-            detalle.setProducto(p); // Java mantiene el enlace fuerte con la BD
+            detalle.setProducto(p);
             detalle.setCantidad(cantidad);
+            detalle.setPrecioUnitario(precioReal);
+            detalle.setValorUnitario(valorUnitarioReal);
+            detalle.setIgv(igvItem);
+            detalle.setImporteTotal(importeTotal);
 
-            // Convertimos los números de forma segura
-            detalle.setPrecioUnitario(Double.parseDouble(itemData.get("mtoPrecioUnitario").toString()));
-            detalle.setValorUnitario(Double.parseDouble(itemData.get("mtoValorUnitario").toString()));
-            detalle.setIgv(Double.parseDouble(itemData.get("igv").toString()));
-            detalle.setImporteTotal(detalle.getPrecioUnitario() * cantidad);
-
-            totalVenta += detalle.getImporteTotal();
-            totalIgv += detalle.getIgv();
-            totalBase += (detalle.getValorUnitario() * cantidad);
+            totalVenta = totalVenta.add(importeTotal);
+            totalIgv = totalIgv.add(igvItem);
+            totalBase = totalBase.add(baseItem);
 
             venta.addDetalle(detalle);
         }
@@ -90,10 +102,27 @@ public class VentaService {
         venta.setTotal(totalVenta);
         venta.setEstado("FACTURADO");
 
-        // 4. ¡El Golpe Final! Guarda la Venta, los Detalles y actualiza el Stock, todo a la vez.
+        // Guardamos todo a la vez
         ventaRepository.save(venta);
 
-        // 5. Enviamos la orden a la SUNAT a través de Miapicloud
-        return facturacionService.enviarAMiapicloud(payload);
+        // Enviamos a la SUNAT a través de Miapicloud
+        Map<String, Object> respuestaApi = facturacionService.enviarAMiapicloud(payload);
+
+        // VALIDACIÓN 3: El Rollback Lógico si Miapicloud o SUNAT falla
+        if (respuestaApi != null) {
+            // Si la API falla a nivel general
+            if (respuestaApi.containsKey("success") && Boolean.FALSE.equals(respuestaApi.get("success"))) {
+                throw new RuntimeException("Error en facturación electrónica: " + respuestaApi.get("message"));
+            }
+            // Si la respuesta interna de Miapicloud fue rechazada
+            if (respuestaApi.containsKey("respuesta")) {
+                Map<String, Object> interna = (Map<String, Object>) respuestaApi.get("respuesta");
+                if (interna.containsKey("success") && Boolean.FALSE.equals(interna.get("success"))) {
+                    throw new RuntimeException("SUNAT rechazó el comprobante: " + interna.get("message"));
+                }
+            }
+        }
+
+        return respuestaApi;
     }
 }

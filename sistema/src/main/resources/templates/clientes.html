@@ -21,7 +21,6 @@
             </button>
         </header>
 
-        <!-- Tabla Principal -->
         <div class="card card-custom p-4 bg-white shadow-sm">
             <table id="tablaClientes" class="table table-hover w-100 align-middle">
                 <thead class="table-light">
@@ -31,7 +30,7 @@
                     <th>Contacto</th>
                     <th>Registro</th>
                     <th class="text-center">Historial 360</th>
-                    <th>Acciones</th>
+                    <th class="text-center">Acciones</th>
                 </tr>
                 </thead>
                 <tbody></tbody>
@@ -40,7 +39,6 @@
     </main>
 </div>
 
-<!-- Modal Registro Cliente -->
 <div class="modal fade" id="modalCliente" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -50,6 +48,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <input type="hidden" id="id">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Tipo Doc.</label>
@@ -60,70 +59,64 @@
                             </select>
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label small fw-bold">Número de Documento</label>
+                            <label class="form-label small fw-bold">Número de Documento *</label>
                             <div class="input-group">
-                                <input type="text" id="numeroDocumento" class="form-control" required>
+                                <input type="text" id="numeroDocumento" class="form-control" maxlength="15" required>
                                 <button class="btn btn-outline-primary" type="button" id="btnBuscarDoc" title="Buscar en RENIEC/SUNAT">
                                     <i class="bi bi-search"></i>
                                 </button>
                             </div>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-bold">Nombre Completo / Razón Social</label>
-                            <input type="text" id="nombreCompleto" class="form-control" required>
+                            <label class="form-label small fw-bold">Nombre Completo / Razón Social *</label>
+                            <input type="text" id="nombreCompleto" class="form-control" maxlength="150" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold"><i class="bi bi-whatsapp text-success me-1"></i> Teléfono/Celular</label>
-                            <input type="text" id="telefono" class="form-control">
+                            <input type="text" id="telefono" class="form-control" maxlength="20">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold"><i class="bi bi-envelope text-secondary me-1"></i> Correo Electrónico</label>
-                            <input type="email" id="correo" class="form-control">
+                            <input type="email" id="correo" class="form-control" maxlength="120">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarCliente">Guardar Cliente</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- MODAL GIGANTE: HISTORIAL 360 -->
 <div class="modal fade" id="modalHistorial" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
                 <h5 class="modal-title"><i class="bi bi-clock-history me-2"></i> Historial 360: <span id="lblHistorialNombre" class="fw-bold text-warning"></span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body bg-light">
-
-                <!-- Pestañas -->
-                <ul class="nav nav-tabs shadow-sm bg-white" id="historialTabs" role="tablist">
+                <ul class="nav nav-tabs shadow-sm bg-white border-0" id="historialTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#tabPetshop" type="button">
+                        <button class="nav-link active fw-bold border-0" data-bs-toggle="tab" data-bs-target="#tabPetshop" type="button">
                             <i class="bi bi-cart-check text-primary me-1"></i> Petshop y Farmacia
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#tabGrooming" type="button">
+                        <button class="nav-link fw-bold border-0" data-bs-toggle="tab" data-bs-target="#tabGrooming" type="button">
                             <i class="bi bi-scissors text-purple me-1" style="color: #6f42c1;"></i> Baños y Cortes
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link fw-bold text-muted" data-bs-toggle="tooltip" title="Próximo Módulo" disabled>
+                        <button class="nav-link fw-bold text-muted border-0" data-bs-toggle="tooltip" title="Próximo Módulo" disabled>
                             <i class="bi bi-heart-pulse text-danger me-1"></i> Historial Clínico
                         </button>
                     </li>
                 </ul>
 
-                <!-- Contenido Pestañas -->
-                <div class="tab-content bg-white border border-top-0 p-3 shadow-sm rounded-bottom">
-
-                    <!-- Pestaña Petshop -->
+                <div class="tab-content bg-white border p-3 shadow-sm rounded-bottom mt-2">
                     <div class="tab-pane fade show active" id="tabPetshop">
                         <div class="table-responsive">
                             <table class="table table-sm table-hover align-middle mb-0" id="tablaHistorialPetshop">
@@ -140,7 +133,6 @@
                         </div>
                     </div>
 
-                    <!-- Pestaña Peluquería -->
                     <div class="tab-pane fade" id="tabGrooming">
                         <div class="table-responsive">
                             <table class="table table-sm table-hover align-middle mb-0" id="tablaHistorialPeluqueria">
@@ -157,7 +149,6 @@
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

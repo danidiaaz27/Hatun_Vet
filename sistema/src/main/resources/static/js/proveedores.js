@@ -66,6 +66,13 @@ $(document).ready(function() {
             return;
         }
 
+        // VALIDACIÓN 4 (Front): Prefijo de RUC
+        const prefijo = ruc.substring(0, 2);
+        if (!['10', '15', '17', '20'].includes(prefijo)) {
+            Swal.fire('Validación', 'El RUC debe empezar con 10, 15, 17 o 20 según la SUNAT.', 'warning');
+            return;
+        }
+
         const btn = $(this);
         const icon = btn.html();
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
@@ -78,16 +85,12 @@ $(document).ready(function() {
                     const razonSocial = info.nombre_o_razon_social || info.razon_social || info.nombre_completo;
                     const direccion = info.direccion || info.domicilio_fiscal || info.direccion_completa;
 
-                    if (razonSocial) {
-                        $('#nombre').val(razonSocial);
-                    }
-                    if (direccion) {
-                        $('#direccion').val(direccion);
-                    }
+                    if (razonSocial) $('#nombre').val(razonSocial);
+                    if (direccion) $('#direccion').val(direccion);
 
-                    Swal.fire('Listo', 'Datos del RUC cargados.', 'success');
+                    Swal.fire('Listo', 'Datos del RUC cargados desde SUNAT.', 'success');
                 } else {
-                    Swal.fire('No encontrado', 'No se encontraron datos para ese RUC.', 'info');
+                    Swal.fire('No encontrado', 'No se encontraron datos para ese RUC en la base de SUNAT.', 'info');
                 }
             })
             .catch(() => Swal.fire('Error', 'No se pudo consultar el RUC.', 'error'))
@@ -107,6 +110,16 @@ $(document).ready(function() {
             return;
         }
 
+        const prefijo = ruc.substring(0, 2);
+        if (!['10', '15', '17', '20'].includes(prefijo)) {
+            Swal.fire('Validación', 'El RUC debe empezar con 10, 15, 17 o 20.', 'warning');
+            return;
+        }
+
+        // VALIDACIÓN 3: Bloqueo anti-doble clic
+        const btnGuardar = $('#btnGuardarProveedor');
+        btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
+
         const payload = {
             id: $('#id').val() || null,
             nombre: $('#nombre').val().trim(),
@@ -123,21 +136,18 @@ $(document).ready(function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-            .then(r => r.json())
-            .then(res => {
-                console.log('Respuesta del servidor:', res);
-                if (res.success) {
-                    proveedorModal.hide();
-                    dataTable.ajax.reload();
-                    Swal.fire('Éxito', res.message, 'success');
-                } else {
-                    Swal.fire('Atención', res.message || 'Error desconocido', 'warning');
-                }
-            })
-            .catch(err => {
-                console.error('Error de conexión:', err);
-                Swal.fire('Error', 'No se pudo guardar el proveedor: ' + err.message, 'error');
-            });
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                proveedorModal.hide();
+                dataTable.ajax.reload();
+                Swal.fire('Éxito', res.message, 'success');
+            } else {
+                Swal.fire('Atención', res.message, 'warning');
+            }
+        })
+        .catch(() => Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error'))
+        .finally(() => btnGuardar.prop('disabled', false).html('Guardar Proveedor'));
     });
 
     $('#tablaProveedores tbody').on('click', '.action-edit', function() {
@@ -159,8 +169,7 @@ $(document).ready(function() {
                 } else {
                     Swal.fire('Error', res.message, 'error');
                 }
-            })
-            .catch(() => Swal.fire('Error', 'No se pudo cargar el proveedor.', 'error'));
+            });
     });
 
     $('#tablaProveedores tbody').on('click', '.action-status', function() {
@@ -168,13 +177,9 @@ $(document).ready(function() {
         fetch(`${API_BASE}/cambiar-estado/${id}`, { method: 'POST' })
             .then(r => r.json())
             .then(res => {
-                if (res.success) {
-                    dataTable.ajax.reload();
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            })
-            .catch(() => Swal.fire('Error', 'No se pudo cambiar el estado.', 'error'));
+                if (res.success) dataTable.ajax.reload();
+                else Swal.fire('Error', res.message, 'error');
+            });
     });
 
     $('#tablaProveedores tbody').on('click', '.action-delete', function() {
@@ -182,7 +187,7 @@ $(document).ready(function() {
 
         Swal.fire({
             title: '¿Eliminar proveedor?',
-            text: 'Esta acción no se puede revertir.',
+            text: 'Se validará que no tenga productos asociados.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Sí, eliminar',
@@ -197,10 +202,9 @@ $(document).ready(function() {
                             dataTable.ajax.reload();
                             Swal.fire('Eliminado', res.message, 'success');
                         } else {
-                            Swal.fire('Error', res.message, 'error');
+                            Swal.fire('Atención', res.message, 'error');
                         }
-                    })
-                    .catch(() => Swal.fire('Error', 'No se pudo eliminar el proveedor.', 'error'));
+                    });
             }
         });
     });

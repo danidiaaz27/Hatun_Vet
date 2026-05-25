@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,19 +39,20 @@ public class ReporteController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // Recolectar datos
-            double ventasHoy = ventaRepository.sumVentasHoy();
-            double ventasMes = ventaRepository.sumVentasMes();
-            int cantVentasMes = ventaRepository.countVentasMes();
+            // ¡Todo en estándar financiero (BigDecimal y Long)!
+            // Gracias al COALESCE en el repositorio, esto nunca será nulo.
+            BigDecimal ventasHoy = ventaRepository.sumVentasHoy();
+            BigDecimal ventasMes = ventaRepository.sumVentasMes();
+            Long cantVentasMes = ventaRepository.countVentasMes();
 
-            double peluqueriaHoy = banoCorteRepository.sumIngresosHoy();
-            double peluqueriaMes = banoCorteRepository.sumIngresosMes();
-            int cantServiciosMes = banoCorteRepository.countServiciosMes();
+            BigDecimal peluqueriaHoy = banoCorteRepository.sumIngresosHoy();
+            BigDecimal peluqueriaMes = banoCorteRepository.sumIngresosMes();
+            Long cantServiciosMes = banoCorteRepository.countServiciosMes();
 
-            // BLOQUE 1: KPIs Generales (Sumamos todos los módulos)
+            // BLOQUE 1: KPIs Generales (Sumamos de forma segura con .add())
             Map<String, Object> kpis = new HashMap<>();
-            kpis.put("ingresosHoy", ventasHoy + peluqueriaHoy);
-            kpis.put("ingresosMes", ventasMes + peluqueriaMes);
+            kpis.put("ingresosHoy", ventasHoy.add(peluqueriaHoy));
+            kpis.put("ingresosMes", ventasMes.add(peluqueriaMes));
             kpis.put("totalVentasMes", cantVentasMes);
             kpis.put("totalServiciosMes", cantServiciosMes);
 
@@ -71,7 +73,7 @@ public class ReporteController {
 
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", e.getMessage());
+            response.put("message", "Error al cargar dashboard: " + e.getMessage());
         }
 
         return response;

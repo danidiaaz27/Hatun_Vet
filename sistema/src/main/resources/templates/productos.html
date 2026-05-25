@@ -54,32 +54,32 @@
 
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label text-muted fw-bold">Código:</label>
-                            <input type="text" id="codigo" class="form-control" placeholder="Ej: PROD001" required>
+                            <label class="form-label text-muted fw-bold">Código *:</label>
+                            <input type="text" id="codigo" class="form-control" maxlength="20" placeholder="Ej: PROD001" required>
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label text-muted fw-bold">Nombre del Producto:</label>
-                            <input type="text" id="nombre" class="form-control" required>
+                            <label class="form-label text-muted fw-bold">Nombre del Producto *:</label>
+                            <input type="text" id="nombre" class="form-control" maxlength="150" required>
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold">Categoría:</label>
+                            <label class="form-label text-muted fw-bold">Categoría *:</label>
                             <select id="id_categoria" class="form-select" required>
                                 <option value="">Seleccione una categoría...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-muted fw-bold">Proveedor:</label>
+                            <label class="form-label text-muted fw-bold">Proveedor (Opcional):</label>
                             <select id="proveedor_id" class="form-select">
                                 <option value="">Seleccione un proveedor...</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label text-muted fw-bold">Precio Unit. (S/):</label>
-                            <input type="number" id="precio" class="form-control" step="0.01" min="0" required>
+                            <label class="form-label text-muted fw-bold">Precio Unit. (S/) *:</label>
+                            <input type="number" id="precio" class="form-control" step="0.01" min="0.01" required>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label text-muted fw-bold">Stock Inicial:</label>
+                            <label class="form-label text-muted fw-bold">Stock Inicial *:</label>
                             <input type="number" id="stock" class="form-control" min="0" required>
                         </div>
 
@@ -89,16 +89,16 @@
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label text-muted fw-bold">Imagen del Producto:</label>
+                            <label class="form-label text-muted fw-bold">Imagen (Max 2MB):</label>
                             <input type="file" id="imagenFile" class="form-control" accept="image/*">
-                            <small class="text-secondary">Sube una foto clara del producto. Si editas y dejas esto vacío, se mantiene la foto anterior.</small>
+                            <small class="text-secondary">Sube una foto clara. Si editas y dejas esto vacío, se mantiene la foto anterior.</small>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formProducto" class="btn" style="background-color: var(--vet-blue); color: white;">Guardar Producto</button>
+                <button type="submit" form="formProducto" class="btn" style="background-color: var(--vet-blue); color: white;" id="btnSubmitProducto">Guardar Producto</button>
             </div>
         </div>
     </div>

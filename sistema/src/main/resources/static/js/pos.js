@@ -8,33 +8,29 @@ $(document).ready(function() {
     }, 1000);
 
     // --- VALIDACIONES DE DOCUMENTOS ---
-
-    // Bloquea cualquier carácter que no sea número
     $('#numDoc').on('input', function() {
         this.value = this.value.replace(/[^0-9]/g, '');
     });
 
-    // Ajusta la longitud máxima y limpia campos al cambiar el tipo (DNI/RUC)
     $('#tipoDoc').change(function() {
         const tipo = $(this).val();
         $('#numDoc').val('');
         $('#nombreCliente').val('');
         $('#direccionCliente').val('');
 
-        if (tipo === '1') { // DNI
+        if (tipo === '1') {
             $('#numDoc').attr('maxlength', '8').attr('placeholder', 'DNI (8 dígitos)');
-        } else { // RUC
+        } else {
             $('#numDoc').attr('maxlength', '11').attr('placeholder', 'RUC (11 dígitos)');
         }
     });
     $('#tipoDoc').trigger('change');
 
-    // --- BUSCAR CLIENTE EN API (Miapicloud) ---
+    // --- BUSCAR CLIENTE EN API ---
     $('#btnBuscarDoc').click(function() {
         const tipoDoc = $('#tipoDoc').val();
         const numDoc = $('#numDoc').val().trim();
 
-        // Validaciones previas a la consulta
         if (tipoDoc === '1' && numDoc.length !== 8) {
             Swal.fire('Atención', 'El DNI debe tener exactamente 8 dígitos.', 'warning');
             return;
@@ -44,6 +40,15 @@ $(document).ready(function() {
             return;
         }
 
+        // VALIDACIÓN 5: Validar formato oficial de RUC en Perú
+        if (tipoDoc === '6') {
+            const prefijo = numDoc.substring(0, 2);
+            if (!['10', '15', '17', '20'].includes(prefijo)) {
+                Swal.fire('RUC Inválido', 'El RUC debe empezar con 10, 15, 17 o 20 según SUNAT.', 'error');
+                return;
+            }
+        }
+
         const btn = $(this);
         const icon = btn.html();
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm text-primary"></span>');
@@ -51,36 +56,24 @@ $(document).ready(function() {
         fetch(`/ventas/api/consultar-cliente?tipoDoc=${tipoDoc}&numero=${numDoc}`)
             .then(r => r.json())
             .then(res => {
-                console.log("Respuesta de API Cliente:", res);
-
                 const info = res.datos || res.data;
-
                 if (res.success && info) {
                     if (tipoDoc === '1') {
-                        // Construcción del nombre para DNI
-                        let nombre = info.nombre_completo ||
-                                     `${info.nombres || ''} ${info.ape_paterno || ''} ${info.ape_materno || ''}`.trim();
+                        let nombre = info.nombre_completo || `${info.nombres || ''} ${info.ape_paterno || ''} ${info.ape_materno || ''}`.trim();
                         $('#nombreCliente').val(nombre);
-
-                        // ¡CAMBIO AQUÍ! Forzamos a que la dirección quede en blanco para los DNI
                         $('#direccionCliente').val('');
-
                     } else {
-                        // Construcción para RUC (Aquí sí llenamos la dirección)
                         $('#nombreCliente').val(info.nombre_o_razon_social || info.razon_social || info.razonSocial);
                         $('#direccionCliente').val(info.direccion_completa || info.direccion || '-');
                     }
                 } else {
-                    let msg = res.message || 'No se encontraron datos oficiales para este documento.';
+                    let msg = res.message || 'No se encontraron datos oficiales.';
                     Swal.fire('Información', msg, 'info');
                     $('#nombreCliente').val('');
                     $('#direccionCliente').val('');
                 }
             })
-            .catch(err => {
-                Swal.fire('Error', 'No se pudo conectar con el servicio de consulta.', 'error');
-                console.error(err);
-            })
+            .catch(() => Swal.fire('Error', 'Fallo al consultar documento.', 'error'))
             .finally(() => btn.prop('disabled', false).html(icon));
     });
 
@@ -100,10 +93,7 @@ $(document).ready(function() {
                 contenedor.empty();
                 if (res.success && res.data.length > 0) {
                     res.data.forEach(p => {
-                        let imgHtml = p.imagen
-                            ? `<img src="/uploads/${p.imagen}" class="card-img-top p-2" style="height: 100px; object-fit: contain;">`
-                            : `<div class="text-center p-3 text-muted"><i class="bi bi-image fs-1"></i></div>`;
-
+                        let imgHtml = p.imagen ? `<img src="/uploads/${p.imagen}" class="card-img-top p-2" style="height: 100px; object-fit: contain;">` : `<div class="text-center p-3 text-muted"><i class="bi bi-image fs-1"></i></div>`;
                         let html = `
                             <div class="col-md-6 col-lg-4">
                                 <div class="card product-card h-100 shadow-sm border-0" onclick='agregarAlCarrito(${JSON.stringify(p)})'>
@@ -143,7 +133,6 @@ $(document).ready(function() {
         } else {
             carrito.push({ ...producto, cantidad: 1 });
         }
-
         $('#inputBuscarProducto').val('').trigger('keyup');
         renderizarCarrito();
     };
@@ -203,20 +192,15 @@ $(document).ready(function() {
     }
 
     function calcularTotales() {
-        let total = 0;
-        let gravadas = 0;
-        let igv = 0;
-
+        let total = 0, gravadas = 0, igv = 0;
         carrito.forEach(item => {
             let subtotal = item.precio * item.cantidad;
             let valorUnitario = item.precio / (1 + TASA_IGV);
             let baseItem = valorUnitario * item.cantidad;
-
             total += subtotal;
             gravadas += baseItem;
             igv += (subtotal - baseItem);
         });
-
         $('#lblOpGravadas').text(gravadas.toFixed(2));
         $('#lblIgv').text(igv.toFixed(2));
         $('#lblTotal').text(total.toFixed(2));
@@ -234,30 +218,22 @@ $(document).ready(function() {
         const nombre = $('#nombreCliente').val().trim();
         const direccion = $('#direccionCliente').val().trim();
 
-        // Validaciones de negocio y SUNAT
-        if (tipoDoc === '1' && numDoc.length !== 8) {
-            Swal.fire('DNI Inválido', 'Debe tener 8 dígitos.', 'error');
-            return;
-        }
-        if (tipoDoc === '6' && numDoc.length !== 11) {
-            Swal.fire('RUC Inválido', 'Debe tener 11 dígitos.', 'error');
-            return;
-        }
-        if (!nombre) {
-            Swal.fire('Cliente requerido', 'Ingresa o busca el nombre del cliente.', 'warning');
-            return;
-        }
-        if (tipoDoc === '6' && !direccion) {
-            Swal.fire('Dirección requerida', 'Es obligatoria para facturas (RUC).', 'warning');
-            return;
+        if (tipoDoc === '1' && numDoc.length !== 8) return Swal.fire('DNI Inválido', 'Debe tener 8 dígitos.', 'error');
+        if (tipoDoc === '6' && numDoc.length !== 11) return Swal.fire('RUC Inválido', 'Debe tener 11 dígitos.', 'error');
+        if (!nombre) return Swal.fire('Cliente requerido', 'Ingresa el nombre del cliente.', 'warning');
+        if (tipoDoc === '6' && !direccion) return Swal.fire('Dirección requerida', 'Obligatoria para facturas.', 'warning');
+
+        if (tipoDoc === '6') {
+            const prefijo = numDoc.substring(0, 2);
+            if (!['10', '15', '17', '20'].includes(prefijo)) {
+                return Swal.fire('RUC Inválido', 'El RUC debe empezar con 10, 15, 17 o 20 según SUNAT.', 'error');
+            }
         }
 
-        // Armado del JSON para Miapicloud
         let itemsApi = carrito.map(item => {
             let valorUnit = item.precio / (1 + TASA_IGV);
             let base = valorUnit * item.cantidad;
             let igvItem = (item.precio * item.cantidad) - base;
-
             return {
                 "codProducto": item.codigo,
                 "descripcion": item.nombre,
@@ -293,6 +269,9 @@ $(document).ready(function() {
         const btn = $(this);
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Procesando...');
 
+        // VALIDACIÓN 6: Bloquear interacciones del carrito para evitar doble facturación
+        $('.cart-container button').prop('disabled', true);
+
         fetch('/ventas/api/procesar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -302,7 +281,6 @@ $(document).ready(function() {
         .then(data => {
             if (data.success && data.miapicloud && data.miapicloud.respuesta && data.miapicloud.respuesta.success) {
                 const res = data.miapicloud.respuesta;
-
                 Swal.fire({
                     title: '¡Venta Realizada!',
                     text: 'Comprobante emitido correctamente.',
@@ -314,24 +292,22 @@ $(document).ready(function() {
                     cancelButtonColor: '#D32F2F',
                     allowOutsideClick: false
                 }).then((choice) => {
-                    if (choice.isConfirmed) {
-                        window.open(res['pdf-ticket'], '_blank');
-                    } else if (choice.dismiss === Swal.DismissReason.cancel) {
-                        window.open(res['pdf-a4'], '_blank');
-                    }
+                    if (choice.isConfirmed) window.open(res['pdf-ticket'], '_blank');
+                    else if (choice.dismiss === Swal.DismissReason.cancel) window.open(res['pdf-a4'], '_blank');
 
-                    // Limpieza para nueva venta
                     carrito = [];
                     renderizarCarrito();
                     $('#numDoc, #nombreCliente, #direccionCliente').val('');
                 });
             } else {
-                Swal.fire('Error', data.message || 'La API rechazó el comprobante.', 'error');
+                Swal.fire('Error', data.message || 'La API o SUNAT rechazó el comprobante.', 'error');
+                // Rehabilitar botones si falla
+                $('.cart-container button').prop('disabled', false);
             }
         })
         .catch(err => {
             Swal.fire('Error de Red', 'No se pudo comunicar con el servidor.', 'error');
-            console.error(err);
+            $('.cart-container button').prop('disabled', false);
         })
         .finally(() => {
             btn.prop('disabled', false).html('<i class="bi bi-receipt me-2"></i> Procesar Venta');

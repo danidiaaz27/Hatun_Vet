@@ -1,6 +1,7 @@
 package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,19 +36,19 @@ public class Venta {
     @Column(name = "fecha_emision")
     private LocalDateTime fechaEmision = LocalDateTime.now();
 
-    @Column(name = "op_gravadas", nullable = false)
-    private double opGravadas;
+    // PUNTO 4: Cambiados de double a BigDecimal para precisión financiera
+    @Column(name = "op_gravadas", nullable = false, precision = 10, scale = 2)
+    private BigDecimal opGravadas = BigDecimal.ZERO;
 
-    @Column(nullable = false)
-    private double igv;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal igv = BigDecimal.ZERO;
 
-    @Column(nullable = false)
-    private double total;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal total = BigDecimal.ZERO;
 
     @Column(length = 20)
     private String estado = "CREADO"; // CREADO, FACTURADO, ANULADO
 
-    // Relación bidireccional para guardar todo el carrito de golpe
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VentaDetalle> detalles = new ArrayList<>();
 
@@ -78,14 +79,14 @@ public class Venta {
     public LocalDateTime getFechaEmision() { return fechaEmision; }
     public void setFechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; }
 
-    public double getOpGravadas() { return opGravadas; }
-    public void setOpGravadas(double opGravadas) { this.opGravadas = opGravadas; }
+    public BigDecimal getOpGravadas() { return opGravadas; }
+    public void setOpGravadas(BigDecimal opGravadas) { this.opGravadas = opGravadas; }
 
-    public double getIgv() { return igv; }
-    public void setIgv(double igv) { this.igv = igv; }
+    public BigDecimal getIgv() { return igv; }
+    public void setIgv(BigDecimal igv) { this.igv = igv; }
 
-    public double getTotal() { return total; }
-    public void setTotal(double total) { this.total = total; }
+    public BigDecimal getTotal() { return total; }
+    public void setTotal(BigDecimal total) { this.total = total; }
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
@@ -93,7 +94,6 @@ public class Venta {
     public List<VentaDetalle> getDetalles() { return detalles; }
     public void setDetalles(List<VentaDetalle> detalles) { this.detalles = detalles; }
 
-    // Método de ayuda para sincronizar la relación bidireccional
     public void addDetalle(VentaDetalle detalle) {
         detalles.add(detalle);
         detalle.setVenta(this);

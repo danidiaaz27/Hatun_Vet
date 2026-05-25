@@ -1,7 +1,6 @@
 $(document).ready(function() {
     const API_BASE = '/categorias/api';
 
-    // Inicializar DataTable
     let dataTable = $('#tablaCategorias').DataTable({
         ajax: { url: `${API_BASE}/listar`, dataSrc: 'data' },
         columns: [
@@ -30,7 +29,6 @@ $(document).ready(function() {
 
     const categoriaModal = new bootstrap.Modal(document.getElementById('categoriaModal'));
 
-    // Nuevo Registro
     $('#btnNuevoRegistro').click(() => {
         $('#formCategoria')[0].reset();
         $('#id').val('');
@@ -38,13 +36,17 @@ $(document).ready(function() {
         categoriaModal.show();
     });
 
-    // Guardar
     $('#formCategoria').submit(e => {
         e.preventDefault();
+
+        // VALIDACIÓN 3: Bloqueo de botón para evitar múltiples envíos
+        const btnGuardar = $('#btnSubmitCategoria');
+        btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
+
         const payload = {
             id: $('#id').val() || null,
-            nombre: $('#nombre').val(),
-            descripcion: $('#descripcion').val()
+            nombre: $('#nombre').val().trim(), // Limpieza de espacios
+            descripcion: $('#descripcion').val().trim()
         };
 
         fetch(`${API_BASE}/guardar`, {
@@ -57,12 +59,15 @@ $(document).ready(function() {
                 dataTable.ajax.reload();
                 Swal.fire('Éxito', data.message, 'success');
             } else {
-                Swal.fire('Error', data.message, 'error');
+                Swal.fire('Atención', data.message, 'warning');
             }
+        }).catch(() => {
+            Swal.fire('Error', 'Fallo al comunicarse con el servidor.', 'error');
+        }).finally(() => {
+            btnGuardar.prop('disabled', false).html('Guardar');
         });
     });
 
-    // Editar
     $('#tablaCategorias tbody').on('click', '.action-edit', function() {
         fetch(`${API_BASE}/${$(this).data('id')}`)
             .then(r => r.json()).then(res => {
@@ -76,27 +81,30 @@ $(document).ready(function() {
             });
     });
 
-    // Cambiar Estado
     $('#tablaCategorias tbody').on('click', '.action-status', function() {
         fetch(`${API_BASE}/cambiar-estado/${$(this).data('id')}`, { method: 'POST' })
             .then(() => dataTable.ajax.reload());
     });
 
-    // Eliminar
     $('#tablaCategorias tbody').on('click', '.action-delete', function() {
         const id = $(this).data('id');
         Swal.fire({
             title: '¿Eliminar Categoría?',
-            text: 'Asegúrate de que no haya productos usando esta categoría.',
+            text: 'Se verificará que no haya productos asociados a ella.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#D32F2F'
+            confirmButtonColor: '#D32F2F',
+            confirmButtonText: 'Sí, eliminar'
         }).then((result) => {
             if (result.isConfirmed) {
                 fetch(`${API_BASE}/eliminar/${id}`, { method: 'DELETE' })
                     .then(r => r.json()).then(data => {
-                        if(data.success) dataTable.ajax.reload();
-                        else Swal.fire('Error', data.message, 'error');
+                        if(data.success) {
+                            dataTable.ajax.reload();
+                            Swal.fire('Eliminada', data.message, 'success');
+                        } else {
+                            Swal.fire('No se puede eliminar', data.message, 'error');
+                        }
                     });
             }
         });

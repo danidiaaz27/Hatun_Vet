@@ -1,6 +1,7 @@
 package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,13 +15,13 @@ public class BanoCorte {
     @Column(name = "fecha_servicio", updatable = false)
     private LocalDateTime fechaServicio;
 
-    @Column(name = "nombre_mascota")
+    @Column(name = "nombre_mascota", nullable = false)
     private String nombreMascota;
 
-    @Column(name = "dni_dueno") // ¡El nuevo campo!
+    @Column(name = "dni_dueno", length = 8)
     private String dniDueno;
 
-    @Column(name = "nombre_dueno")
+    @Column(name = "nombre_dueno", nullable = false)
     private String nombreDueno;
 
     private String especie;
@@ -31,13 +32,16 @@ public class BanoCorte {
     @Column(name = "detalles_extra")
     private String detallesExtra;
 
-    private Double precio;
+    // ESTÁNDAR FINANCIERO RESTAURADO
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal precio;
 
     private String estado;
 
     @PrePersist
     protected void onCreate() {
         this.fechaServicio = LocalDateTime.now();
+        // El estado se fuerza a PENDIENTE en el controlador por seguridad, pero dejamos el fallback aquí.
         if (this.estado == null) this.estado = "PENDIENTE";
     }
 
@@ -66,8 +70,8 @@ public class BanoCorte {
     public String getDetallesExtra() { return detallesExtra; }
     public void setDetallesExtra(String detallesExtra) { this.detallesExtra = detallesExtra; }
 
-    public Double getPrecio() { return precio; }
-    public void setPrecio(Double precio) { this.precio = precio; }
+    public BigDecimal getPrecio() { return precio; }
+    public void setPrecio(BigDecimal precio) { this.precio = precio; }
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }

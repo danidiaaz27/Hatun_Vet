@@ -5,8 +5,9 @@ import com.hatunvet.sistema.repository.BanoCorteRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List; // <-- Esta es la importación que seguramente faltaba
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -19,13 +20,11 @@ public class BanoCorteController {
         this.banoCorteRepository = banoCorteRepository;
     }
 
-    // 1. Cargar la página principal (HTML)
     @GetMapping
     public String index() {
         return "banos-cortes";
     }
 
-    // 2. Listar todos los servicios (API para la tabla)
     @GetMapping("/api/listar")
     @ResponseBody
     public Map<String, Object> listar() {
@@ -34,36 +33,56 @@ public class BanoCorteController {
         return res;
     }
 
-    // 3. Guardar un nuevo registro en la base de datos
     @PostMapping("/api/guardar")
     @ResponseBody
     public Map<String, Object> guardar(@RequestBody BanoCorte registro) {
         Map<String, Object> res = new HashMap<>();
         try {
+            // VALIDACIÓN 1: Precios no pueden ser negativos o cero
+            if (registro.getPrecio() == null || registro.getPrecio().compareTo(BigDecimal.ZERO) <= 0) {
+                res.put("success", false);
+                res.put("message", "El precio debe ser mayor a 0.");
+                return res;
+            }
+
+            // VALIDACIÓN 2: Evitar falsificación de datos (Nuevo registro siempre es PENDIENTE)
+            registro.setId(null);
+            registro.setEstado("PENDIENTE");
+
             banoCorteRepository.save(registro);
             res.put("success", true);
             res.put("message", "Servicio registrado correctamente");
         } catch (Exception e) {
             res.put("success", false);
-            res.put("message", "Error: " + e.getMessage());
+            res.put("message", "Error: Verifique que todos los campos requeridos estén llenos.");
         }
         return res;
     }
 
-    // 4. Cambiar el estado del servicio (PENDIENTE -> TERMINADO -> PAGADO)
     @PostMapping("/api/cambiar-estado/{id}")
     @ResponseBody
     public Map<String, Object> cambiarEstado(@PathVariable Long id, @RequestParam String nuevoEstado) {
         Map<String, Object> res = new HashMap<>();
-        banoCorteRepository.findById(id).ifPresent(r -> {
+
+        // VALIDACIÓN 3: Solo permitir estados válidos del sistema
+        if (!nuevoEstado.equals("TERMINADO") && !nuevoEstado.equals("PAGADO")) {
+            res.put("success", false);
+            res.put("message", "Estado no permitido por el sistema.");
+            return res;
+        }
+
+        banoCorteRepository.findById(id).ifPresentOrElse(r -> {
             r.setEstado(nuevoEstado);
             banoCorteRepository.save(r);
+            res.put("success", true);
+        }, () -> {
+            res.put("success", false);
+            res.put("message", "Servicio no encontrado.");
         });
-        res.put("success", true);
+
         return res;
     }
 
-    // 5. Obtener los tipos de servicio dinámicos (El nuevo endpoint)
     @GetMapping("/api/tipos-servicio")
     @ResponseBody
     public List<String> listarTipos() {

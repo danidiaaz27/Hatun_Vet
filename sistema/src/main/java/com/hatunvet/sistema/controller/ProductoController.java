@@ -72,9 +72,12 @@ public class ProductoController {
             productoService.guardar(producto, imagenFile);
             response.put("success", true);
             response.put("message", "Producto guardado correctamente");
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al guardar: " + e.getMessage());
+            response.put("message", "Error interno al guardar.");
         }
         return response;
     }
@@ -97,9 +100,9 @@ public class ProductoController {
             boolean ok = productoService.eliminar(id);
             response.put("success", ok);
             response.put("message", ok ? "Producto eliminado" : "No se pudo eliminar");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             response.put("success", false);
-            response.put("message", "Error al eliminar. Verifique dependencias.");
+            response.put("message", e.getMessage());
         }
         return response;
     }

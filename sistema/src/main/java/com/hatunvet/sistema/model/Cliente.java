@@ -9,20 +9,22 @@ public class Cliente {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(columnDefinition = "int") // <-- Esto evita que Hibernate pelee con MySQL
+    @Column(columnDefinition = "int")
     private Integer id;
 
-    @Column(name = "tipo_documento")
+    @Column(name = "tipo_documento", length = 2)
     private String tipoDocumento;
 
-    @Column(name = "numero_documento", unique = true)
+    @Column(name = "numero_documento", unique = true, length = 15, nullable = false)
     private String numeroDocumento;
 
-    @Column(name = "nombre_completo")
+    @Column(name = "nombre_completo", length = 150, nullable = false)
     private String nombreCompleto;
 
+    @Column(length = 20)
     private String telefono;
 
+    @Column(length = 120)
     private String correo;
 
     @Column(name = "fecha_registro", updatable = false)

@@ -2,6 +2,7 @@ package com.hatunvet.sistema.service;
 
 import com.hatunvet.sistema.model.Proveedor;
 import com.hatunvet.sistema.repository.ProveedorRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,23 +30,31 @@ public class ProveedorService {
 
     @Transactional
     public Proveedor guardar(Proveedor proveedor) {
-        // Validaciones básicas
-        if (proveedor.getNombre() == null || proveedor.getNombre().trim().isEmpty()) {
+        // Limpiamos los espacios en blanco
+        proveedor.setNombre(proveedor.getNombre() != null ? proveedor.getNombre().trim() : null);
+        proveedor.setRuc(proveedor.getRuc() != null ? proveedor.getRuc().trim() : null);
+
+        if (proveedor.getNombre() == null || proveedor.getNombre().isEmpty()) {
             throw new IllegalArgumentException("El nombre del proveedor es requerido");
         }
-        if (proveedor.getRuc() == null || proveedor.getRuc().trim().isEmpty()) {
+        if (proveedor.getRuc() == null || proveedor.getRuc().isEmpty()) {
             throw new IllegalArgumentException("El RUC es requerido");
         }
         if (proveedor.getRuc().length() != 11) {
             throw new IllegalArgumentException("El RUC debe tener 11 dígitos");
         }
-        
-        // Validar RUC único
+
+        // VALIDACIÓN 1: Prefijos oficiales de SUNAT
+        String prefijo = proveedor.getRuc().substring(0, 2);
+        if (!List.of("10", "15", "17", "20").contains(prefijo)) {
+            throw new IllegalArgumentException("El RUC ingresado no es válido en Perú (Debe iniciar con 10, 15, 17 o 20).");
+        }
+
         Optional<Proveedor> existente = proveedorRepository.findByRuc(proveedor.getRuc());
         if (existente.isPresent() && (proveedor.getId() == null || !existente.get().getId().equals(proveedor.getId()))) {
-            throw new IllegalArgumentException("Ya existe un proveedor con ese RUC");
+            throw new IllegalArgumentException("Ya existe un proveedor registrado con ese RUC.");
         }
-        
+
         return proveedorRepository.save(proveedor);
     }
 
@@ -60,10 +69,15 @@ public class ProveedorService {
 
     @Transactional
     public boolean eliminar(Integer id) {
-        if (proveedorRepository.existsById(id)) {
-            proveedorRepository.deleteById(id);
-            return true;
+        try {
+            if (proveedorRepository.existsById(id)) {
+                proveedorRepository.deleteById(id);
+                return true;
+            }
+            return false;
+        } catch (DataIntegrityViolationException e) {
+            // VALIDACIÓN 2: Proteger contra la eliminación de proveedores en uso
+            throw new RuntimeException("No se puede eliminar este proveedor porque ya tiene productos o compras asociadas en el sistema.");
         }
-        return false;
     }
 }

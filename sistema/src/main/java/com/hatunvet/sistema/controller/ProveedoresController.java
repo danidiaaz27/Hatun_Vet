@@ -53,17 +53,6 @@ public class ProveedoresController {
     public Map<String, Object> apiGuardar(@RequestBody Proveedor proveedor) {
         Map<String, Object> response = new HashMap<>();
         try {
-            if (proveedor.getNombre() == null || proveedor.getNombre().trim().isEmpty()) {
-                response.put("success", false);
-                response.put("message", "El nombre del proveedor es obligatorio");
-                return response;
-            }
-            if (proveedor.getRuc() == null || proveedor.getRuc().trim().isEmpty()) {
-                response.put("success", false);
-                response.put("message", "El RUC es obligatorio");
-                return response;
-            }
-            
             proveedorService.guardar(proveedor);
             response.put("success", true);
             response.put("message", "Proveedor guardado correctamente");
@@ -72,8 +61,7 @@ public class ProveedoresController {
             response.put("message", e.getMessage());
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al guardar: " + e.getMessage());
-            e.printStackTrace();
+            response.put("message", "Error interno al guardar el proveedor.");
         }
         return response;
     }
@@ -92,9 +80,15 @@ public class ProveedoresController {
     @ResponseBody
     public Map<String, Object> apiEliminar(@PathVariable Integer id) {
         Map<String, Object> response = new HashMap<>();
-        boolean ok = proveedorService.eliminar(id);
-        response.put("success", ok);
-        response.put("message", ok ? "Proveedor eliminado correctamente" : "No se encontró el proveedor");
+        try {
+            boolean ok = proveedorService.eliminar(id);
+            response.put("success", ok);
+            response.put("message", ok ? "Proveedor eliminado correctamente" : "No se encontró el proveedor");
+        } catch (RuntimeException e) {
+            // Aquí atrapamos el error si el proveedor ya tiene productos registrados
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
         return response;
     }
 }

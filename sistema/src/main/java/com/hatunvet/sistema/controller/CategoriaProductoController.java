@@ -18,13 +18,10 @@ public class CategoriaProductoController {
         this.categoriaService = categoriaService;
     }
 
-    // Retorna la vista HTML
     @GetMapping
     public String vistaCategorias() {
         return "categorias";
     }
-
-    // --- API PARA DATATABLES Y AJAX ---
 
     @GetMapping("/api/listar")
     @ResponseBody
@@ -53,9 +50,13 @@ public class CategoriaProductoController {
             categoriaService.guardarCategoria(categoria);
             response.put("success", true);
             response.put("message", "Categoría guardada con éxito");
+        } catch (IllegalArgumentException e) {
+            // Captura los errores de validación (Ej. Duplicados)
+            response.put("success", false);
+            response.put("message", e.getMessage());
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al guardar");
+            response.put("message", "Error interno al guardar la categoría.");
         }
         return response;
     }
@@ -74,9 +75,15 @@ public class CategoriaProductoController {
     @ResponseBody
     public Map<String, Object> apiEliminar(@PathVariable String id) {
         Map<String, Object> response = new HashMap<>();
-        boolean ok = categoriaService.eliminarCategoria(id);
-        response.put("success", ok);
-        response.put("message", ok ? "Categoría eliminada" : "Error al eliminar. Verifique si tiene productos asociados.");
+        try {
+            boolean ok = categoriaService.eliminarCategoria(id);
+            response.put("success", ok);
+            response.put("message", ok ? "Categoría eliminada" : "Categoría no encontrada.");
+        } catch (RuntimeException e) {
+            // Captura el error de productos vinculados
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        }
         return response;
     }
 }

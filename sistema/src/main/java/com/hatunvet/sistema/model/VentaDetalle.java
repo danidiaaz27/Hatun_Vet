@@ -2,6 +2,7 @@ package com.hatunvet.sistema.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "venta_detalles")
@@ -12,7 +13,6 @@ public class VentaDetalle {
     @Column(updatable = false, nullable = false, length = 36)
     private String id;
 
-    // JsonIgnore evita errores circulares al convertir a JSON en las APIs
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_venta", nullable = false)
     @JsonIgnore
@@ -25,17 +25,18 @@ public class VentaDetalle {
     @Column(nullable = false)
     private int cantidad;
 
-    @Column(name = "precio_unitario", nullable = false)
-    private double precioUnitario; // Precio con IGV (Lo que ve el cliente)
+    // PUNTO 4: Cambiados de double a BigDecimal
+    @Column(name = "precio_unitario", nullable = false, precision = 10, scale = 2)
+    private BigDecimal precioUnitario;
 
-    @Column(name = "valor_unitario", nullable = false)
-    private double valorUnitario; // Precio sin IGV (Base para la SUNAT)
+    @Column(name = "valor_unitario", nullable = false, precision = 10, scale = 2)
+    private BigDecimal valorUnitario;
 
-    @Column(nullable = false)
-    private double igv;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal igv;
 
-    @Column(name = "importe_total", nullable = false)
-    private double importeTotal; // cantidad * precioUnitario
+    @Column(name = "importe_total", nullable = false, precision = 10, scale = 2)
+    private BigDecimal importeTotal;
 
     public VentaDetalle() {}
 
@@ -52,15 +53,15 @@ public class VentaDetalle {
     public int getCantidad() { return cantidad; }
     public void setCantidad(int cantidad) { this.cantidad = cantidad; }
 
-    public double getPrecioUnitario() { return precioUnitario; }
-    public void setPrecioUnitario(double precioUnitario) { this.precioUnitario = precioUnitario; }
+    public BigDecimal getPrecioUnitario() { return precioUnitario; }
+    public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
 
-    public double getValorUnitario() { return valorUnitario; }
-    public void setValorUnitario(double valorUnitario) { this.valorUnitario = valorUnitario; }
+    public BigDecimal getValorUnitario() { return valorUnitario; }
+    public void setValorUnitario(BigDecimal valorUnitario) { this.valorUnitario = valorUnitario; }
 
-    public double getIgv() { return igv; }
-    public void setIgv(double igv) { this.igv = igv; }
+    public BigDecimal getIgv() { return igv; }
+    public void setIgv(BigDecimal igv) { this.igv = igv; }
 
-    public double getImporteTotal() { return importeTotal; }
-    public void setImporteTotal(double importeTotal) { this.importeTotal = importeTotal; }
+    public BigDecimal getImporteTotal() { return importeTotal; }
+    public void setImporteTotal(BigDecimal importeTotal) { this.importeTotal = importeTotal; }
 }

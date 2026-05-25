@@ -12,7 +12,6 @@
 
 <div class="d-flex">
     <div th:replace="~{sidebar :: sidebar(activeUri='/usuarios/listar')}"></div>
-
     <main class="main-content w-100">
         <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
             <h2 class="h4 mb-0 fw-bold" style="color: var(--vet-blue)">Gestión de Usuarios</h2>
@@ -20,7 +19,6 @@
                 <i class="bi bi-person-plus-fill me-1"></i> Nuevo Usuario
             </button>
         </header>
-
         <div class="card card-custom p-4 bg-white">
             <table id="tablaUsuarios" class="table table-hover w-100">
                 <thead class="table-light">
@@ -51,16 +49,16 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label text-muted">Nombre Completo:</label>
-                            <input type="text" id="nombre" class="form-control" required>
+                            <input type="text" id="nombre" class="form-control" maxlength="80" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-muted">Nombre de Usuario (Login):</label>
-                            <input type="text" id="usuario" class="form-control" required>
+                            <label class="form-label text-muted">Usuario (Login):</label>
+                            <input type="text" id="usuario" class="form-control" maxlength="50" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted">Contraseña:</label>
                             <input type="password" id="clave" class="form-control" placeholder="Obligatorio para nuevos">
-                            <small class="text-secondary" id="claveHelp" style="display:none;">Déjalo en blanco para mantener la contraseña actual.</small>
+                            <small class="text-secondary" id="claveHelp" style="display:none;">Déjalo en blanco para mantener la actual.</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted">Perfil de Acceso:</label>
@@ -85,6 +83,5 @@
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script th:src="@{/js/usuarios.js}"></script>
-
 </body>
 </html>

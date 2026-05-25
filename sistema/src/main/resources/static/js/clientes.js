@@ -3,7 +3,6 @@ $(document).ready(function() {
     const modalCliente = new bootstrap.Modal(document.getElementById('modalCliente'));
     const modalHistorial = new bootstrap.Modal(document.getElementById('modalHistorial'));
 
-    // --- 1. Inicializar DataTable Principal ---
     let dataTable = $('#tablaClientes').DataTable({
         ajax: { url: `${API_URL}/listar`, dataSrc: 'data' },
         columns: [
@@ -23,7 +22,7 @@ $(document).ready(function() {
             },
             {
                 data: 'fechaRegistro',
-                render: data => new Date(data).toLocaleDateString('es-PE')
+                render: data => data ? new Date(data).toLocaleDateString('es-PE') : ''
             },
             {
                 data: null,
@@ -36,17 +35,22 @@ $(document).ready(function() {
             },
             {
                 data: 'id',
+                className: 'text-center',
                 render: id => `
-                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarCliente(${id})" title="Eliminar">
-                        <i class="bi bi-trash3-fill"></i>
-                    </button>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary action-edit" data-id="${id}" title="Editar">
+                            <i class="bi bi-pencil-fill"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="eliminarCliente(${id})" title="Eliminar">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
                 `
             }
         ],
-        language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" }
+        language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" }
     });
 
-    // --- 2. Lupa: Buscar en RENIEC/SUNAT ---
     $('#numeroDocumento').on('input', function() { this.value = this.value.replace(/[^0-9]/g, ''); });
 
     $('#btnBuscarDoc').click(function() {
@@ -56,11 +60,6 @@ $(document).ready(function() {
         if (tipoDoc === '1' && numDoc.length !== 8) return Swal.fire('Aviso', 'El DNI debe tener 8 dígitos', 'warning');
         if (tipoDoc === '6' && numDoc.length !== 11) return Swal.fire('Aviso', 'El RUC debe tener 11 dígitos', 'warning');
 
-        const btn = $(this);
-        const icon = btn.html();
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
-
-        // Reutilizamos el endpoint de ventas
         fetch(`/ventas/api/consultar-cliente?tipoDoc=${tipoDoc}&numero=${numDoc}`)
             .then(r => r.json())
             .then(res => {
@@ -71,27 +70,44 @@ $(document).ready(function() {
                         : (info.nombre_o_razon_social || info.razon_social);
                     $('#nombreCompleto').val(nombre);
                 } else {
-                    Swal.fire('No encontrado', 'Verifique el número ingresado', 'info');
+                    Swal.fire('No encontrado', 'Verifique el número ingresado en SUNAT/RENIEC.', 'info');
                 }
             })
-            .catch(() => Swal.fire('Error', 'Fallo al conectar con la API', 'error'))
-            .finally(() => btn.prop('disabled', false).html(icon));
+            .catch(() => Swal.fire('Error', 'Fallo al conectar con la API', 'error'));
     });
 
-    // --- 3. Guardar Cliente ---
     $('#btnNuevoCliente').click(() => {
         $('#formCliente')[0].reset();
+        $('#id').val('');
         modalCliente.show();
+    });
+
+    $('#tablaClientes tbody').on('click', '.action-edit', function() {
+        const id = $(this).data('id');
+        fetch(`${API_URL}/${id}`)
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    $('#id').val(res.data.id);
+                    $('#tipoDocumento').val(res.data.tipoDocumento);
+                    $('#numeroDocumento').val(res.data.numeroDocumento);
+                    $('#nombreCompleto').val(res.data.nombreCompleto);
+                    $('#telefono').val(res.data.telefono || '');
+                    $('#correo').val(res.data.correo || '');
+                    modalCliente.show();
+                }
+            });
     });
 
     $('#formCliente').submit(e => {
         e.preventDefault();
         const data = {
+            id: $('#id').val() || null,
             tipoDocumento: $('#tipoDocumento').val(),
-            numeroDocumento: $('#numeroDocumento').val(),
-            nombreCompleto: $('#nombreCompleto').val(),
-            telefono: $('#telefono').val(),
-            correo: $('#correo').val()
+            numeroDocumento: $('#numeroDocumento').val().trim(),
+            nombreCompleto: $('#nombreCompleto').val().trim(),
+            telefono: $('#telefono').val().trim(),
+            correo: $('#correo').val().trim()
         };
 
         fetch(`${API_URL}/guardar`, {
@@ -111,15 +127,13 @@ $(document).ready(function() {
         });
     });
 
-    // --- 4. Eliminar Cliente ---
     window.eliminarCliente = function(id) {
         Swal.fire({
             title: '¿Eliminar cliente?',
-            text: "No podrás revertir esto.",
+            text: "Se verificará que no tenga historial de ventas.",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
             confirmButtonText: 'Sí, eliminar'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -130,71 +144,39 @@ $(document).ready(function() {
                             dataTable.ajax.reload();
                             Swal.fire('Eliminado', 'Cliente eliminado', 'success');
                         } else {
-                            Swal.fire('Error', res.message, 'error');
+                            Swal.fire('No permitido', res.message, 'error');
                         }
                     });
             }
         });
     };
 
-    // --- 5. LA MAGIA: Cargar Historial 360 ---
     window.verHistorial = function(numDocumento, nombre) {
         $('#lblHistorialNombre').text(nombre);
-
-        // Limpiar tablas previas
         $('#tablaHistorialPetshop tbody').html('<tr><td colspan="4" class="text-center py-4"><span class="spinner-border text-primary"></span></td></tr>');
         $('#tablaHistorialPeluqueria tbody').html('<tr><td colspan="5" class="text-center py-4"><span class="spinner-border text-primary"></span></td></tr>');
-
         modalHistorial.show();
 
         fetch(`${API_URL}/historial/${numDocumento}`)
             .then(r => r.json())
             .then(res => {
                 if(res.success) {
-
-                    // Llenar Compras (Petshop)
                     const tbodyPet = $('#tablaHistorialPetshop tbody');
                     tbodyPet.empty();
-                    if(res.compras.length === 0) {
-                        tbodyPet.html('<tr><td colspan="4" class="text-center text-muted py-3">No hay compras registradas</td></tr>');
-                    } else {
-                        res.compras.forEach(v => {
-                            let f = new Date(v.fechaEmision).toLocaleString('es-PE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
-                            tbodyPet.append(`
-                                <tr>
-                                    <td><small>${f}</small></td>
-                                    <td><span class="badge bg-secondary">${v.serie || 'TICK'}-${v.correlativo || '000'}</span></td>
-                                    <td class="fw-bold text-success">S/ ${v.total.toFixed(2)}</td>
-                                    <td><span class="badge ${v.estado === 'EMITIDO' ? 'bg-success' : 'bg-danger'}">${v.estado}</span></td>
-                                </tr>
-                            `);
-                        });
-                    }
+                    if(res.compras.length === 0) tbodyPet.html('<tr><td colspan="4" class="text-center text-muted py-3">No hay compras registradas</td></tr>');
+                    else res.compras.forEach(v => {
+                        let f = new Date(v.fechaEmision).toLocaleString('es-PE', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'});
+                        tbodyPet.append(`<tr><td><small>${f}</small></td><td><span class="badge bg-secondary">${v.serie || 'TICK'}-${v.correlativo || '000'}</span></td><td class="fw-bold text-success">S/ ${v.total.toFixed(2)}</td><td><span class="badge ${v.estado === 'FACTURADO' ? 'bg-success' : 'bg-danger'}">${v.estado}</span></td></tr>`);
+                    });
 
-                    // Llenar Peluquería
                     const tbodyPel = $('#tablaHistorialPeluqueria tbody');
                     tbodyPel.empty();
-                    if(res.peluqueria.length === 0) {
-                        tbodyPel.html('<tr><td colspan="5" class="text-center text-muted py-3">No hay atenciones de peluquería registradas</td></tr>');
-                    } else {
-                        res.peluqueria.forEach(b => {
-                            let f = new Date(b.fechaServicio).toLocaleString('es-PE', {day:'2-digit', month:'2-digit', year:'numeric'});
-                            tbodyPel.append(`
-                                <tr>
-                                    <td><small>${f}</small></td>
-                                    <td class="fw-bold">${b.nombreMascota} <span class="text-muted small">(${b.especie})</span></td>
-                                    <td>${b.tipoServicio}</td>
-                                    <td class="text-primary fw-bold">S/ ${b.precio.toFixed(2)}</td>
-                                    <td><span class="badge ${b.estado === 'TERMINADO' ? 'bg-success' : 'bg-info'}">${b.estado}</span></td>
-                                </tr>
-                            `);
-                        });
-                    }
-
-                } else {
-                    Swal.fire('Error', res.message, 'error');
+                    if(res.peluqueria.length === 0) tbodyPel.html('<tr><td colspan="5" class="text-center text-muted py-3">No hay atenciones de peluquería registradas</td></tr>');
+                    else res.peluqueria.forEach(b => {
+                        let f = new Date(b.fechaServicio).toLocaleString('es-PE', {day:'2-digit', month:'2-digit', year:'numeric'});
+                        tbodyPel.append(`<tr><td><small>${f}</small></td><td class="fw-bold">${b.nombreMascota}</td><td>${b.tipoServicio}</td><td class="text-primary fw-bold">S/ ${b.precio.toFixed(2)}</td><td><span class="badge ${b.estado === 'TERMINADO' ? 'bg-success' : 'bg-info'}">${b.estado}</span></td></tr>`);
+                    });
                 }
-            })
-            .catch(() => Swal.fire('Error', 'Fallo al conectar con el servidor', 'error'));
+            });
     };
 });

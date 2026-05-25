@@ -5,7 +5,6 @@ import com.hatunvet.sistema.service.PerfilService;
 import com.hatunvet.sistema.service.UsuarioService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,22 +13,15 @@ import java.util.Map;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-    private final PerfilService perfilService; // Necesitamos esto para llenar el "Select" del formulario
+    private final PerfilService perfilService;
 
     public UsuarioController(UsuarioService usuarioService, PerfilService perfilService) {
         this.usuarioService = usuarioService;
         this.perfilService = perfilService;
     }
 
-    // 1. Devuelve la vista HTML
     @GetMapping("/listar")
-    public String vistaUsuarios() {
-        return "usuarios";
-    }
-
-    // ==========================================
-    // ENDPOINTS API PARA AJAX (DataTables y JS)
-    // ==========================================
+    public String vistaUsuarios() { return "usuarios"; }
 
     @GetMapping("/api/listar")
     @ResponseBody
@@ -44,7 +36,7 @@ public class UsuarioController {
     public Map<String, Object> apiListarPerfilesActivos() {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("data", perfilService.listarActivos()); // Solo perfiles activos para asignar
+        response.put("data", perfilService.listarActivos());
         return response;
     }
 
@@ -53,14 +45,8 @@ public class UsuarioController {
     public Map<String, Object> apiObtener(@PathVariable String id) {
         Map<String, Object> response = new HashMap<>();
         usuarioService.obtenerUsuarioPorId(id).ifPresentOrElse(
-                usuario -> {
-                    response.put("success", true);
-                    response.put("data", usuario);
-                },
-                () -> {
-                    response.put("success", false);
-                    response.put("message", "Usuario no encontrado");
-                }
+                usuario -> { response.put("success", true); response.put("data", usuario); },
+                () -> { response.put("success", false); response.put("message", "Usuario no encontrado"); }
         );
         return response;
     }
@@ -70,6 +56,16 @@ public class UsuarioController {
     public Map<String, Object> apiGuardar(@RequestBody Usuario usuario) {
         Map<String, Object> response = new HashMap<>();
         try {
+            // Sanitización
+            usuario.setNombre(usuario.getNombre() != null ? usuario.getNombre().trim() : "");
+            usuario.setUsuario(usuario.getUsuario() != null ? usuario.getUsuario().trim().toLowerCase() : "");
+
+            if (usuario.getNombre().isEmpty() || usuario.getUsuario().length() < 3) {
+                response.put("success", false);
+                response.put("message", "Nombre inválido o usuario demasiado corto (min 3 chars).");
+                return response;
+            }
+
             usuarioService.guardarUsuario(usuario);
             response.put("success", true);
             response.put("message", "Usuario guardado correctamente");
@@ -78,7 +74,7 @@ public class UsuarioController {
             response.put("message", e.getMessage());
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al guardar el usuario");
+            response.put("message", "Error interno al guardar el usuario");
         }
         return response;
     }
@@ -88,14 +84,8 @@ public class UsuarioController {
     public Map<String, Object> apiCambiarEstado(@PathVariable String id) {
         Map<String, Object> response = new HashMap<>();
         usuarioService.cambiarEstadoUsuario(id).ifPresentOrElse(
-                u -> {
-                    response.put("success", true);
-                    response.put("message", "Estado actualizado");
-                },
-                () -> {
-                    response.put("success", false);
-                    response.put("message", "Error al actualizar");
-                }
+                u -> { response.put("success", true); response.put("message", "Estado actualizado"); },
+                () -> { response.put("success", false); response.put("message", "Error al actualizar"); }
         );
         return response;
     }
@@ -110,7 +100,7 @@ public class UsuarioController {
             response.put("message", "Usuario eliminado (desactivado)");
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "Error al eliminar");
+            response.put("message", "Error al eliminar: " + e.getMessage());
         }
         return response;
     }

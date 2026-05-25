@@ -1,7 +1,6 @@
 $(document).ready(function() {
     const API_BASE = '/productos/api';
 
-    // Cargar categorías en el Select
     function cargarCategorias() {
         fetch(`${API_BASE}/categorias`)
             .then(r => r.json())
@@ -9,7 +8,6 @@ $(document).ready(function() {
                 if(res.success) {
                     const select = $('#id_categoria');
                     select.find('option:not(:first)').remove();
-                    // Filtramos para mostrar solo las activas en el combo
                     res.data.filter(c => c.estado).forEach(c => {
                         select.append(`<option value="${c.id}">${c.nombre}</option>`);
                     });
@@ -17,7 +15,6 @@ $(document).ready(function() {
             });
     }
 
-    // Cargar proveedores en el Select
     function cargarProveedores() {
         fetch('/proveedores/api/listar')
             .then(r => r.json())
@@ -32,7 +29,6 @@ $(document).ready(function() {
             });
     }
 
-    // Inicializar DataTable
     let dataTable = $('#tablaProductos').DataTable({
         ajax: { url: `${API_BASE}/listar`, dataSrc: 'data' },
         columns: [
@@ -40,10 +36,7 @@ $(document).ready(function() {
                 data: 'imagen',
                 orderable: false,
                 render: function(data) {
-                    // Si tiene imagen, busca en la carpeta /uploads/. Si no, usa un icono genérico.
-                    if (data) {
-                        return `<img src="/uploads/${data}" alt="img" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">`;
-                    }
+                    if (data) return `<img src="/uploads/${data}" alt="img" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">`;
                     return `<div class="bg-light text-secondary d-flex align-items-center justify-content-center border rounded" style="width: 50px; height: 50px;"><i class="bi bi-image fs-4"></i></div>`;
                 }
             },
@@ -89,7 +82,6 @@ $(document).ready(function() {
     cargarCategorias();
     cargarProveedores();
 
-    // Botón Nuevo
     $('#btnNuevoRegistro').click(() => {
         $('#formProducto')[0].reset();
         $('#id').val('');
@@ -97,28 +89,36 @@ $(document).ready(function() {
         productoModal.show();
     });
 
-    // Guardar (Crear o Editar)
     $('#formProducto').submit(e => {
         e.preventDefault();
 
-        // Usamos FormData para empaquetar el texto Y el archivo
-        let formData = new FormData();
+        // VALIDACIÓN 5: Límite de Peso de Imagen (Max 2MB)
+        let fileInput = document.getElementById('imagenFile');
+        if (fileInput.files.length > 0) {
+            let fileSize = fileInput.files[0].size / 1024 / 1024; // en MB
+            if (fileSize > 2) {
+                Swal.fire('Archivo muy pesado', 'La imagen no puede pesar más de 2MB.', 'warning');
+                return;
+            }
+        }
 
+        // VALIDACIÓN ANTI-DOBLE CLIC
+        const btnGuardar = $('#btnSubmitProducto');
+        btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
+
+        let formData = new FormData();
         if ($('#id').val()) formData.append("id", $('#id').val());
-        formData.append("codigo", $('#codigo').val());
-        formData.append("nombre", $('#nombre').val());
-        formData.append("descripcion", $('#descripcion').val());
+
+        formData.append("codigo", $('#codigo').val().trim());
+        formData.append("nombre", $('#nombre').val().trim());
+        formData.append("descripcion", $('#descripcion').val().trim());
         formData.append("precio", $('#precio').val());
         formData.append("stock", $('#stock').val());
         formData.append("categoria.id", $('#id_categoria').val());
-        
-        const proveedorId = $('#proveedor_id').val();
-        if (proveedorId) {
-            formData.append("proveedor.id", proveedorId);
-        }
 
-        // Agregamos el archivo si el usuario seleccionó uno
-        let fileInput = document.getElementById('imagenFile');
+        const proveedorId = $('#proveedor_id').val();
+        if (proveedorId) formData.append("proveedor.id", proveedorId);
+
         if (fileInput.files.length > 0) {
             formData.append("imagenFile", fileInput.files[0]);
         }
@@ -132,12 +132,12 @@ $(document).ready(function() {
                 dataTable.ajax.reload();
                 Swal.fire('Éxito', data.message, 'success');
             } else {
-                Swal.fire('Error', data.message, 'error');
+                Swal.fire('Atención', data.message, 'warning');
             }
-        });
+        }).catch(() => Swal.fire('Error', 'Fallo de conexión.', 'error'))
+          .finally(() => btnGuardar.prop('disabled', false).html('Guardar Producto'));
     });
 
-    // Editar (Cargar datos en el modal)
     $('#tablaProductos tbody').on('click', '.action-edit', function() {
         fetch(`${API_BASE}/${$(this).data('id')}`)
             .then(r => r.json()).then(res => {
@@ -151,32 +151,28 @@ $(document).ready(function() {
                     $('#stock').val(p.stock);
                     $('#id_categoria').val(p.categoria ? p.categoria.id : '');
                     $('#proveedor_id').val(p.proveedor ? p.proveedor.id : '');
-
                     $('#imagenFile').val('');
-
                     $('#modalTitle').text('Editar Producto');
                     productoModal.show();
                 }
             });
     });
 
-    // Cambiar Estado
     $('#tablaProductos tbody').on('click', '.action-status', function() {
         fetch(`${API_BASE}/cambiar-estado/${$(this).data('id')}`, { method: 'POST' })
             .then(() => dataTable.ajax.reload());
     });
 
-    // Eliminar Producto
     $('#tablaProductos tbody').on('click', '.action-delete', function() {
         const id = $(this).data('id');
         Swal.fire({
-            title: '¿Eliminar producto de forma permanente?',
-            text: 'Se borrará el registro y la imagen asociada. Esta acción no se puede deshacer.',
+            title: '¿Eliminar producto?',
+            text: 'Solo se podrá eliminar si no tiene historial de ventas o inventario.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#D32F2F',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: 'Sí, intentar eliminar',
             cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -186,7 +182,7 @@ $(document).ready(function() {
                             dataTable.ajax.reload();
                             Swal.fire('Eliminado', data.message, 'success');
                         } else {
-                            Swal.fire('Error', data.message, 'error');
+                            Swal.fire('No permitido', data.message, 'error');
                         }
                     });
             }

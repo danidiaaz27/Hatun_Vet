@@ -40,7 +40,6 @@
     </main>
 </div>
 
-<!-- Modal para Registro -->
 <div class="modal fade" id="modalServicio" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -64,7 +63,6 @@
                             </select>
                         </div>
 
-                        <!-- DNI con lupa y Nombre -->
                         <div class="col-md-5">
                             <label class="form-label small fw-bold">DNI Dueño</label>
                             <div class="input-group">
@@ -79,7 +77,6 @@
                             <input type="text" id="nombreDueno" class="form-control" required>
                         </div>
 
-                        <!-- Servicio Dinámico -->
                         <div class="col-12">
                             <label class="form-label small fw-bold">Tipo de Servicio</label>
                             <div class="input-group">
@@ -97,14 +94,14 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label small fw-bold text-danger">Precio a Cobrar (S/)</label>
-                            <input type="number" id="precio" class="form-control form-control-lg fw-bold" step="0.50" required>
+                            <input type="number" id="precio" class="form-control form-control-lg fw-bold" step="0.50" min="1" required>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Registro</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarServicio">Guardar Registro</button>
                 </div>
             </form>
         </div>

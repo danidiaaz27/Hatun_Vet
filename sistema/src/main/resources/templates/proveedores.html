@@ -47,15 +47,15 @@
                     <h5 class="modal-title" id="modalTitle">Nuevo Proveedor</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body bg-light p-4">
                     <input type="hidden" id="id">
                     <div class="row g-3">
                         <div class="col-md-8">
-                            <label class="form-label text-muted">Nombre / Razón social</label>
+                            <label class="form-label text-muted fw-bold small">Nombre / Razón social *</label>
                             <input type="text" id="nombre" class="form-control" maxlength="150" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label text-muted">RUC</label>
+                            <label class="form-label text-muted fw-bold small">RUC *</label>
                             <div class="input-group">
                                 <input type="text" id="ruc" class="form-control" maxlength="11" required>
                                 <button class="btn btn-outline-primary" type="button" id="btnBuscarRuc" title="Buscar en SUNAT">
@@ -64,33 +64,33 @@
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-muted">Persona de contacto</label>
-                            <input type="text" id="contacto" class="form-control" maxlength="120">
+                            <label class="form-label text-muted fw-bold small">Persona de contacto</label>
+                            <input type="text" id="contacto" class="form-control" maxlength="120" placeholder="Ej. Juan Pérez">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label text-muted">Teléfono</label>
+                            <label class="form-label text-muted fw-bold small">Teléfono</label>
                             <input type="text" id="telefono" class="form-control" maxlength="20">
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label text-muted">Correo</label>
+                            <label class="form-label text-muted fw-bold small">Correo electrónico</label>
                             <input type="email" id="correo" class="form-control" maxlength="120">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label text-muted">Estado</label>
+                            <label class="form-label text-muted fw-bold small">Estado</label>
                             <select id="estado" class="form-select" required>
                                 <option value="true">Activo</option>
                                 <option value="false">Inactivo</option>
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label text-muted">Dirección</label>
+                            <label class="form-label text-muted fw-bold small">Dirección</label>
                             <textarea id="direccion" class="form-control" rows="2" maxlength="250"></textarea>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-top-0 bg-white">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn" style="background-color: var(--vet-blue); color: white;">Guardar</button>
+                    <button type="submit" class="btn px-4" id="btnGuardarProveedor" style="background-color: var(--vet-blue); color: white;">Guardar Proveedor</button>
                 </div>
             </form>
         </div>

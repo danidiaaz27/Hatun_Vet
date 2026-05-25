@@ -4,12 +4,14 @@ import com.hatunvet.sistema.model.Opcion;
 import com.hatunvet.sistema.model.Perfil;
 import com.hatunvet.sistema.repository.OpcionRepository;
 import com.hatunvet.sistema.repository.PerfilRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class DataLoader implements ApplicationRunner {
@@ -20,10 +22,12 @@ public class DataLoader implements ApplicationRunner {
 
     private final OpcionRepository opcionRepository;
     private final PerfilRepository perfilRepository;
+    private final EntityManager entityManager;
 
-    public DataLoader(OpcionRepository opcionRepository, PerfilRepository perfilRepository) {
+    public DataLoader(OpcionRepository opcionRepository, PerfilRepository perfilRepository, EntityManager entityManager) {
         this.opcionRepository = opcionRepository;
         this.perfilRepository = perfilRepository;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -70,11 +74,26 @@ public class DataLoader implements ApplicationRunner {
     }
 
     private Opcion upsertOpcion(String id, String nombre, String ruta, String icono) {
-        Opcion opcion = opcionRepository.findById(id).orElseGet(Opcion::new);
-        opcion.setId(id);
-        opcion.setNombre(nombre);
-        opcion.setRuta(ruta);
-        opcion.setIcono(icono);
-        return opcionRepository.save(opcion);
+        Optional<Opcion> optOpcion = opcionRepository.findById(id);
+        
+        if (optOpcion.isPresent()) {
+            // Si ya existe en la BD, la actualizamos normalmente
+            Opcion opcion = optOpcion.get();
+            opcion.setNombre(nombre);
+            opcion.setRuta(ruta);
+            opcion.setIcono(icono);
+            return opcionRepository.save(opcion);
+        } else {
+            // Si NO existe, forzamos la inserción mediante SQL Nativo para evitar conflictos con los UUID
+            entityManager.createNativeQuery("INSERT INTO opciones (id, nombre, ruta, icono) VALUES (:id, :nombre, :ruta, :icono)")
+                    .setParameter("id", id)
+                    .setParameter("nombre", nombre)
+                    .setParameter("ruta", ruta)
+                    .setParameter("icono", icono)
+                    .executeUpdate();
+            
+            // Una vez insertado, lo recuperamos formalmente para devolverlo gestionado por Spring
+            return opcionRepository.findById(id).orElseThrow();
+        }
     }
 }

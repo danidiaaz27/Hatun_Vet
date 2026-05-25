@@ -2,11 +2,9 @@ $(document).ready(function() {
     const API_URL = '/banos-cortes/api';
     const modalServicio = new bootstrap.Modal(document.getElementById('modalServicio'));
 
-    // Lista base de servicios por defecto
     const serviciosBase = ['Baño Estándar', 'Baño Medicado', 'Solo Corte', 'Baño y Corte', 'Corte de Uñas'];
     let modoNuevoServicio = false;
 
-    // Inicializar DataTable
     let dataTable = $('#tablaServicios').DataTable({
         ajax: { url: `${API_URL}/listar`, dataSrc: 'data' },
         columns: [
@@ -37,35 +35,39 @@ $(document).ready(function() {
             },
             {
                 data: null,
-                render: row => `
+                render: row => {
+                    // VALIDACIÓN VISUAL: Si ya está pagado, no mostramos botones de acción
+                    if (row.estado === 'PAGADO') {
+                        return `<span class="text-muted small"><i class="bi bi-check2-all"></i> Finalizado</span>`;
+                    }
+
+                    let btnTerminado = row.estado === 'PENDIENTE'
+                        ? `<button class="btn btn-outline-success" onclick="cambiarEstado(${row.id}, 'TERMINADO')" title="Terminar"><i class="bi bi-check-circle"></i></button>`
+                        : '';
+
+                    return `
                     <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-success" onclick="cambiarEstado(${row.id}, 'TERMINADO')" title="Terminar"><i class="bi bi-check-circle"></i></button>
+                        ${btnTerminado}
                         <button class="btn btn-outline-info" onclick="cambiarEstado(${row.id}, 'PAGADO')" title="Marcar como Pagado"><i class="bi bi-cash"></i></button>
-                    </div>`
+                    </div>`;
+                }
             }
         ],
         language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
         order: [[0, 'desc']]
     });
 
-    // --- CARGAR TIPOS DE SERVICIO DINÁMICOS ---
     function cargarTiposServicio() {
         fetch(`${API_URL}/tipos-servicio`)
             .then(r => r.json())
             .then(tiposDB => {
                 const select = $('#tipoServicioSelect');
                 select.empty();
-
-                // Juntar los base con los que vengan de la base de datos, sin repetir
                 let tiposFinales = [...new Set([...serviciosBase, ...tiposDB])];
-
-                tiposFinales.forEach(t => {
-                    select.append(`<option value="${t}">${t}</option>`);
-                });
+                tiposFinales.forEach(t => select.append(`<option value="${t}">${t}</option>`));
             });
     }
 
-    // --- ALTERNAR ENTRE SELECT E INPUT PARA NUEVO SERVICIO ---
     $('#btnAlternarTipo').click(function() {
         modoNuevoServicio = !modoNuevoServicio;
         if (modoNuevoServicio) {
@@ -79,7 +81,6 @@ $(document).ready(function() {
         }
     });
 
-    // --- LUPA: BUSCAR DNI (Reutilizando la API del Punto de Venta) ---
     $('#dniDueno').on('input', function() { this.value = this.value.replace(/[^0-9]/g, ''); });
 
     $('#btnBuscarDni').click(function() {
@@ -93,7 +94,6 @@ $(document).ready(function() {
         const icon = btn.html();
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
 
-        // ¡Magia! Llamamos al endpoint que hicimos para las ventas
         fetch(`/ventas/api/consultar-cliente?tipoDoc=1&numero=${dni}`)
             .then(r => r.json())
             .then(res => {
@@ -109,28 +109,34 @@ $(document).ready(function() {
             .finally(() => btn.prop('disabled', false).html(icon));
     });
 
-    // --- BOTÓN NUEVO REGISTRO ---
     $('#btnNuevoServicio').click(() => {
         $('#formServicio')[0].reset();
         cargarTiposServicio();
-
-        // Resetear el botón de tipo de servicio si se quedó en modo texto
         if(modoNuevoServicio) $('#btnAlternarTipo').click();
 
+        // Habilitar el botón de guardado si estaba bloqueado
+        $('#btnGuardarServicio').prop('disabled', false).html('Guardar Registro');
         modalServicio.show();
     });
 
-    // --- GUARDAR SERVICIO ---
     $('#formServicio').submit(e => {
         e.preventDefault();
 
-        // Obtener el tipo de servicio dependiendo de qué control está visible
         let tipoElegido = modoNuevoServicio ? $('#tipoServicioInput').val().trim() : $('#tipoServicioSelect').val();
-
         if (!tipoElegido) {
             Swal.fire('Atención', 'Debes ingresar un tipo de servicio', 'warning');
             return;
         }
+
+        const precio = parseFloat($('#precio').val());
+        if (precio <= 0) {
+            Swal.fire('Atención', 'El precio debe ser mayor a cero.', 'warning');
+            return;
+        }
+
+        // VALIDACIÓN ANTI-DOBLE CLIC
+        const btnGuardar = $('#btnGuardarServicio');
+        btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
 
         const data = {
             nombreMascota: $('#nombreMascota').val(),
@@ -139,7 +145,7 @@ $(document).ready(function() {
             especie: $('#especie').val(),
             tipoServicio: tipoElegido,
             detallesExtra: $('#detallesExtra').val(),
-            precio: $('#precio').val()
+            precio: precio
         };
 
         fetch(`${API_URL}/guardar`, {
@@ -155,12 +161,28 @@ $(document).ready(function() {
                 Swal.fire('Éxito', res.message, 'success');
             } else {
                 Swal.fire('Error', res.message, 'error');
+                btnGuardar.prop('disabled', false).html('Guardar Registro');
             }
         });
     });
 
     window.cambiarEstado = function(id, nuevoEstado) {
-        fetch(`${API_URL}/cambiar-estado/${id}?nuevoEstado=${nuevoEstado}`, { method: 'POST' })
-            .then(() => dataTable.ajax.reload());
+        Swal.fire({
+            title: `¿Marcar como ${nuevoEstado}?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sí, continuar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`${API_URL}/cambiar-estado/${id}?nuevoEstado=${nuevoEstado}`, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(res => {
+                        if(res.success) dataTable.ajax.reload();
+                        else Swal.fire('Error', res.message, 'error');
+                    });
+            }
+        });
     };
 });

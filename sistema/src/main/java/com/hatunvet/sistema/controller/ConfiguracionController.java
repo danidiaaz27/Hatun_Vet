@@ -43,6 +43,15 @@ public class ConfiguracionController {
                                                @RequestParam(value = "logoFile", required = false) MultipartFile logoFile) {
         Map<String, Object> response = new HashMap<>();
         try {
+            // Sanitización estricta
+            configuracion.setNombreVeterinaria(configuracion.getNombreVeterinaria() != null ? configuracion.getNombreVeterinaria().trim() : "");
+
+            if (configuracion.getNombreVeterinaria().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "El nombre de la veterinaria es obligatorio.");
+                return response;
+            }
+
             configuracionService.guardarConfiguracion(configuracion, logoFile);
             response.put("success", true);
             response.put("message", "Configuración guardada correctamente");
@@ -67,14 +76,8 @@ public class ConfiguracionController {
     public Map<String, Object> apiObtenerImagen(@PathVariable String id) {
         Map<String, Object> response = new HashMap<>();
         landingImagenService.obtenerPorId(id).ifPresentOrElse(
-                imagen -> {
-                    response.put("success", true);
-                    response.put("data", imagen);
-                },
-                () -> {
-                    response.put("success", false);
-                    response.put("message", "Imagen no encontrada");
-                }
+                imagen -> { response.put("success", true); response.put("data", imagen); },
+                () -> { response.put("success", false); response.put("message", "Imagen no encontrada"); }
         );
         return response;
     }
