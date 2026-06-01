@@ -22,11 +22,14 @@ public class VentaService {
     private final VentaRepository ventaRepository;
     private final ProductoRepository productoRepository;
     private final FacturacionService facturacionService;
+    private final CajaService cajaService; // NUEVA CONEXIÓN
 
-    public VentaService(VentaRepository ventaRepository, ProductoRepository productoRepository, FacturacionService facturacionService) {
+    public VentaService(VentaRepository ventaRepository, ProductoRepository productoRepository, 
+                        FacturacionService facturacionService, CajaService cajaService) {
         this.ventaRepository = ventaRepository;
         this.productoRepository = productoRepository;
         this.facturacionService = facturacionService;
+        this.cajaService = cajaService;
     }
 
     @Transactional
@@ -50,8 +53,11 @@ public class VentaService {
         venta.setCorrelativo(correlativo);
         venta.setClienteDocumento((String) cliente.get("numDoc"));
         venta.setClienteNombre((String) cliente.get("rznSocial"));
+        
+        // Se asume la obtención de la forma de pago enviada por el front (ej. "EFECTIVO", "TARJETA")
+        String medioPago = comprobante.get("medioPago") != null ? (String) comprobante.get("medioPago") : "EFECTIVO";
+        venta.setMedioPago(medioPago);
 
-        // Inicializamos totales con BigDecimal
         BigDecimal totalVenta = BigDecimal.ZERO;
         BigDecimal totalIgv = BigDecimal.ZERO;
         BigDecimal totalBase = BigDecimal.ZERO;
@@ -63,23 +69,18 @@ public class VentaService {
 
             int cantidad = (Integer) itemData.get("cantidad");
 
-            // VALIDACIÓN 2: Doble Validación de Stock en tiempo real
             if (p.getStock() < cantidad) {
                 throw new RuntimeException("Stock insuficiente para: " + p.getNombre() + ". Stock actual: " + p.getStock());
             }
 
-            // VALIDACIÓN 1: Verificación de Precios Directo de BD
-            // CORRECCIÓN: Como p.getPrecio() ya es BigDecimal, lo asignamos directamente
             BigDecimal precioReal = p.getPrecio();
             BigDecimal cantidadBd = new BigDecimal(cantidad);
 
-            // Cálculos precisos de IGV
             BigDecimal valorUnitarioReal = precioReal.divide(new BigDecimal("1.18"), 2, RoundingMode.HALF_UP);
             BigDecimal importeTotal = precioReal.multiply(cantidadBd);
             BigDecimal baseItem = valorUnitarioReal.multiply(cantidadBd);
             BigDecimal igvItem = importeTotal.subtract(baseItem);
 
-            // Actualizamos stock en memoria
             p.setStock(p.getStock() - cantidad);
 
             VentaDetalle detalle = new VentaDetalle();
@@ -102,19 +103,23 @@ public class VentaService {
         venta.setTotal(totalVenta);
         venta.setEstado("FACTURADO");
 
-        // Guardamos todo a la vez
         ventaRepository.save(venta);
 
-        // Enviamos a la SUNAT a través de Miapicloud
+        // CONEXIÓN AUTOMÁTICA A CAJA: Se registra el ingreso del total de la venta
+        cajaService.registrarIngresoAutomatizado(
+                venta.getTotal(),
+                "Venta POS N° " + venta.getSerie() + "-" + venta.getCorrelativo(),
+                venta.getMedioPago(),
+                venta,
+                null
+        );
+
         Map<String, Object> respuestaApi = facturacionService.enviarAMiapicloud(payload);
 
-        // VALIDACIÓN 3: El Rollback Lógico si Miapicloud o SUNAT falla
         if (respuestaApi != null) {
-            // Si la API falla a nivel general
             if (respuestaApi.containsKey("success") && Boolean.FALSE.equals(respuestaApi.get("success"))) {
                 throw new RuntimeException("Error en facturación electrónica: " + respuestaApi.get("message"));
             }
-            // Si la respuesta interna de Miapicloud fue rechazada
             if (respuestaApi.containsKey("respuesta")) {
                 Map<String, Object> interna = (Map<String, Object>) respuestaApi.get("respuesta");
                 if (interna.containsKey("success") && Boolean.FALSE.equals(interna.get("success"))) {

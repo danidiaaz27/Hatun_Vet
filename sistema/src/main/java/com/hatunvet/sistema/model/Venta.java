@@ -16,7 +16,7 @@ public class Venta {
     private String id;
 
     @Column(name = "tipo_comprobante", nullable = false, length = 2)
-    private String tipoComprobante; // '01' Factura, '03' Boleta
+    private String tipoComprobante;
 
     @Column(nullable = false, length = 4)
     private String serie;
@@ -33,67 +33,80 @@ public class Venta {
     @Column(name = "cliente_direccion", length = 255)
     private String clienteDireccion;
 
-    @Column(name = "fecha_emision")
-    private LocalDateTime fechaEmision = LocalDateTime.now();
+    @Column(name = "fecha_emision", updatable = false)
+    private LocalDateTime fechaEmision;
 
-    // PUNTO 4: Cambiados de double a BigDecimal para precisión financiera
     @Column(name = "op_gravadas", nullable = false, precision = 10, scale = 2)
-    private BigDecimal opGravadas = BigDecimal.ZERO;
+    private BigDecimal opGravadas;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal igv = BigDecimal.ZERO;
+    private BigDecimal igv;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal total = BigDecimal.ZERO;
+    private BigDecimal total;
 
     @Column(length = 20)
-    private String estado = "CREADO"; // CREADO, FACTURADO, ANULADO
+    private String estado;
 
-    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(name = "medio_pago", length = 30)
+    private String medioPago;
+
+    // CORREGIDO: Se cambió VentaDetail por VentaDetalle
+    @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<VentaDetalle> detalles = new ArrayList<>();
+
+    @PrePersist
+    protected void onCreate() {
+        this.fechaEmision = LocalDateTime.now();
+    }
 
     public Venta() {}
 
-    // --- GETTERS Y SETTERS ---
+    // --- GETTER Y SETTER DE MEDIO DE PAGO ---
+    public String getMedioPago() {
+        return medioPago;
+    }
+
+    public void setMedioPago(String medioPago) {
+        this.medioPago = medioPago;
+    }
+
+    // --- GETTERS Y SETTERS ORIGINALES ---
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-
     public String getTipoComprobante() { return tipoComprobante; }
     public void setTipoComprobante(String tipoComprobante) { this.tipoComprobante = tipoComprobante; }
-
     public String getSerie() { return serie; }
     public void setSerie(String serie) { this.serie = serie; }
-
     public int getCorrelativo() { return correlativo; }
     public void setCorrelativo(int correlativo) { this.correlativo = correlativo; }
-
     public String getClienteDocumento() { return clienteDocumento; }
     public void setClienteDocumento(String clienteDocumento) { this.clienteDocumento = clienteDocumento; }
-
     public String getClienteNombre() { return clienteNombre; }
     public void setClienteNombre(String clienteNombre) { this.clienteNombre = clienteNombre; }
-
     public String getClienteDireccion() { return clienteDireccion; }
     public void setClienteDireccion(String clienteDireccion) { this.clienteDireccion = clienteDireccion; }
-
     public LocalDateTime getFechaEmision() { return fechaEmision; }
     public void setFechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; }
-
     public BigDecimal getOpGravadas() { return opGravadas; }
     public void setOpGravadas(BigDecimal opGravadas) { this.opGravadas = opGravadas; }
-
     public BigDecimal getIgv() { return igv; }
     public void setIgv(BigDecimal igv) { this.igv = igv; }
-
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
-
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
-    public List<VentaDetalle> getDetalles() { return detalles; }
-    public void setDetalles(List<VentaDetalle> detalles) { this.detalles = detalles; }
+    // --- GETTER Y SETTER DE LA LISTA DE DETALLES ---
+    public List<VentaDetalle> getDetalles() {
+        return detalles;
+    }
 
+    public void setDetalles(List<VentaDetalle> detalles) {
+        this.detalles = detalles;
+    }
+
+    // --- MÉTODO OPERATIVO COMPLETO ---
     public void addDetalle(VentaDetalle detalle) {
         detalles.add(detalle);
         detalle.setVenta(this);
