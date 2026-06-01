@@ -19,6 +19,7 @@ public class DataLoader implements ApplicationRunner {
     private static final String OPCION_ID = "e1c51161-4bf2-11f1-980a-8d0986850898";
     private static final String PROVEEDORES_ID = "4aee659b-4c37-11f1-baf2-f0bfed632bab";
     private static final String INVENTARIO_ID = "4aee9e82-4c37-11f1-baf2-f0bfed632bab";
+    private static final String MASCOTAS_ID = "a2f42f30-9b2f-4a9b-9d6f-6cb0f6f2c3f1";
 
     private final OpcionRepository opcionRepository;
     private final PerfilRepository perfilRepository;
@@ -36,6 +37,7 @@ public class DataLoader implements ApplicationRunner {
         Opcion configuracion = upsertOpcion(OPCION_ID, "Configuración", "/configuracion", "bi bi-gear-fill");
         Opcion proveedores = upsertOpcion(PROVEEDORES_ID, "Proveedores", "/proveedores/listar", "bi bi-truck");
         Opcion inventario = upsertOpcion(INVENTARIO_ID, "Inventario", "/inventario", "bi bi-boxes");
+        Opcion mascotas = upsertOpcion(MASCOTAS_ID, "Mascotas", "/mascotas", "bi bi-paw-fill");
 
         // Buscar un perfil administrador o el primer perfil activo
         List<Perfil> perfilesActivos = perfilRepository.findByEstadoTrue();
@@ -65,6 +67,10 @@ public class DataLoader implements ApplicationRunner {
             }
             if (perfilAsignado.getOpciones().stream().noneMatch(o -> INVENTARIO_ID.equals(o.getId()))) {
                 perfilAsignado.getOpciones().add(inventario);
+                cambio = true;
+            }
+            if (perfilAsignado.getOpciones().stream().noneMatch(o -> MASCOTAS_ID.equals(o.getId()))) {
+                perfilAsignado.getOpciones().add(mascotas);
                 cambio = true;
             }
             if (cambio) {
