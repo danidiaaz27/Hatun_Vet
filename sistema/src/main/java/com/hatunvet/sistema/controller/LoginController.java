@@ -128,6 +128,7 @@ public class LoginController {
             case "/ventas/pos" -> 20;
             case "/ventas/historial" -> 30;
             case "/banos-cortes" -> 40;
+            case "/mascotas" -> 45;
             case "/inventario" -> 50;
             case "/categorias" -> 60;
             case "/productos/listar" -> 70;
