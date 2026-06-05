@@ -12,7 +12,7 @@ public class CitaWebController {
         return "agenda"; 
     }
 
-    // Pantalla para el Médico (La haremos en el siguiente paso)
+    // Pantalla para el Médico (Torre de Control)
     @GetMapping("/consultorio")
     public String torreControlMedico() {
         return "consultorio"; 

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link th:href="@{/css/main.css}" rel="stylesheet">
     <style>
-        .espera-card { border-left: 5px solid #fd7e14; transition: transform 0.2s; }
+        .espera-card { border-left: 5px solid #fd7e14; transition: transform 0.2s; cursor: pointer; }
         .espera-card:hover { transform: translateX(5px); }
         .atencion-panel { border-top: 5px solid #198754; }
     </style>
@@ -28,8 +28,7 @@
                     <h5 class="fw-bold text-secondary mb-0">En Espera</h5>
                     <span class="badge bg-warning text-dark rounded-pill" id="contadorEspera">0</span>
                 </div>
-                <div id="listaEspera" class="d-flex flex-column gap-2">
-                    </div>
+                <div id="listaEspera" class="d-flex flex-column gap-2"></div>
             </div>
 
             <div class="col-md-8">
@@ -47,16 +46,22 @@
                             <h5 class="fw-bold text-dark mb-0" id="lblMotivoActivo">Motivo de Cita</h5>
                             <small class="text-muted"><i class="bi bi-clock-history"></i> Iniciado: <span id="lblHoraInicio">--:--</span></small>
                         </div>
-                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">EN CURSO</span>
+                        <div>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">EN CURSO</span>
+                            <button type="button" id="btnVerHistorial" class="btn btn-sm btn-outline-primary ms-3 fw-bold">
+                                <i class="bi bi-clock-history me-1"></i> Ver Historial Previo
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="card-body p-4">
                         <form id="formAnamnesis">
                             <input type="hidden" id="citaActivaId">
+                            <input type="hidden" id="mascotaActivaId">
                             
                             <div class="alert alert-info border-info bg-info bg-opacity-10 py-2 px-3 mb-4">
-                                <small class="fw-bold"><i class="bi bi-info-circle-fill me-1"></i> Historial Clínico Perpetuo:</small> 
-                                <small>Complete las constantes vitales obligatorias para poder guardar el registro.</small>
+                                <small class="fw-bold"><i class="bi bi-info-circle-fill me-1"></i> Constantes Vitales:</small> 
+                                <small>Complete los datos obligatorios para poder guardar el registro.</small>
                             </div>
 
                             <div class="row g-3 mb-4">
@@ -97,9 +102,7 @@
                                 <label class="form-label small fw-bold">Tratamiento Indicado (Interno/Externo) *</label>
                                 <textarea id="tratamiento" class="form-control form-control-sm" rows="3" required></textarea>
                             </div>
-
                             <hr>
-
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <div>
                                     <button type="button" class="btn btn-outline-secondary btn-sm me-2" disabled><i class="bi bi-box-seam me-1"></i> Jalar Insumo</button>
@@ -116,6 +119,20 @@
             </div>
         </div>
     </main>
+</div>
+
+<div class="modal fade" id="modalHistorial" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-journal-medical me-2"></i> Historial Clínico de la Mascota</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div id="timelineHistorial" class="py-2"></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

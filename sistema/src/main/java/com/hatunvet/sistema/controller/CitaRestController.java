@@ -20,7 +20,6 @@ public class CitaRestController {
         this.citaService = citaService;
     }
 
-    // --- NUEVOS ENDPOINTS BÁSICOS PARA EL CALENDARIO ---
     @GetMapping
     public ResponseEntity<List<Cita>> listarCitas() {
         return ResponseEntity.ok(citaService.obtenerTodasLasCitas());
@@ -30,7 +29,6 @@ public class CitaRestController {
     public ResponseEntity<Map<String, Object>> crearCita(@RequestBody Cita nuevaCita) {
         Map<String, Object> response = new HashMap<>();
         try {
-            // Asegurarnos de que nazca como AGENDADA
             nuevaCita.setEstado("AGENDADA"); 
             Cita citaGuardada = citaService.guardarCita(nuevaCita);
             response.put("success", true);
@@ -44,7 +42,6 @@ public class CitaRestController {
         }
     }
 
-    // --- ENDPOINTS DE CAMBIO DE ESTADOS Y CLÍNICA ---
     @PostMapping("/{id}/check-in")
     public ResponseEntity<Map<String, Object>> hacerCheckIn(@PathVariable String id) {
         Map<String, Object> response = new HashMap<>();
@@ -107,5 +104,17 @@ public class CitaRestController {
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    // --- NUEVO: ENDPOINT HISTORIAL PERPETUO ---
+    @GetMapping("/historial/{mascotaId}")
+    public ResponseEntity<List<Map<String, Object>>> verHistorial(@PathVariable String mascotaId) {
+        return ResponseEntity.ok(citaService.obtenerHistorialMascota(mascotaId));
+    }
+
+    // --- NUEVO: ENDPOINT PUENTE AL POS ---
+    @GetMapping("/por-cobrar")
+    public ResponseEntity<List<Map<String, Object>>> citasPorCobrar() {
+        return ResponseEntity.ok(citaService.obtenerCitasParaFacturacion());
     }
 }

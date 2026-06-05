@@ -23,7 +23,12 @@
             <h2 class="h5 mb-0 fw-bold" style="color: var(--vet-blue)">
                 <i class="bi bi-cart-check-fill me-2 text-danger"></i> Punto de Venta
             </h2>
-            <div class="text-muted" id="relojActual">00:00:00</div>
+            <div class="d-flex align-items-center gap-3">
+                <button type="button" class="btn btn-sm btn-outline-danger fw-bold shadow-sm" onclick="abrirModalCitasCobro()">
+                    <i class="bi bi-heart-pulse-fill me-1"></i> Cobrar Citas Médicas
+                </button>
+                <div class="text-muted" id="relojActual">00:00:00</div>
+            </div>
         </header>
 
         <div class="row g-3">
@@ -111,6 +116,21 @@
             </div>
         </div>
     </main>
+</div>
+
+<div class="modal fade" id="modalCitasCobro" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-heart-pulse me-2"></i> Citas Finalizadas (Pendientes de Cobro)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="list-group" id="listaCitasPorCobrar">
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>

@@ -60,9 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('formNuevaCita').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Construimos el LocalDateTime combinando fecha y hora
-        const fecha = document.getElementById('fechaCita').val;
-        const hora = document.getElementById('horaCita').val;
+        // CORRECCIÓN APLICADA: .value en lugar de .val
+        const fecha = document.getElementById('fechaCita').value;
+        const hora = document.getElementById('horaCita').value;
         const fechaHora = `${fecha}T${hora}:00`;
 
         const payload = {

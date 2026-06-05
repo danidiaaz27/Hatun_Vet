@@ -1,6 +1,9 @@
 $(document).ready(function() {
     let carrito = [];
     const TASA_IGV = 0.18;
+    
+    // Inicializar Modal de Citas
+    let modalCitasCobro = new bootstrap.Modal(document.getElementById('modalCitasCobro'));
 
     // --- RELOJ EN TIEMPO REAL ---
     setInterval(() => {
@@ -31,21 +34,13 @@ $(document).ready(function() {
         const tipoDoc = $('#tipoDoc').val();
         const numDoc = $('#numDoc').val().trim();
 
-        if (tipoDoc === '1' && numDoc.length !== 8) {
-            Swal.fire('Atención', 'El DNI debe tener exactamente 8 dígitos.', 'warning');
-            return;
-        }
-        if (tipoDoc === '6' && numDoc.length !== 11) {
-            Swal.fire('Atención', 'El RUC debe tener exactamente 11 dígitos.', 'warning');
-            return;
-        }
+        if (tipoDoc === '1' && numDoc.length !== 8) return Swal.fire('Atención', 'El DNI debe tener 8 dígitos.', 'warning');
+        if (tipoDoc === '6' && numDoc.length !== 11) return Swal.fire('Atención', 'El RUC debe tener 11 dígitos.', 'warning');
 
-        // VALIDACIÓN 5: Validar formato oficial de RUC en Perú
         if (tipoDoc === '6') {
             const prefijo = numDoc.substring(0, 2);
             if (!['10', '15', '17', '20'].includes(prefijo)) {
-                Swal.fire('RUC Inválido', 'El RUC debe empezar con 10, 15, 17 o 20 según SUNAT.', 'error');
-                return;
+                return Swal.fire('RUC Inválido', 'El RUC debe empezar con 10, 15, 17 o 20.', 'error');
             }
         }
 
@@ -67,10 +62,8 @@ $(document).ready(function() {
                         $('#direccionCliente').val(info.direccion_completa || info.direccion || '-');
                     }
                 } else {
-                    let msg = res.message || 'No se encontraron datos oficiales.';
-                    Swal.fire('Información', msg, 'info');
+                    Swal.fire('Información', res.message || 'No se encontraron datos.', 'info');
                     $('#nombreCliente').val('');
-                    $('#direccionCliente').val('');
                 }
             })
             .catch(() => Swal.fire('Error', 'Fallo al consultar documento.', 'error'))
@@ -110,7 +103,7 @@ $(document).ready(function() {
                         contenedor.append(html);
                     });
                 } else {
-                    contenedor.html('<div class="col-12 text-center text-danger mt-4">No se encontraron productos coincidentes.</div>');
+                    contenedor.html('<div class="col-12 text-center text-danger mt-4">No se encontraron productos.</div>');
                 }
             });
     });
@@ -206,12 +199,81 @@ $(document).ready(function() {
         $('#lblTotal').text(total.toFixed(2));
     }
 
+    // --- NUEVO: IMPORTAR CUENTAS MÉDICAS AL POS ---
+    window.abrirModalCitasCobro = function() {
+        fetch('/api/citas/por-cobrar')
+            .then(r => r.json())
+            .then(citas => {
+                const lista = $('#listaCitasPorCobrar');
+                lista.empty();
+                
+                if(citas.length === 0) {
+                    lista.html('<div class="text-center text-muted p-4">No hay citas médicas finalizadas pendientes de cobro en este momento.</div>');
+                    modalCitasCobro.show();
+                    return;
+                }
+
+                citas.forEach(c => {
+                    const btn = $('<button class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 mb-2 rounded shadow-sm border-0"></button>');
+                    btn.html(`
+                        <div>
+                            <h6 class="mb-1 fw-bold text-dark">Paciente: ${c.mascota} <span class="badge bg-danger ms-2">Total a cobrar: S/ ${c.total.toFixed(2)}</span></h6>
+                            <small class="text-muted d-block"><i class="bi bi-person"></i> Cliente: ${c.clienteNombre} (Doc: ${c.clienteDocumento})</small>
+                            <small class="text-primary fw-bold mt-1 d-block"><i class="bi bi-list-check"></i> ${c.detalles.length} ítems en la cuenta médica</small>
+                        </div>
+                        <i class="bi bi-box-arrow-in-down-right fs-3 text-danger"></i>
+                    `);
+                    
+                    btn.click(function() {
+                        importarCitaDirecta(c);
+                        modalCitasCobro.hide();
+                    });
+                    lista.append(btn);
+                });
+                modalCitasCobro.show();
+            });
+    };
+
+    function importarCitaDirecta(citaData) {
+        // Rellenar tipo de comprobante y documento automáticamente
+        const isRuc = citaData.clienteDocumento.length === 11;
+        $('#tipoDoc').val(isRuc ? '6' : '1').trigger('change');
+        $('#numDoc').val(citaData.clienteDocumento);
+        $('#nombreCliente').val(citaData.clienteNombre);
+        
+        // Cargar los servicios (evadiendo la validación de stock)
+        citaData.detalles.forEach((item, index) => {
+            const servicioMédico = {
+                id: item.idProducto || ('CITA-' + citaData.citaId + '-' + index), 
+                codigo: item.tipo === 'SERVICIO' ? 'CM-001' : 'INS-001',
+                nombre: item.descripcion,
+                precio: parseFloat(item.precio),
+                cantidad: parseInt(item.cantidad),
+                stock: 9999 // Stock virtual infinito para evitar bloqueo
+            };
+            
+            const existente = carrito.find(i => i.id === servicioMédico.id);
+            if (existente) {
+                existente.cantidad += servicioMédico.cantidad;
+            } else {
+                carrito.push(servicioMédico);
+            }
+        });
+        
+        renderizarCarrito();
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Cuenta Médica Importada',
+            text: `Se han transferido los gastos de ${citaData.mascota} al carrito.`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+
     // --- PROCESAR VENTA FINAL ---
     $('#btnCobrar').click(function() {
-        if (carrito.length === 0) {
-            Swal.fire('Carrito vacío', 'Agrega al menos un producto.', 'warning');
-            return;
-        }
+        if (carrito.length === 0) return Swal.fire('Carrito vacío', 'Agrega al menos un producto.', 'warning');
 
         const tipoDoc = $('#tipoDoc').val();
         const numDoc = $('#numDoc').val().trim();
@@ -222,13 +284,6 @@ $(document).ready(function() {
         if (tipoDoc === '6' && numDoc.length !== 11) return Swal.fire('RUC Inválido', 'Debe tener 11 dígitos.', 'error');
         if (!nombre) return Swal.fire('Cliente requerido', 'Ingresa el nombre del cliente.', 'warning');
         if (tipoDoc === '6' && !direccion) return Swal.fire('Dirección requerida', 'Obligatoria para facturas.', 'warning');
-
-        if (tipoDoc === '6') {
-            const prefijo = numDoc.substring(0, 2);
-            if (!['10', '15', '17', '20'].includes(prefijo)) {
-                return Swal.fire('RUC Inválido', 'El RUC debe empezar con 10, 15, 17 o 20 según SUNAT.', 'error');
-            }
-        }
 
         let itemsApi = carrito.map(item => {
             let valorUnit = item.precio / (1 + TASA_IGV);
@@ -268,8 +323,6 @@ $(document).ready(function() {
 
         const btn = $(this);
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Procesando...');
-
-        // VALIDACIÓN 6: Bloquear interacciones del carrito para evitar doble facturación
         $('.cart-container button').prop('disabled', true);
 
         fetch('/ventas/api/procesar', {
@@ -301,7 +354,6 @@ $(document).ready(function() {
                 });
             } else {
                 Swal.fire('Error', data.message || 'La API o SUNAT rechazó el comprobante.', 'error');
-                // Rehabilitar botones si falla
                 $('.cart-container button').prop('disabled', false);
             }
         })

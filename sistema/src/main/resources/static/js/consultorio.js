@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     const API_URL = '/api/citas';
     let pacienteEnAtencionId = null;
+    let mascotaActualId = null;
+    const modalHistorial = new bootstrap.Modal(document.getElementById('modalHistorial'));
 
-    // 1. Cargar el Monitor Clínico
     function cargarTorreControl() {
         fetch(API_URL)
             .then(r => r.json())
@@ -16,8 +17,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Procesar pacientes en Espera
                     if (cita.estado === 'EN_ESPERA') {
                         countEspera++;
-                        const hora = new Date(cita.fechaHoraLlegada).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
                         
+                        // Blindaje 1: Parseo seguro de la fecha
+                        let fechaLlegada = cita.fechaHoraLlegada;
+                        if (Array.isArray(fechaLlegada)) {
+                            // Si Spring Boot lo mandó como Array [2026, 6, 5, 11, 38]
+                            fechaLlegada = new Date(fechaLlegada[0], fechaLlegada[1]-1, fechaLlegada[2], fechaLlegada[3]||0, fechaLlegada[4]||0);
+                        } else {
+                            fechaLlegada = new Date(fechaLlegada);
+                        }
+                        const hora = fechaLlegada.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+                        
+                        // Blindaje 2: Parseo seguro del ID de la Mascota
+                        const mId = cita.mascota && cita.mascota.id ? String(cita.mascota.id).substring(0,6) : 'N/A';
+
                         const card = document.createElement('div');
                         card.className = 'card shadow-sm border-0 espera-card p-3 mb-2';
                         card.innerHTML = `
@@ -25,9 +38,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div>
                                     <small class="text-muted fw-bold d-block mb-1"><i class="bi bi-clock"></i> Llegó: ${hora}</small>
                                     <h6 class="fw-bold text-dark mb-1">${cita.motivoPrincipal}</h6>
-                                    <span class="badge bg-light text-secondary border">Mascota ID: ${cita.mascota?.id?.substring(0,6) || 'N/A'}</span>
+                                    <span class="badge bg-light text-secondary border">Mascota ID: ${mId}</span>
                                 </div>
-                                <button class="btn btn-sm btn-success fw-bold btn-iniciar" data-id="${cita.id}">
+                                <button class="btn btn-sm btn-success fw-bold btn-iniciar" data-id="${cita.id}" data-mascota="${cita.mascota?.id || ''}">
                                     <i class="bi bi-play-fill"></i> Atender
                                 </button>
                             </div>
@@ -39,15 +52,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (cita.estado === 'EN_ATENCION') {
                         hayPacienteActivo = true;
                         pacienteEnAtencionId = cita.id;
+                        mascotaActualId = cita.mascota?.id;
+                        
                         document.getElementById('lblMotivoActivo').innerText = cita.motivoPrincipal;
-                        document.getElementById('lblHoraInicio').innerText = new Date().toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+                        
+                        let fechaInicio = cita.fechaHoraLlegada; // Para simplificar usamos la de llegada
+                        if (!Array.isArray(fechaInicio)) fechaInicio = new Date(fechaInicio);
+                        else fechaInicio = new Date(); // Fallback rápido
+                        
+                        document.getElementById('lblHoraInicio').innerText = new Date(fechaInicio).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
                         document.getElementById('citaActivaId').value = cita.id;
+                        document.getElementById('mascotaActivaId').value = mascotaActualId;
                     }
                 });
 
                 document.getElementById('contadorEspera').innerText = countEspera;
 
-                // Alternar la vista del consultorio
                 if (hayPacienteActivo) {
                     document.getElementById('panelVacio').style.display = 'none';
                     document.getElementById('panelActivo').style.display = 'block';
@@ -56,19 +76,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('panelActivo').style.display = 'none';
                     document.getElementById('formAnamnesis').reset();
                     pacienteEnAtencionId = null;
+                    mascotaActualId = null;
                 }
 
-                // Asignar eventos a los botones de Atender recién creados
                 document.querySelectorAll('.btn-iniciar').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        const id = this.getAttribute('data-id');
-                        iniciarAtencion(id);
+                        iniciarAtencion(this.getAttribute('data-id'));
                     });
                 });
-            });
+            })
+            .catch(err => console.error("Error al cargar la Torre de Control:", err));
     }
 
-    // 2. Iniciar Atención Médica
     function iniciarAtencion(idCita) {
         if (pacienteEnAtencionId) {
             Swal.fire('Consultorio Ocupado', 'Finalice la consulta actual antes de llamar a un nuevo paciente.', 'warning');
@@ -78,15 +97,11 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(`${API_URL}/${idCita}/iniciar-atencion`, { method: 'POST' })
             .then(r => r.json())
             .then(res => {
-                if (res.success) {
-                    cargarTorreControl(); // Refresca las columnas
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
+                if (res.success) cargarTorreControl();
+                else Swal.fire('Error', res.message, 'error');
             });
     }
 
-    // 3. Guardar Anamnesis (Regla LEAN Estricta)
     document.getElementById('formAnamnesis').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = document.getElementById('btnGuardarAnamnesis');
@@ -112,24 +127,17 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => {
             btn.disabled = false;
             btn.innerText = "Guardar Registro";
-            
-            if (res.success) {
-                Swal.fire('Historial Actualizado', 'La anamnesis se ha guardado correctamente. Ya puede finalizar la cita o agregar insumos.', 'success');
-            } else {
-                Swal.fire('Datos Incompletos', res.message, 'error');
-            }
+            if (res.success) Swal.fire('Actualizado', 'Anamnesis guardada correctamente.', 'success');
+            else Swal.fire('Error', res.message, 'error');
         });
     });
 
-    // 4. Finalizar Cita (Enviar a Caja)
     document.getElementById('btnFinalizarConsulta').addEventListener('click', function() {
         Swal.fire({
             title: '¿Finalizar Consulta?',
-            text: "El paciente pasará a estado FINALIZADO y su cuenta se enviará a la Caja para el cobro.",
+            text: "La cuenta médica se enviará a la Caja para su cobro.",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#212529',
-            cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, enviar a caja'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -138,19 +146,57 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(res => {
                         if (res.success) {
                             Swal.fire('Finalizado', res.message, 'success');
-                            cargarTorreControl(); // El consultorio volverá a estar libre
-                        } else {
-                            // Si salta el error del backend porque no llenaron la anamnesis
-                            Swal.fire('Falta Registro Clínico', res.message, 'error');
-                        }
+                            cargarTorreControl();
+                        } else Swal.fire('Falta Registro Clínico', res.message, 'error');
                     });
             }
         });
     });
 
-    // Iniciar el monitor
-    cargarTorreControl();
+    document.getElementById('btnVerHistorial').addEventListener('click', function() {
+        if(!mascotaActualId) mascotaActualId = document.getElementById('mascotaActivaId').value;
 
-    // Opcional: Actualización en vivo (Polling) cada 10 segundos para ver si el counter agendó a alguien
+        fetch(`${API_URL}/historial/${mascotaActualId}`)
+            .then(r => r.json())
+            .then(historial => {
+                const contenedor = document.getElementById('timelineHistorial');
+                contenedor.innerHTML = '';
+
+                if(historial.length === 0) {
+                    contenedor.innerHTML = '<div class="text-center text-muted p-4">No hay atenciones previas registradas para esta mascota.</div>';
+                    modalHistorial.show();
+                    return;
+                }
+
+                let html = '<div class="border-start border-3 border-primary ms-3 ps-4 position-relative">';
+                historial.forEach(h => {
+                    const fecha = new Date(h.fecha).toLocaleDateString('es-PE', { year:'numeric', month:'short', day:'numeric' });
+                    html += `
+                        <div class="mb-4 position-relative">
+                            <span class="position-absolute translate-middle p-2 bg-primary border border-light border-3 rounded-circle" style="left: -1.6rem; top: 0.2rem;"></span>
+                            <div class="card shadow-sm border-0">
+                                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-2">
+                                    <strong class="text-primary"><i class="bi bi-calendar-event me-1"></i> ${fecha}</strong>
+                                    <small class="text-muted"><i class="bi bi-person-badge"></i> Dr/a. ${h.medico}</small>
+                                </div>
+                                <div class="card-body py-2">
+                                    <div class="d-flex gap-3 mb-2 small text-danger fw-bold border-bottom pb-2">
+                                        <span>Peso: ${h.peso} kg</span>
+                                        <span>Temp: ${h.temp} °C</span>
+                                    </div>
+                                    <p class="mb-1 small"><strong>Síntomas:</strong> ${h.sintomas}</p>
+                                    <p class="mb-1 small"><strong>Diagnóstico:</strong> ${h.diagnostico}</p>
+                                    <p class="mb-0 small"><strong>Tratamiento:</strong> ${h.tratamiento}</p>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                html += '</div>';
+                contenedor.innerHTML = html;
+                modalHistorial.show();
+            });
+    });
+
+    cargarTorreControl();
     setInterval(cargarTorreControl, 10000); 
 });
