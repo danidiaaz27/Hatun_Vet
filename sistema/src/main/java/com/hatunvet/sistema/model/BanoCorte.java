@@ -1,5 +1,7 @@
 package com.hatunvet.sistema.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,6 +16,16 @@ public class BanoCorte {
 
     @Column(name = "fecha_servicio", updatable = false)
     private LocalDateTime fechaServicio;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "mascota_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Mascota mascota;
+
+    /** Campo de entrada JSON; el controlador resuelve la entidad Mascota. */
+    @Transient
+    @JsonProperty("mascotaId")
+    private Long mascotaId;
 
     @Column(name = "nombre_mascota", nullable = false)
     private String nombreMascota;
@@ -51,6 +63,18 @@ public class BanoCorte {
 
     public LocalDateTime getFechaServicio() { return fechaServicio; }
     public void setFechaServicio(LocalDateTime fechaServicio) { this.fechaServicio = fechaServicio; }
+
+    public Mascota getMascota() { return mascota; }
+    public void setMascota(Mascota mascota) { this.mascota = mascota; }
+
+    public Long getMascotaId() {
+        if (mascota != null && mascota.getId() != null) {
+            return mascota.getId();
+        }
+        return mascotaId;
+    }
+
+    public void setMascotaId(Long mascotaId) { this.mascotaId = mascotaId; }
 
     public String getNombreMascota() { return nombreMascota; }
     public void setNombreMascota(String nombreMascota) { this.nombreMascota = nombreMascota; }

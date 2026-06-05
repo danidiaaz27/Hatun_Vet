@@ -1,24 +1,164 @@
 $(document).ready(function() {
     const API_URL = '/banos-cortes/api';
+    const MASCOTAS_API_URL = '/mascotas/api';
     const modalServicio = new bootstrap.Modal(document.getElementById('modalServicio'));
 
     const serviciosBase = ['Baño Estándar', 'Baño Medicado', 'Solo Corte', 'Baño y Corte', 'Corte de Uñas'];
     let modoNuevoServicio = false;
+    let mascotaSeleccionada = null;
+
+    function normalizarTexto(texto) {
+        return (texto || '').toString().trim();
+    }
+
+    function formatDate(value) {
+        if (!value) return '';
+        return new Date(value).toLocaleDateString('es-PE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+
+    function formatDateTime(value) {
+        if (!value) return '';
+        return new Date(value).toLocaleString('es-PE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function nombreMascotaFila(row) {
+        if (row.mascota && row.mascota.nombre) return row.mascota.nombre;
+        return row.nombreMascota || '—';
+    }
+
+    function especieMascotaFila(row) {
+        if (row.mascota && row.mascota.especie) return row.mascota.especie;
+        return row.especie || '';
+    }
+
+    function limpiarSeleccionMascota() {
+        mascotaSeleccionada = null;
+        $('#mascotaId').val('');
+        $('#panelMascotaSeleccionada').addClass('d-none');
+        $('#panelResultadosMascota').addClass('d-none').empty();
+        $('#txtBuscarMascota').val('').prop('disabled', false);
+        $('#btnBuscarMascota').prop('disabled', false);
+    }
+
+    function seleccionarMascota(mascota) {
+        mascotaSeleccionada = mascota;
+        $('#mascotaId').val(mascota.id);
+        $('#panelResultadosMascota').addClass('d-none').empty();
+
+        const inicial = (mascota.nombre || '?').charAt(0).toUpperCase();
+        $('#lblMascotaInicial').text(inicial);
+        $('#lblMascotaNombre').text(`${mascota.nombre || ''} (ID #${mascota.id})`);
+        $('#lblMascotaDetalle').text(`${mascota.especie || 'Sin especie'} · ${mascota.raza || 'Sin raza'}`);
+
+        const cliente = mascota.cliente;
+        if (cliente) {
+            $('#lblDuenoDetalle').html(
+                `<i class="bi bi-person-badge me-1"></i>${cliente.nombreCompleto || 'Sin nombre'} · ${cliente.numeroDocumento || 'Sin documento'}`
+            );
+        } else {
+            $('#lblDuenoDetalle').html('<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Sin dueño vinculado en el padrón</span>');
+        }
+
+        const registro = mascota.fechaRegistro
+            ? `Registrada: ${formatDateTime(mascota.fechaRegistro)}`
+            : '';
+        $('#lblFechaRegistroMascota').text(registro);
+
+        $('#panelMascotaSeleccionada').removeClass('d-none');
+        $('#txtBuscarMascota').prop('disabled', true);
+        $('#btnBuscarMascota').prop('disabled', true);
+    }
+
+    function renderResultadosMascota(lista) {
+        const panel = $('#panelResultadosMascota');
+        panel.empty();
+
+        if (!lista.length) {
+            panel.append(
+                '<div class="list-group-item text-muted small text-center py-3">No se encontraron mascotas activas</div>'
+            );
+            panel.removeClass('d-none');
+            return;
+        }
+
+        lista.forEach(m => {
+            const cliente = m.cliente;
+            const dueno = cliente
+                ? `${cliente.nombreCompleto || ''} · ${cliente.numeroDocumento || ''}`
+                : 'Sin dueño vinculado';
+            const registro = m.fechaRegistro ? formatDate(m.fechaRegistro) : '—';
+
+            panel.append(`
+                <button type="button" class="list-group-item list-group-item-action mascota-result-item" data-id="${m.id}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-pill-sm">${(m.nombre || '?').charAt(0).toUpperCase()}</div>
+                        <div class="text-start">
+                            <div class="fw-bold">${m.nombre || ''} <span class="text-muted fw-normal">#${m.id}</span></div>
+                            <small class="text-muted">${m.especie || 'Sin especie'} · ${m.raza || 'Sin raza'}</small>
+                            <div class="small">${dueno}</div>
+                            <div class="small text-muted">Registro: ${registro}</div>
+                        </div>
+                    </div>
+                </button>
+            `);
+        });
+
+        panel.removeClass('d-none');
+    }
+
+    function buscarMascotas() {
+        const valor = normalizarTexto($('#txtBuscarMascota').val());
+        if (!valor) {
+            Swal.fire('Atención', 'Ingrese el ID o nombre de la mascota', 'warning');
+            return;
+        }
+
+        const btn = $('#btnBuscarMascota');
+        const icon = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+        fetch(`${MASCOTAS_API_URL}/buscar/${encodeURIComponent(valor)}`)
+            .then(r => r.json())
+            .then(res => {
+                const activas = (res.data || []).filter(m => (m.estado || 'ACTIVA').toUpperCase() === 'ACTIVA');
+                renderResultadosMascota(activas);
+                if (activas.length === 1) {
+                    seleccionarMascota(activas[0]);
+                }
+            })
+            .catch(() => Swal.fire('Error', 'No se pudo buscar en el padrón de mascotas', 'error'))
+            .finally(() => btn.prop('disabled', false).html(icon));
+    }
 
     let dataTable = $('#tablaServicios').DataTable({
         ajax: { url: `${API_URL}/listar`, dataSrc: 'data' },
         columns: [
             {
                 data: 'fechaServicio',
-                render: data => new Date(data).toLocaleString('es-PE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+                render: data => formatDateTime(data)
             },
             {
                 data: null,
-                render: row => `<strong>${row.nombreMascota}</strong> <br><small class="text-muted">${row.especie}</small>`
+                render: row => {
+                    const nombre = nombreMascotaFila(row);
+                    const especie = especieMascotaFila(row);
+                    const idMascota = row.mascota && row.mascota.id ? ` <span class="badge bg-light text-dark border">#${row.mascota.id}</span>` : '';
+                    return `<strong>${nombre}</strong>${idMascota} <br><small class="text-muted">${especie}</small>`;
+                }
             },
             {
                 data: null,
-                render: row => `<span>${row.nombreDueno}</span><br><small class="text-muted">DNI: ${row.dniDueno || '---'}</small>`
+                render: row => `<span>${row.nombreDueno}</span><br><small class="text-muted">Doc: ${row.dniDueno || '---'}</small>`
             },
             { data: 'tipoServicio' },
             {
@@ -36,7 +176,6 @@ $(document).ready(function() {
             {
                 data: null,
                 render: row => {
-                    // VALIDACIÓN VISUAL: Si ya está pagado, no mostramos botones de acción
                     if (row.estado === 'PAGADO') {
                         return `<span class="text-muted small"><i class="bi bi-check2-all"></i> Finalizado</span>`;
                     }
@@ -81,46 +220,47 @@ $(document).ready(function() {
         }
     });
 
-    $('#dniDueno').on('input', function() { this.value = this.value.replace(/[^0-9]/g, ''); });
-
-    $('#btnBuscarDni').click(function() {
-        const dni = $('#dniDueno').val().trim();
-        if (dni.length !== 8) {
-            Swal.fire('Atención', 'El DNI debe tener 8 dígitos', 'warning');
-            return;
+    $('#btnBuscarMascota').click(() => buscarMascotas());
+    $('#txtBuscarMascota').on('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            buscarMascotas();
         }
+    });
 
-        const btn = $(this);
-        const icon = btn.html();
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
-
-        fetch(`/ventas/api/consultar-cliente?tipoDoc=1&numero=${dni}`)
+    $('#panelResultadosMascota').on('click', '.mascota-result-item', function() {
+        const id = Number($(this).data('id'));
+        fetch(`${MASCOTAS_API_URL}/${id}`)
             .then(r => r.json())
             .then(res => {
-                const info = res.datos || res.data;
-                if (res.success && info) {
-                    let nombre = info.nombre_completo || `${info.nombres || ''} ${info.ape_paterno || ''} ${info.ape_materno || ''}`.trim();
-                    $('#nombreDueno').val(nombre);
+                if (res.success && res.data) {
+                    seleccionarMascota(res.data);
                 } else {
-                    Swal.fire('No encontrado', 'No se hallaron datos en RENIEC', 'info');
+                    Swal.fire('Error', 'No se pudo cargar la mascota seleccionada', 'error');
                 }
             })
-            .catch(() => Swal.fire('Error', 'Fallo al conectar con la API', 'error'))
-            .finally(() => btn.prop('disabled', false).html(icon));
+            .catch(() => Swal.fire('Error', 'No se pudo cargar la mascota seleccionada', 'error'));
     });
+
+    $('#btnLimpiarMascota').click(() => limpiarSeleccionMascota());
 
     $('#btnNuevoServicio').click(() => {
         $('#formServicio')[0].reset();
+        limpiarSeleccionMascota();
         cargarTiposServicio();
-        if(modoNuevoServicio) $('#btnAlternarTipo').click();
-
-        // Habilitar el botón de guardado si estaba bloqueado
+        if (modoNuevoServicio) $('#btnAlternarTipo').click();
         $('#btnGuardarServicio').prop('disabled', false).html('Guardar Registro');
         modalServicio.show();
     });
 
     $('#formServicio').submit(e => {
         e.preventDefault();
+
+        const mascotaId = normalizarTexto($('#mascotaId').val());
+        if (!mascotaId) {
+            Swal.fire('Atención', 'Debe seleccionar una mascota del padrón', 'warning');
+            return;
+        }
 
         let tipoElegido = modoNuevoServicio ? $('#tipoServicioInput').val().trim() : $('#tipoServicioSelect').val();
         if (!tipoElegido) {
@@ -134,15 +274,11 @@ $(document).ready(function() {
             return;
         }
 
-        // VALIDACIÓN ANTI-DOBLE CLIC
         const btnGuardar = $('#btnGuardarServicio');
         btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
 
         const data = {
-            nombreMascota: $('#nombreMascota').val(),
-            dniDueno: $('#dniDueno').val(),
-            nombreDueno: $('#nombreDueno').val(),
-            especie: $('#especie').val(),
+            mascotaId: Number(mascotaId),
             tipoServicio: tipoElegido,
             detallesExtra: $('#detallesExtra').val(),
             precio: precio
@@ -155,7 +291,7 @@ $(document).ready(function() {
         })
         .then(r => r.json())
         .then(res => {
-            if(res.success) {
+            if (res.success) {
                 modalServicio.hide();
                 dataTable.ajax.reload();
                 Swal.fire('Éxito', res.message, 'success');
@@ -163,6 +299,10 @@ $(document).ready(function() {
                 Swal.fire('Error', res.message, 'error');
                 btnGuardar.prop('disabled', false).html('Guardar Registro');
             }
+        })
+        .catch(() => {
+            Swal.fire('Error', 'No se pudo guardar el servicio', 'error');
+            btnGuardar.prop('disabled', false).html('Guardar Registro');
         });
     });
 
@@ -179,7 +319,7 @@ $(document).ready(function() {
                 fetch(`${API_URL}/cambiar-estado/${id}?nuevoEstado=${nuevoEstado}`, { method: 'POST' })
                     .then(r => r.json())
                     .then(res => {
-                        if(res.success) dataTable.ajax.reload();
+                        if (res.success) dataTable.ajax.reload();
                         else Swal.fire('Error', res.message, 'error');
                     });
             }

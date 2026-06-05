@@ -1,8 +1,10 @@
 package com.hatunvet.sistema.controller;
 
 import com.hatunvet.sistema.model.BanoCorte;
+import com.hatunvet.sistema.model.Cliente;
+import com.hatunvet.sistema.model.Mascota;
 import com.hatunvet.sistema.repository.BanoCorteRepository;
-import com.hatunvet.sistema.service.CajaService; // NUEVA CONEXIÓN
+import com.hatunvet.sistema.repository.MascotaRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +18,11 @@ import java.util.Map;
 public class BanoCorteController {
 
     private final BanoCorteRepository banoCorteRepository;
-    private final CajaService cajaService; // NUEVA CONEXIÓN
+    private final MascotaRepository mascotaRepository;
 
-    public BanoCorteController(BanoCorteRepository banoCorteRepository, CajaService cajaService) {
+    public BanoCorteController(BanoCorteRepository banoCorteRepository, MascotaRepository mascotaRepository) {
         this.banoCorteRepository = banoCorteRepository;
-        this.cajaService = cajaService;
+        this.mascotaRepository = mascotaRepository;
     }
 
     @GetMapping
@@ -47,6 +49,29 @@ public class BanoCorteController {
                 return res;
             }
 
+            Long mascotaId = registro.getMascotaId();
+            if (mascotaId == null) {
+                res.put("success", false);
+                res.put("message", "Debe seleccionar una mascota registrada.");
+                return res;
+            }
+
+            Mascota mascota = mascotaRepository.findById(mascotaId)
+                    .orElse(null);
+            if (mascota == null) {
+                res.put("success", false);
+                res.put("message", "La mascota seleccionada no existe.");
+                return res;
+            }
+
+            if (mascota.getEstado() != null && !"ACTIVA".equalsIgnoreCase(mascota.getEstado().trim())) {
+                res.put("success", false);
+                res.put("message", "La mascota no está activa en el padrón.");
+                return res;
+            }
+
+            vincularDatosDesdeMascota(registro, mascota);
+
             registro.setId(null);
             registro.setEstado("PENDIENTE");
 
@@ -60,6 +85,21 @@ public class BanoCorteController {
         return res;
     }
 
+    private void vincularDatosDesdeMascota(BanoCorte registro, Mascota mascota) {
+        registro.setMascota(mascota);
+        registro.setNombreMascota(mascota.getNombre());
+        registro.setEspecie(mascota.getEspecie() != null ? mascota.getEspecie() : "Sin especie");
+
+        Cliente cliente = mascota.getCliente();
+        if (cliente != null) {
+            registro.setNombreDueno(cliente.getNombreCompleto() != null ? cliente.getNombreCompleto() : "Sin dueño");
+            registro.setDniDueno(cliente.getNumeroDocumento());
+        } else {
+            registro.setNombreDueno("Sin dueño vinculado");
+            registro.setDniDueno(null);
+        }
+    }
+
     @PostMapping("/api/cambiar-estado/{id}")
     @ResponseBody
     public Map<String, Object> cambiarEstado(@PathVariable Long id, @RequestParam String nuevoEstado) {
@@ -71,35 +111,14 @@ public class BanoCorteController {
             return res;
         }
 
-        try {
-            banoCorteRepository.findById(id).ifPresentOrElse(r -> {
-                r.setEstado(nuevoEstado);
-                banoCorteRepository.save(r);
-
-                // CONEXIÓN AUTOMÁTICA A CAJA: Se ejecuta si el nuevo estado es "PAGADO"
-                if ("PAGADO".equals(nuevoEstado)) {
-                    cajaService.registrarIngresoAutomatizado(
-                            r.getPrecio(),
-                            "Servicio Grooming (" + r.getTipoServicio() + ") - Mascota: " + r.getNombreMascota(),
-                            "EFECTIVO",
-                            null,
-                            r
-                    );
-                }
-
-                res.put("success", true);
-            }, () -> {
-                res.put("success", false);
-                res.put("message", "Servicio no encontrado.");
-            });
-        } catch (IllegalArgumentException e) {
-            // Captura el error si el usuario intenta cobrar sin haber abierto la caja previamente
+        banoCorteRepository.findById(id).ifPresentOrElse(r -> {
+            r.setEstado(nuevoEstado);
+            banoCorteRepository.save(r);
+            res.put("success", true);
+        }, () -> {
             res.put("success", false);
-            res.put("message", e.getMessage());
-        } catch (Exception e) {
-            res.put("success", false);
-            res.put("message", "Error interno del sistema al cambiar de estado.");
-        }
+            res.put("message", "Servicio no encontrado.");
+        });
 
         return res;
     }
