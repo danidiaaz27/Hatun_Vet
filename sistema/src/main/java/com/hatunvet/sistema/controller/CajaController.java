@@ -3,11 +3,14 @@ package com.hatunvet.sistema.controller;
 import com.hatunvet.sistema.model.CajaMovimiento;
 import com.hatunvet.sistema.model.CajaSesion;
 import com.hatunvet.sistema.service.CajaService;
+import com.hatunvet.sistema.repository.CajaMovimientoRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -15,9 +18,11 @@ import java.util.Map;
 public class CajaController {
 
     private final CajaService cajaService;
+    private final CajaMovimientoRepository movimientoRepository;
 
-    public CajaController(CajaService cajaService) {
+    public CajaController(CajaService cajaService, CajaMovimientoRepository movimientoRepository) {
         this.cajaService = cajaService;
+        this.movimientoRepository = movimientoRepository;
     }
 
     @GetMapping
@@ -41,6 +46,31 @@ public class CajaController {
                 res.put("activo", false);
             }
         );
+        return res;
+    }
+
+    // NUEVO: Endpoint para el botón Buscar
+    @GetMapping("/api/filtrar")
+    @ResponseBody
+    public Map<String, Object> filtrarMonitor(
+            @RequestParam(required = false) String fechaDesde,
+            @RequestParam(required = false) String fechaHasta,
+            @RequestParam(required = false) String tipo,
+            @RequestParam(required = false) String medioPago) {
+        
+        Map<String, Object> res = new HashMap<>();
+        try {
+            LocalDateTime inicio = (fechaDesde != null && !fechaDesde.isEmpty()) ? LocalDateTime.parse(fechaDesde + "T00:00:00") : null;
+            LocalDateTime fin = (fechaHasta != null && !fechaHasta.isEmpty()) ? LocalDateTime.parse(fechaHasta + "T23:59:59") : null;
+            
+            List<CajaMovimiento> movimientos = movimientoRepository.filtrarMovimientosMonitor(inicio, fin, tipo, medioPago);
+            
+            res.put("success", true);
+            res.put("data", movimientos);
+        } catch (Exception e) {
+            res.put("success", false);
+            res.put("message", "Error al filtrar los datos");
+        }
         return res;
     }
 
