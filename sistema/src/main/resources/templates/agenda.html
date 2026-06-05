@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Agenda y Recepción - HatunVet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+    <style>
+        .fc-event { cursor: pointer; border-radius: 4px; border: none; padding: 2px 4px; }
+        .bg-agendada { background-color: #0d6efd; color: white; }
+        .bg-espera { background-color: #fd7e14; color: white; }
+        .bg-atencion { background-color: #198754; color: white; }
+    </style>
+</head>
+<body>
+<div class="d-flex">
+    <div th:replace="~{sidebar :: sidebar(activeUri='/agenda')}"></div>
+
+    <main class="main-content w-100 p-4 bg-light">
+        <header class="mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h4 mb-0 fw-bold text-dark">Agenda Central (Counter)</h2>
+                <small class="text-muted">Gestión de reservas y Check-in de pacientes</small>
+            </div>
+            <button class="btn btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
+                <i class="bi bi-calendar-plus me-1"></i> Agendar Cita
+            </button>
+        </header>
+
+        <div class="card p-4 bg-white shadow-sm border-0 rounded-3">
+            <div id="calendar"></div>
+        </div>
+    </main>
+</div>
+
+<div class="modal fade" id="modalNuevaCita" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formNuevaCita">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i> Nueva Reserva</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-3">
+                    <div class="col-12 text-center mb-2">
+                        <small class="text-primary fw-bold"><i class="bi bi-lightbulb-fill"></i> Tip LEAN: Sugiera horas atípicas (Ej. 10:05 o 10:15) para mejorar la puntualidad.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">ID Mascota (Temporal)</label>
+                        <input type="text" id="mascotaId" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">ID Médico (Temporal)</label>
+                        <input type="text" id="medicoId" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Fecha de Cita</label>
+                        <input type="date" id="fechaCita" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Hora (Sugerir Atípica)</label>
+                        <input type="time" id="horaCita" class="form-control" step="300" required> </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Motivo de Consulta</label>
+                        <input type="text" id="motivoCita" class="form-control" placeholder="Ej. Vacunación, Decaimiento..." required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-dark fw-bold">Agendar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCheckIn" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-person-check-fill me-2"></i> Recepción de Paciente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="alert alert-warning border-warning fw-bold text-dark mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2 text-danger"></i>
+                    PROTOCOLO OBLIGATORIO:<br>
+                    <span class="fw-normal">Recuerde informar al cliente que toda evaluación médica tiene un <strong>costo base de consulta</strong> antes de ingresarlo al consultorio.</span>
+                </div>
+                
+                <h5 id="lblMotivoCheckIn" class="mb-3 text-secondary">Motivo: --</h5>
+                <input type="hidden" id="citaIdCheckIn">
+                
+                <div class="form-check form-switch d-flex justify-content-center gap-2 mb-3">
+                    <input class="form-check-input fs-5" type="checkbox" id="checkAvisoCosto" required>
+                    <label class="form-check-label fw-bold mt-1" for="checkAvisoCosto">Confirmo que el cliente aceptó el costo base</label>
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" id="btnProcesarCheckIn" class="btn btn-primary btn-lg fw-bold px-5">Marcar Llegada (Pasar a Espera)</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/agenda.js}"></script>
+</body>
+</html>
