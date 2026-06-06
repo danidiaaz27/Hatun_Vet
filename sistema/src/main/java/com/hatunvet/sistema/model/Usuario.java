@@ -1,6 +1,7 @@
 package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "usuarios")
@@ -18,6 +19,7 @@ public class Usuario {
     private String usuario;
 
     @Column(name = "password_hash", nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String passwordHash;
 
     @Column(nullable = false)
