@@ -2,6 +2,8 @@ package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "citas")
@@ -15,17 +17,21 @@ public class Cita {
     // Conexión con el paciente (Mascota)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mascota_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Mascota mascota;
 
     // Conexión con el doctor asignado
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "veterinario_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Usuario veterinario;
 
     @Column(name = "fecha_hora_programada", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaHoraProgramada; // La hora atípica (ej. 10:05)
 
     @Column(name = "fecha_hora_llegada")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaHoraLlegada; // Cuando el counter hace check-in
 
     @Column(nullable = false, length = 20)
