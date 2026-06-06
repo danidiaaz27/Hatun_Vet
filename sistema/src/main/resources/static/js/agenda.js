@@ -60,13 +60,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('formNuevaCita').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // CORRECCIÓN APLICADA: .value en lugar de .val
         const fecha = document.getElementById('fechaCita').value;
         const hora = document.getElementById('horaCita').value;
         const fechaHora = `${fecha}T${hora}:00`;
 
         const payload = {
-            mascota: { id: document.getElementById('mascotaId').value }, // Requiere IDs válidos en tu BD
+            mascota: { id: document.getElementById('mascotaId').value }, 
             veterinario: { id: document.getElementById('medicoId').value },
             fechaHoraProgramada: fechaHora,
             motivoPrincipal: document.getElementById('motivoCita').value
@@ -92,17 +91,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 3. Procesar el Check-In (Pasar paciente a En Espera)
     document.getElementById('btnProcesarCheckIn').addEventListener('click', function() {
-        if (!document.getElementById('checkAvisoCosto').checked) {
+        const checkboxCosto = document.getElementById('checkAvisoCosto');
+
+        if (!checkboxCosto.checked) {
             Swal.fire('Atención', 'Debe confirmar que informó el costo base al cliente.', 'warning');
             return;
         }
 
         const idCita = document.getElementById('citaIdCheckIn').value;
+        // --- CAMBIO: Se extrae dinámicamente el valor del checkbox ---
+        const costoBaseInformado = checkboxCosto.checked; 
+        
         const btn = this;
         btn.disabled = true;
         btn.innerText = "Procesando...";
 
-        fetch(`/api/citas/${idCita}/check-in`, { method: 'POST' })
+        // --- CAMBIO: Enviamos la variable como Query Parameter (?costoBaseInformado=true) ---
+        fetch(`/api/citas/${idCita}/check-in?costoBaseInformado=${costoBaseInformado}`, { method: 'POST' })
             .then(r => r.json())
             .then(res => {
                 btn.disabled = false;

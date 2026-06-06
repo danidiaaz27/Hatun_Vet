@@ -4,22 +4,26 @@ $(document).ready(function() {
     const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     $('#fechaActual').text(new Date().toLocaleDateString('es-PE', opcionesFecha));
 
-    // Formateador de moneda
+    // Formateador de moneda (Estándar Sol Peruano)
     const formatoMoneda = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
 
-    // Llamar a la API Centralizada que creamos en Java
+    // ==========================================
+    // 1. LLAMADA A LA API CENTRALIZADA (DASHBOARD)
+    // ==========================================
     fetch('/reportes/api/dashboard')
         .then(response => response.json())
         .then(res => {
             if (res.success) {
-                // 1. PINTAR KPIs (Tarjetas Superiores)
+                // PINTAR KPIs (Tarjetas Superiores)
                 $('#kpiIngresosHoy').text(formatoMoneda.format(res.kpis.ingresosHoy));
                 $('#kpiIngresosMes').text(formatoMoneda.format(res.kpis.ingresosMes));
                 $('#kpiTotalVentas').text(res.kpis.totalVentasMes);
                 $('#kpiTotalServicios').text(res.kpis.totalServiciosMes);
 
-                // 2. PINTAR ALERTA DE STOCK (Petshop)
+                // PINTAR ALERTA DE STOCK (Petshop)
                 const tbodyStock = $('#tbodyStockCritico');
+                tbodyStock.empty(); // Limpiar estático
+                
                 if (res.petshop.stockCritico.length === 0) {
                     tbodyStock.html('<tr><td colspan="2" class="text-center text-success py-4"><i class="bi bi-check-circle-fill fs-4 d-block mb-2"></i>¡Todo en orden! No hay stock crítico.</td></tr>');
                 } else {
@@ -34,7 +38,7 @@ $(document).ready(function() {
                     });
                 }
 
-                // 3. DIBUJAR GRÁFICOS (Peluquería)
+                // DIBUJAR GRÁFICOS (Peluquería)
                 dibujarGraficoEspecies(res.peluqueria.porEspecie);
                 dibujarGraficoServicios(res.peluqueria.porServicio);
 
@@ -43,12 +47,55 @@ $(document).ready(function() {
                 alert("Ocurrió un error al cargar los datos del Dashboard.");
             }
         })
-        .catch(error => console.error("Error de red:", error));
+        .catch(error => console.error("Error de red en Dashboard:", error));
 
-    // --- Funciones para Chart.js ---
 
+    // ==========================================
+    // 2. CONSUMIR ENDPOINT DE RENTABILIDAD Y AUDITORÍA
+    // ==========================================
+    fetch('/reportes/api/rentabilidad-clinica')
+        .then(response => response.json())
+        .then(res => {
+            const tbodyAuditoria = $('#tbodyAuditoriaInsumos');
+            tbodyAuditoria.empty(); // Remover el mensaje de "Cargando..."
+
+            // Verificamos que la respuesta sea exitosa y contenga la lista de detalles
+            if (res.success && res.data.detalles && res.data.detalles.length > 0) {
+                res.data.detalles.forEach(item => {
+                    // Estilo de color automático si la utilidad es negativa (alerta de pérdida)
+                    let utilidadClass = item.utilidad >= 0 ? 'text-success' : 'text-danger fw-bold';
+                    
+                    tbodyAuditoria.append(`
+                        <tr>
+                            <td class="ps-3">
+                                <span class="fw-bold text-secondary"><i class="bi bi-github text-primary me-1"></i>${item.mascota}</span>
+                            </td>
+                            <td>
+                                <span class="d-inline-block text-truncate" style="max-width: 280px;" title="${item.insumo}">
+                                    ${item.insumo}
+                                </span>
+                            </td>
+                            <td class="text-center fw-semibold">${item.cantidad}</td>
+                            <td class="text-end text-dark">${formatoMoneda.format(item.precioCobrado)}</td>
+                            <td class="text-end text-muted">${formatoMoneda.format(item.cogs)}</td>
+                            <td class="text-end pe-3 ${utilidadClass}">${formatoMoneda.format(item.utilidad)}</td>
+                        </tr>
+                    `);
+                });
+            } else {
+                tbodyAuditoria.html('<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-info-circle me-2"></i>No se registran movimientos ni consumos de insumos clínicos en este periodo.</td></tr>');
+            }
+        })
+        .catch(error => {
+            console.error("Error de red en Auditoría:", error);
+            $('#tbodyAuditoriaInsumos').html('<tr><td colspan="6" class="text-center text-danger py-4"><i class="bi bi-exclamation-octagon-fill me-2"></i>Error al conectar con la API de auditoría.</td></tr>');
+        });
+
+
+    // ==========================================
+    // NOTA: MOTORES DE RENDERIZADO (CHART.JS)
+    // ==========================================
     function dibujarGraficoEspecies(datosEspecie) {
-        // datosEspecie llega como [["Perro", 10], ["Gato", 5]]
         const etiquetas = datosEspecie.map(item => item[0]);
         const valores = datosEspecie.map(item => item[1]);
 
@@ -75,7 +122,6 @@ $(document).ready(function() {
     }
 
     function dibujarGraficoServicios(datosServicio) {
-        // datosServicio llega como [["Baño Estándar", 8], ["Solo Corte", 4]]
         const etiquetas = datosServicio.map(item => item[0]);
         const valores = datosServicio.map(item => item[1]);
 
@@ -87,7 +133,7 @@ $(document).ready(function() {
                 datasets: [{
                     label: 'Cantidad de Servicios',
                     data: valores,
-                    backgroundColor: 'rgba(111, 66, 193, 0.7)', // Morado HatunVet
+                    backgroundColor: 'rgba(111, 66, 193, 0.7)',
                     borderColor: '#6f42c1',
                     borderWidth: 1,
                     borderRadius: 4
@@ -100,10 +146,9 @@ $(document).ready(function() {
                     y: { beginAtZero: true, ticks: { stepSize: 1 } }
                 },
                 plugins: {
-                    legend: { display: false } // Ocultamos la leyenda superior para que se vea más limpio
+                    legend: { display: false }
                 }
             }
         });
     }
-
 });
