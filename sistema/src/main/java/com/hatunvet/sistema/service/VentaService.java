@@ -22,7 +22,7 @@ public class VentaService {
     private final VentaRepository ventaRepository;
     private final ProductoRepository productoRepository;
     private final FacturacionService facturacionService;
-    private final CajaService cajaService; // NUEVA CONEXIÓN
+    private final CajaService cajaService;
 
     public VentaService(VentaRepository ventaRepository, ProductoRepository productoRepository, 
                         FacturacionService facturacionService, CajaService cajaService) {
@@ -54,7 +54,6 @@ public class VentaService {
         venta.setClienteDocumento((String) cliente.get("numDoc"));
         venta.setClienteNombre((String) cliente.get("rznSocial"));
         
-        // Se asume la obtención de la forma de pago enviada por el front (ej. "EFECTIVO", "TARJETA")
         String medioPago = comprobante.get("medioPago") != null ? (String) comprobante.get("medioPago") : "EFECTIVO";
         venta.setMedioPago(medioPago);
 
@@ -67,25 +66,29 @@ public class VentaService {
             Producto p = productoRepository.findByCodigo(codProd)
                     .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + codProd));
 
-            int cantidad = (Integer) itemData.get("cantidad");
+            // --- CAMBIO: Deserialización segura mediante Number para soportar decimales (Double) e Integer ---
+            double cantidad = ((Number) itemData.get("cantidad")).doubleValue();
 
             if (p.getStock() < cantidad) {
                 throw new RuntimeException("Stock insuficiente para: " + p.getNombre() + ". Stock actual: " + p.getStock());
             }
 
             BigDecimal precioReal = p.getPrecio();
-            BigDecimal cantidadBd = new BigDecimal(cantidad);
+            // --- CAMBIO: Se genera el BigDecimal a partir del valor double de la cantidad ---
+            BigDecimal cantidadBd = BigDecimal.valueOf(cantidad);
 
             BigDecimal valorUnitarioReal = precioReal.divide(new BigDecimal("1.18"), 2, RoundingMode.HALF_UP);
             BigDecimal importeTotal = precioReal.multiply(cantidadBd);
             BigDecimal baseItem = valorUnitarioReal.multiply(cantidadBd);
             BigDecimal igvItem = importeTotal.subtract(baseItem);
 
+            // Restamos la cantidad fraccionada del stock (Asegúrate de que p.getStock() y setStock() manejen double/Double)
             p.setStock(p.getStock() - cantidad);
 
             VentaDetalle detalle = new VentaDetalle();
             detalle.setProducto(p);
-            detalle.setCantidad(cantidad);
+            // --- CAMBIO: Si VentaDetalle requiere int, usa (int) cantidad o actualiza su tipo a Double/BigDecimal ---
+            detalle.setCantidad((int) cantidad); 
             detalle.setPrecioUnitario(precioReal);
             detalle.setValorUnitario(valorUnitarioReal);
             detalle.setIgv(igvItem);
@@ -105,7 +108,6 @@ public class VentaService {
 
         ventaRepository.save(venta);
 
-        // CONEXIÓN AUTOMÁTICA A CAJA: Se registra el ingreso del total de la venta
         cajaService.registrarIngresoAutomatizado(
                 venta.getTotal(),
                 "Venta POS N° " + venta.getSerie() + "-" + venta.getCorrelativo(),
