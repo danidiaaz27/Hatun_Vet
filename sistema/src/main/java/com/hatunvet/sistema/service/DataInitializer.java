@@ -4,9 +4,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-// IMPORTANTE: Asegúrate de importar tus Entidades y Repositorios reales aquí
- import com.hatunvet.sistema.model.*;
- import com.hatunvet.sistema.repository.*;
+// Importaciones de tus Entidades y Repositorios
+import com.hatunvet.sistema.model.*;
+import com.hatunvet.sistema.repository.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ProductoRepository productoRepository;
     private final ClienteRepository clienteRepository;
 
-    // Inyección de dependencias por constructor (Buena práctica en Spring)
+    // Inyección de dependencias por constructor
     public DataInitializer(
             PerfilRepository perfilRepository,
             UsuarioRepository usuarioRepository,
@@ -47,7 +47,7 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("⏳ Iniciando la carga de datos maestros para HatunVet...");
         
         initPerfiles();
-        initUsuarios();
+        initUsuarios(); // <- Ahora creará los usuarios con sus perfiles asignados
         initConfiguracion();
         initCategorias();
         initProveedores();
@@ -58,7 +58,6 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initPerfiles() {
         if (perfilRepository.count() == 0) {
-            // Nota: Ajusta los setters según los nombres exactos en tus clases @Entity
             Perfil admin = new Perfil();
             admin.setId("32b655d7-3c3d-11f1-adc7-50ebf6d2c599");
             admin.setNombre("Administrador");
@@ -79,27 +78,31 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initUsuarios() {
         if (usuarioRepository.count() == 0) {
-            // Asumimos que tienes una relación ManyToOne o que pasas el ID del perfil
+            // Buscamos los perfiles que acabamos de asegurar que existen en la BD
+            Perfil perfilAdmin = perfilRepository.findById("32b655d7-3c3d-11f1-adc7-50ebf6d2c599").orElse(null);
+            Perfil perfilVendedor = perfilRepository.findById("21781535-5a0a-4e3c-a268-a7624bfcb09f").orElse(null);
+
+            // Crear Usuario Administrador
             Usuario admin = new Usuario();
             admin.setId("32d68284-3c3d-11f1-adc7-50ebf6d2c599");
             admin.setNombre("Administrador HatunVet");
             admin.setUsuario("admin");
             admin.setPasswordHash("$2a$10$ifojdEQ.cHInJoDazhbvu.Ou2cb4ewKjLoqOZnghY1gPR4Rkykx4i");
             admin.setActivo(true);
-            
-            // Debes asignar el perfil aquí, dependiendo de cómo mapeaste tu @Entity
-            // admin.setPerfil(perfilRepository.findById("32b655d7-3c3d-11f1-adc7-50ebf6d2c599").orElse(null));
+            admin.setPerfil(perfilAdmin); // 👈 Vinculación corregida
 
+            // Crear Usuario Vendedor
             Usuario vendedor = new Usuario();
             vendedor.setId("c53798d5-fb81-4bcd-872e-fdd108844563");
             vendedor.setNombre("Mateo Sanchez");
             vendedor.setUsuario("mateo");
             vendedor.setPasswordHash("$2a$10$1zZAfBNRu0D0oJuiZQkE3eQTpHBr/ApUSwDlsO/JTUA77mLjXbvc6");
             vendedor.setActivo(true);
+            vendedor.setPerfil(perfilVendedor); // 👈 Vinculación corregida
 
             usuarioRepository.save(admin);
             usuarioRepository.save(vendedor);
-            System.out.println(" -> Usuarios registrados.");
+            System.out.println(" -> Usuarios registrados correctamente con sus perfiles.");
         }
     }
 
@@ -155,7 +158,6 @@ public class DataInitializer implements CommandLineRunner {
     private void initProveedores() {
         if (proveedorRepository.count() == 0) {
             Proveedor prov1 = new Proveedor();
-            // Dependiendo de si tu ID es autoincremental en JPA, podrías no necesitar setearlo
             prov1.setNombre("DISTRIBUIDORA DE PRODUCTOS AGRO VETERINARIOS S.A.C.");
             prov1.setRuc("20602461824");
             prov1.setTelefono("975184139");
