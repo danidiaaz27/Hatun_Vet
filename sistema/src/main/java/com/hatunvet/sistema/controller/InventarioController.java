@@ -55,12 +55,14 @@ public class InventarioController {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            // VALIDACIÓN 1: Jamás aceptar cantidades <= 0 (Evita hackeo por ley de signos)
             if (movimiento.getCantidad() == null || movimiento.getCantidad() <= 0) {
                 response.put("success", false);
                 response.put("message", "Operación rechazada. La cantidad debe ser mayor a 0.");
                 return response;
             }
 
+            // VALIDACIÓN 2: Lista blanca de Movimientos
             String tipo = movimiento.getTipoMovimiento();
             List<String> validTypes = List.of("COMPRA", "AJUSTE POSITIVO", "CONSUMO INTERNO", "MERMA POR VENCIMIENTO", "AJUSTE NEGATIVO");
             if (!validTypes.contains(tipo)) {
@@ -79,20 +81,22 @@ public class InventarioController {
             Producto producto = prodOpt.get();
             movimiento.setProducto(producto);
 
-            // --- CORREGIDO: Ahora es double para alinearse con el modelo Producto ---
-            double stockActual = producto.getStock(); 
-            int cantidadMovimiento = movimiento.getCantidad(); 
+            int stockActual = producto.getStock();
+            int cantidadMovimiento = movimiento.getCantidad(); // Ya sabemos que es positivo seguro
 
+            // LOGICA MATEMATICA SEGURA
             if (tipo.equals("COMPRA") || tipo.equals("AJUSTE POSITIVO")) {
                 producto.setStock(stockActual + cantidadMovimiento);
+                // El registro de BD guarda cantidad en positivo
             } else {
+                // Son salidas (CONSUMO, MERMA, AJUSTE NEGATIVO)
                 if (stockActual < cantidadMovimiento) {
                     response.put("success", false);
                     response.put("message", "No hay stock suficiente. Stock actual: " + stockActual);
                     return response;
                 }
                 producto.setStock(stockActual - cantidadMovimiento);
-                movimiento.setCantidad(-cantidadMovimiento); 
+                movimiento.setCantidad(-cantidadMovimiento); // Guardamos en negativo para el Kardex visual
             }
 
             productoRepo.save(producto);
