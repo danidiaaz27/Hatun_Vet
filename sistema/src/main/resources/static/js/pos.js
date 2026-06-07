@@ -1,5 +1,6 @@
 $(document).ready(function() {
     let carrito = [];
+    let citaIdImportada = null;
     const TASA_IGV = 0.18;
     
     // Inicializar Modal de Citas
@@ -235,6 +236,7 @@ $(document).ready(function() {
     };
 
     function importarCitaDirecta(citaData) {
+        citaIdImportada = citaData.citaId;
         // Rellenar tipo de comprobante y documento automáticamente
         const isRuc = citaData.clienteDocumento.length === 11;
         $('#tipoDoc').val(isRuc ? '6' : '1').trigger('change');
@@ -318,7 +320,8 @@ $(document).ready(function() {
                 "tipoPago": "Contado",
                 "observacion": "Generado desde POS HatunVet"
             },
-            "items": itemsApi
+            "items": itemsApi,
+            "citaId": citaIdImportada
         };
 
         const btn = $(this);
@@ -349,6 +352,7 @@ $(document).ready(function() {
                     else if (choice.dismiss === Swal.DismissReason.cancel) window.open(res['pdf-a4'], '_blank');
 
                     carrito = [];
+                    citaIdImportada = null;
                     renderizarCarrito();
                     $('#numDoc, #nombreCliente, #direccionCliente').val('');
                 });

@@ -5,6 +5,7 @@ import com.hatunvet.sistema.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,18 +20,45 @@ public class CitaService {
     private final ConsultaClinicaRepository consultaRepository;
     private final ConsultaInsumoRepository insumoRepository;
     private final ServicioTerceroRepository terceroRepository;
+    private final ProductoRepository productoRepository;
 
     public CitaService(CitaRepository citaRepository, ConsultaClinicaRepository consultaRepository, 
-                       ConsultaInsumoRepository insumoRepository, ServicioTerceroRepository terceroRepository) {
+                       ConsultaInsumoRepository insumoRepository, ServicioTerceroRepository terceroRepository,
+                       ProductoRepository productoRepository) {
         this.citaRepository = citaRepository;
         this.consultaRepository = consultaRepository;
         this.insumoRepository = insumoRepository;
         this.terceroRepository = terceroRepository;
+        this.productoRepository = productoRepository;
     }
 
-    public List<Cita> obtenerTodasLasCitas() {
-        return citaRepository.findAll();
+    // =========================================================================
+    // CAMBIO: MÉTODOS SOBRECARGADOS CON FILTRO DE FECHAS (JOIN FETCH INTEGRADO)
+    // =========================================================================
+    
+    /**
+     * Obtiene las citas del sistema. Si se proporcionan 'fechaInicio' y 'fechaFin',
+     * realiza el filtro por rango. De lo contrario, retorna todas las citas.
+     * Ambas opciones usan JOIN FETCH para evitar consultas N+1.
+     */
+    public List<Cita> obtenerTodasLasCitas(LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        if (fechaInicio != null && fechaFin != null) {
+            return citaRepository.findCitasConRelacionesEnRango(fechaInicio, fechaFin);
+        }
+        return citaRepository.findAllWithRelaciones();
     }
+
+    /**
+     * Sobrecarga de respaldo para mantener la compatibilidad con llamadas 
+     * existentes en tu código que no envían parámetros.
+     */
+    public List<Cita> obtenerTodasLasCitas() {
+        return obtenerTodasLasCitas(null, null);
+    }
+
+    // =========================================================================
+    // PROCESOS OPERATIVOS DE LA CITA
+    // =========================================================================
 
     @Transactional
     public Cita guardarCita(Cita cita) {
@@ -65,15 +93,59 @@ public class CitaService {
             datosClinicos.getSintomas().trim().isEmpty() || datosClinicos.getDiagnosticoPresuntivo().trim().isEmpty()) {
             throw new IllegalArgumentException("El peso, temperatura, síntomas y diagnóstico son obligatorios.");
         }
-        Cita cita = citaRepository.findById(citaId).orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
-        datosClinicos.setCita(cita);
-        return consultaRepository.save(datosClinicos);
+        
+        Optional<ConsultaClinica> consultaExistenteOpt = consultaRepository.findByCitaId(citaId);
+        
+        if (consultaExistenteOpt.isPresent()) {
+            ConsultaClinica consultaExistente = consultaExistenteOpt.get();
+            consultaExistente.setPesoKg(datosClinicos.getPesoKg());
+            consultaExistente.setTemperaturaC(datosClinicos.getTemperaturaC());
+            consultaExistente.setFrecuenciaCardiaca(datosClinicos.getFrecuenciaCardiaca());
+            consultaExistente.setSintomas(datosClinicos.getSintomas());
+            consultaExistente.setDiagnosticoPresuntivo(datosClinicos.getDiagnosticoPresuntivo());
+            consultaExistente.setTratamientoIndicado(datosClinicos.getTratamientoIndicado());
+            return consultaRepository.save(consultaExistente);
+        } else {
+            Cita cita = citaRepository.findById(citaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
+            datosClinicos.setCita(cita);
+            return consultaRepository.save(datosClinicos);
+        }
     }
 
     @Transactional
     public ConsultaInsumo registrarInsumo(String consultaId, ConsultaInsumo insumo) {
-        ConsultaClinica consulta = consultaRepository.findById(consultaId).orElseThrow(() -> new IllegalArgumentException("Consulta no encontrada"));
+        ConsultaClinica consulta = consultaRepository.findById(consultaId)
+                .orElseThrow(() -> new IllegalArgumentException("Consulta no encontrada"));
+        
+        Producto producto = productoRepository.findById(insumo.getProducto().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+
+        BigDecimal consumoReal = new BigDecimal(String.valueOf(insumo.getCantidadUsada()));
+
+        if (producto.getSubStock() == null) {
+            producto.setSubStock(BigDecimal.ZERO);
+        }
+
+        if (producto.getSubStock().compareTo(consumoReal) < 0) {
+            if (producto.getStock() >= 1) {
+                producto.setStock(producto.getStock() - 1);
+                BigDecimal contenidoAAgregar = producto.getContenidoUnidad() != null ? producto.getContenidoUnidad() : BigDecimal.ZERO;
+                producto.setSubStock(producto.getSubStock().add(contenidoAAgregar));
+            } else {
+                throw new IllegalStateException("Stock comercial agotado. No es posible fraccionar más unidades de: " + producto.getNombre());
+            }
+
+            if (producto.getSubStock().compareTo(consumoReal) < 0) {
+                throw new IllegalStateException("El consumo solicitado supera el contenido disponible fraccionado de: " + producto.getNombre());
+            }
+        }
+
+        producto.setSubStock(producto.getSubStock().subtract(consumoReal));
+        productoRepository.save(producto);
+
         insumo.setConsultaClinica(consulta);
+        insumo.setProducto(producto);
         return insumoRepository.save(insumo);
     }
 
@@ -85,7 +157,9 @@ public class CitaService {
         return citaRepository.save(cita);
     }
 
-    // --- HISTORIAL PERPETUO ---
+    // =========================================================================
+    // HISTORIAL PERPETUO
+    // =========================================================================
     public List<Map<String, Object>> obtenerHistorialMascota(String mascotaId) {
         List<ConsultaClinica> consultas = consultaRepository.findHistorialByMascotaId(mascotaId);
         return consultas.stream().map(c -> {
@@ -101,9 +175,11 @@ public class CitaService {
         }).toList();
     }
 
-    // --- PUENTE CON EL PUNTO DE VENTA (POS) ---
+    // =========================================================================
+    // PUENTE OPTIMIZADO CON EL PUNTO DE VENTA (POS)
+    // =========================================================================
     public List<Map<String, Object>> obtenerCitasParaFacturacion() {
-        List<Cita> citasFinalizadas = citaRepository.findByEstado("FINALIZADA");
+        List<Cita> citasFinalizadas = citaRepository.findByEstadoWithRelaciones("FINALIZADA");
         
         return citasFinalizadas.stream().map(cita -> {
             Map<String, Object> map = new HashMap<>();
@@ -126,10 +202,10 @@ public class CitaService {
                 List<ConsultaInsumo> insumos = insumoRepository.findByConsultaClinicaId(clinicaOpt.get().getId());
                 for(ConsultaInsumo ins : insumos) {
                     Map<String, Object> itemIns = new HashMap<>();
-                    itemIns.put("idProducto", ins.getProducto().getId());
+                    itemIns.put("codProducto", ins.getProducto().getCodigo());
                     itemIns.put("descripcion", ins.getProducto().getNombre() + " (" + ins.getCantidadUsada() + " " + ins.getUnidadMedida() + ")");
                     itemIns.put("precio", ins.getPrecioCobrado());
-                    itemIns.put("cantidad", 1);
+                    itemIns.put("cantidad", ins.getCantidadUsada());
                     itemIns.put("tipo", "INSUMO");
                     detallesCesta.add(itemIns);
                 }

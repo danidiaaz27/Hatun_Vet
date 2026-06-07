@@ -2,6 +2,7 @@ package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public class Perfil {
             joinColumns = @JoinColumn(name = "id_perfil"),
             inverseJoinColumns = @JoinColumn(name = "id_opcion")
     )
-    @JsonIgnoreProperties("perfiles")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Set<Opcion> opciones = new HashSet<>();
 
     public Perfil() {}

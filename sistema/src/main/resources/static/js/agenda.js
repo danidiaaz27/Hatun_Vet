@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const calendarEl = document.getElementById('calendar');
     const modalNuevaCita = new bootstrap.Modal(document.getElementById('modalNuevaCita'));
     const modalCheckIn = new bootstrap.Modal(document.getElementById('modalCheckIn'));
@@ -15,17 +15,23 @@ document.addEventListener('DOMContentLoaded', function() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        // Cargar eventos desde nuestro backend
-        events: function(fetchInfo, successCallback, failureCallback) {
-            fetch('/api/citas')
+
+        // MODIFICADO: Cargar eventos filtrados dinámicamente por el rango visible
+        events: function (fetchInfo, successCallback, failureCallback) {
+            // fetchInfo.startStr y fetchInfo.endStr devuelven las fechas en formato ISO (ej: 2026-06-01T00:00:00-05:00)
+            const inicio = fetchInfo.startStr;
+            const fin = fetchInfo.endStr;
+
+            // Concatenamos las fechas como parámetros Query a nuestro controlador de Spring Boot
+            fetch(`/api/citas?inicio=${inicio}&fin=${fin}`)
                 .then(response => response.json())
                 .then(data => {
                     let events = data.map(cita => {
                         // Asignar colores según nuestro motor de estados
                         let colorClass = 'bg-agendada';
-                        if(cita.estado === 'EN_ESPERA') colorClass = 'bg-espera';
-                        if(cita.estado === 'EN_ATENCION') colorClass = 'bg-atencion';
-                        if(cita.estado === 'FINALIZADA') colorClass = 'bg-secondary';
+                        if (cita.estado === 'EN_ESPERA') colorClass = 'bg-espera';
+                        if (cita.estado === 'EN_ATENCION') colorClass = 'bg-atencion';
+                        if (cita.estado === 'FINALIZADA' || cita.estado === 'COBRADA') colorClass = 'bg-secondary';
 
                         return {
                             id: cita.id,
@@ -40,9 +46,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(error => failureCallback(error));
         },
         // Al hacer clic en una cita existente
-        eventClick: function(info) {
+        eventClick: function (info) {
             const estado = info.event.extendedProps.estado;
-            
+
             // Si está agendada, el Counter hace el Check-in
             if (estado === 'AGENDADA') {
                 document.getElementById('citaIdCheckIn').value = info.event.id;
@@ -57,16 +63,15 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar.render();
 
     // 2. Guardar Nueva Cita
-    document.getElementById('formNuevaCita').addEventListener('submit', function(e) {
+    document.getElementById('formNuevaCita').addEventListener('submit', function (e) {
         e.preventDefault();
-        
-        // CORRECCIÓN APLICADA: .value en lugar de .val
+
         const fecha = document.getElementById('fechaCita').value;
         const hora = document.getElementById('horaCita').value;
         const fechaHora = `${fecha}T${hora}:00`;
 
         const payload = {
-            mascota: { id: document.getElementById('mascotaId').value }, // Requiere IDs válidos en tu BD
+            mascota: { id: document.getElementById('mascotaId').value },
             veterinario: { id: document.getElementById('medicoId').value },
             fechaHoraProgramada: fechaHora,
             motivoPrincipal: document.getElementById('motivoCita').value
@@ -77,21 +82,21 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                modalNuevaCita.hide();
-                calendar.refetchEvents(); // Recargar el calendario
-                Swal.fire('Éxito', res.message, 'success');
-                this.reset();
-            } else {
-                Swal.fire('Error', res.message, 'error');
-            }
-        });
+            .then(r => r.json())
+            .then(res => {
+                if (res.success) {
+                    modalNuevaCita.hide();
+                    calendar.refetchEvents(); // Recargar el calendario dinámicamente
+                    Swal.fire('Éxito', res.message, 'success');
+                    this.reset();
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            });
     });
 
     // 3. Procesar el Check-In (Pasar paciente a En Espera)
-    document.getElementById('btnProcesarCheckIn').addEventListener('click', function() {
+    document.getElementById('btnProcesarCheckIn').addEventListener('click', function () {
         if (!document.getElementById('checkAvisoCosto').checked) {
             Swal.fire('Atención', 'Debe confirmar que informó el costo base al cliente.', 'warning');
             return;
@@ -107,10 +112,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => {
                 btn.disabled = false;
                 btn.innerText = "Marcar Llegada (Pasar a Espera)";
-                
+
                 if (res.success) {
                     modalCheckIn.hide();
-                    calendar.refetchEvents();
+                    calendar.refetchEvents(); // Recarga solo el rango actual optimizado
                     Swal.fire('Check-in Exitoso', res.message, 'success');
                 } else {
                     Swal.fire('Error', res.message, 'error');
