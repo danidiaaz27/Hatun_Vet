@@ -5,7 +5,6 @@ import com.hatunvet.sistema.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,17 +19,13 @@ public class CitaService {
     private final ConsultaClinicaRepository consultaRepository;
     private final ConsultaInsumoRepository insumoRepository;
     private final ServicioTerceroRepository terceroRepository;
-    private final ProductoRepository productoRepository; // NUEVA INYECCIÓN para control de inventario
 
-    // Constructor actualizado con la nueva dependencia
     public CitaService(CitaRepository citaRepository, ConsultaClinicaRepository consultaRepository, 
-                       ConsultaInsumoRepository insumoRepository, ServicioTerceroRepository terceroRepository,
-                       ProductoRepository productoRepository) {
+                       ConsultaInsumoRepository insumoRepository, ServicioTerceroRepository terceroRepository) {
         this.citaRepository = citaRepository;
         this.consultaRepository = consultaRepository;
         this.insumoRepository = insumoRepository;
         this.terceroRepository = terceroRepository;
-        this.productoRepository = productoRepository;
     }
 
     public List<Cita> obtenerTodasLasCitas() {
@@ -43,7 +38,7 @@ public class CitaService {
     }
 
     @Transactional
-    public Cita registrarLlegadaPaciente(String citaId, boolean costoBaseInformado) {
+    public Cita registrarLlegadaPaciente(String citaId) {
         Cita cita = citaRepository.findById(citaId)
                 .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
         
@@ -52,7 +47,7 @@ public class CitaService {
         }
         cita.setEstado("EN_ESPERA");
         cita.setFechaHoraLlegada(LocalDateTime.now());
-        cita.setCostoBaseInformado(costoBaseInformado); 
+        cita.setCostoBaseInformado(true); 
         return citaRepository.save(cita);
     }
 
@@ -70,66 +65,15 @@ public class CitaService {
             datosClinicos.getSintomas().trim().isEmpty() || datosClinicos.getDiagnosticoPresuntivo().trim().isEmpty()) {
             throw new IllegalArgumentException("El peso, temperatura, síntomas y diagnóstico son obligatorios.");
         }
-
-        Optional<ConsultaClinica> consultaExistenteOpt = consultaRepository.findByCitaId(citaId);
-        
-        if (consultaExistenteOpt.isPresent()) {
-            ConsultaClinica consultaExistente = consultaExistenteOpt.get();
-            
-            consultaExistente.setPesoKg(datosClinicos.getPesoKg());
-            consultaExistente.setTemperaturaC(datosClinicos.getTemperaturaC());
-            consultaExistente.setFrecuenciaCardiaca(datosClinicos.getFrecuenciaCardiaca());
-            consultaExistente.setSintomas(datosClinicos.getSintomas());
-            consultaExistente.setDiagnosticoPresuntivo(datosClinicos.getDiagnosticoPresuntivo());
-            consultaExistente.setTratamientoIndicado(datosClinicos.getTratamientoIndicado());
-            
-            return consultaRepository.save(consultaExistente);
-        } else {
-            Cita cita = citaRepository.findById(citaId)
-                    .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
-            
-            datosClinicos.setCita(cita);
-            return consultaRepository.save(datosClinicos);
-        }
+        Cita cita = citaRepository.findById(citaId).orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
+        datosClinicos.setCita(cita);
+        return consultaRepository.save(datosClinicos);
     }
 
-    // --- CAMBIO 2: Lógica de deducción y fraccionamiento del Sub-Stock Clínico ---
     @Transactional
     public ConsultaInsumo registrarInsumo(String consultaId, ConsultaInsumo insumo) {
-        ConsultaClinica consulta = consultaRepository.findById(consultaId)
-                .orElseThrow(() -> new IllegalArgumentException("Consulta no encontrada"));
-        
-        Producto producto = productoRepository.findById(insumo.getProducto().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
-
-        // --- CORREGIDO: Conversión segura y universal a BigDecimal sin importar el tipo de origen ---
-        BigDecimal consumoReal = new BigDecimal(String.valueOf(insumo.getCantidadUsada()));
-
-        if (producto.getSubStock() == null) {
-            producto.setSubStock(BigDecimal.ZERO);
-        }
-
-        if (producto.getSubStock().compareTo(consumoReal) < 0) {
-            if (producto.getStock() >= 1) {
-                producto.setStock(producto.getStock() - 1);
-                
-                BigDecimal contenidoAAgregar = producto.getContenidoUnidad() != null ? producto.getContenidoUnidad() : BigDecimal.ZERO;
-                producto.setSubStock(producto.getSubStock().add(contenidoAAgregar));
-            } else {
-                throw new IllegalStateException("Stock comercial agotado. No es posible fraccionar más unidades de: " + producto.getNombre());
-            }
-
-            if (producto.getSubStock().compareTo(consumoReal) < 0) {
-                throw new IllegalStateException("El consumo solicitado supera el contenido disponible fraccionado de: " + producto.getNombre());
-            }
-        }
-
-        producto.setSubStock(producto.getSubStock().subtract(consumoReal));
-        
-        productoRepository.save(producto);
-
+        ConsultaClinica consulta = consultaRepository.findById(consultaId).orElseThrow(() -> new IllegalArgumentException("Consulta no encontrada"));
         insumo.setConsultaClinica(consulta);
-        insumo.setProducto(producto);
         return insumoRepository.save(insumo);
     }
 
@@ -182,11 +126,10 @@ public class CitaService {
                 List<ConsultaInsumo> insumos = insumoRepository.findByConsultaClinicaId(clinicaOpt.get().getId());
                 for(ConsultaInsumo ins : insumos) {
                     Map<String, Object> itemIns = new HashMap<>();
-                    itemIns.put("codProducto", ins.getProducto().getCodigo());
+                    itemIns.put("idProducto", ins.getProducto().getId());
                     itemIns.put("descripcion", ins.getProducto().getNombre() + " (" + ins.getCantidadUsada() + " " + ins.getUnidadMedida() + ")");
                     itemIns.put("precio", ins.getPrecioCobrado());
-                    // --- CAMBIO 1: Garantizado el uso dinámico de getCantidadUsada() ---
-                    itemIns.put("cantidad", ins.getCantidadUsada()); 
+                    itemIns.put("cantidad", 1);
                     itemIns.put("tipo", "INSUMO");
                     detallesCesta.add(itemIns);
                 }

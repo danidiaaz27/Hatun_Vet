@@ -42,19 +42,13 @@ public class CitaRestController {
         }
     }
 
-    // --- CAMBIO: Endpoint actualizado para recibir el parámetro de confirmación ---
     @PostMapping("/{id}/check-in")
-    public ResponseEntity<Map<String, Object>> hacerCheckIn(
-            @PathVariable String id, 
-            @RequestParam boolean costoBaseInformado) {
-        
+    public ResponseEntity<Map<String, Object>> hacerCheckIn(@PathVariable String id) {
         Map<String, Object> response = new HashMap<>();
         try {
-            // Se pasa el parámetro booleano directo al servicio modificado
-            Cita cita = citaService.registrarLlegadaPaciente(id, costoBaseInformado);
-            
+            Cita cita = citaService.registrarLlegadaPaciente(id);
             response.put("success", true);
-            response.put("message", "Paciente en sala de espera. Check-in completado.");
+            response.put("message", "Paciente en sala de espera. ¡No olvide cobrar la consulta base!");
             response.put("data", cita);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -112,11 +106,13 @@ public class CitaRestController {
         }
     }
 
+    // --- NUEVO: ENDPOINT HISTORIAL PERPETUO ---
     @GetMapping("/historial/{mascotaId}")
     public ResponseEntity<List<Map<String, Object>>> verHistorial(@PathVariable String mascotaId) {
         return ResponseEntity.ok(citaService.obtenerHistorialMascota(mascotaId));
     }
 
+    // --- NUEVO: ENDPOINT PUENTE AL POS ---
     @GetMapping("/por-cobrar")
     public ResponseEntity<List<Map<String, Object>>> citasPorCobrar() {
         return ResponseEntity.ok(citaService.obtenerCitasParaFacturacion());
