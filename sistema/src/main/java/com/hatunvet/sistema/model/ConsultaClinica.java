@@ -1,7 +1,6 @@
 package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -17,7 +16,6 @@ public class ConsultaClinica {
     // Relación estricta 1 a 1: Una cita genera exactamente una consulta clínica
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cita_id", nullable = false, unique = true)
-    @JsonIgnore
     private Cita cita;
 
     // Anamnesis Obligatoria

@@ -21,24 +21,12 @@ public class Producto {
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
+    // VALIDACIÓN 1: Actualizado a BigDecimal
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
 
-    @Column(nullable = false) 
-    private double stock;
-
-    // --- NUEVOS CAMPOS CLINICOS ---
-    
-    @Column(name = "contenido_unidad", precision = 10, scale = 3)
-    private BigDecimal contenidoUnidad; // Ej: 100.000 (para un frasco de 100ml)
-
-    @Column(name = "unidad_medida", length = 30)
-    private String unidadMedida; // Ej: "ml", "g", "tabletas"
-
-    @Column(name = "sub_stock", precision = 10, scale = 3)
-    private BigDecimal subStock; // Ej: Stock interno detallado por fracciones residuales
-
-    // -------------------------------
+    @Column(nullable = false)
+    private int stock;
 
     @Column(length = 255)
     private String imagen;
@@ -70,19 +58,8 @@ public class Producto {
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }
 
-    public double getStock() { return stock; }
-    public void setStock(double stock) { this.stock = stock; }
-
-    // --- GETTERS Y SETTERS DE LOS CAMPOS CLÍNICOS ---
-    
-    public BigDecimal getContenidoUnidad() { return contenidoUnidad; }
-    public void setContenidoUnidad(BigDecimal contenidoUnidad) { this.contenidoUnidad = contenidoUnidad; }
-
-    public String getUnidadMedida() { return unidadMedida; }
-    public void setUnidadMedida(String unidadMedida) { this.unidadMedida = unidadMedida; }
-
-    public BigDecimal getSubStock() { return subStock; }
-    public void setSubStock(BigDecimal subStock) { this.subStock = subStock; }
+    public int getStock() { return stock; }
+    public void setStock(int stock) { this.stock = stock; }
 
     public String getImagen() { return imagen; }
     public void setImagen(String imagen) { this.imagen = imagen; }

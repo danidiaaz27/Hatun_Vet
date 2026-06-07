@@ -81,7 +81,7 @@ public class InventarioController {
             Producto producto = prodOpt.get();
             movimiento.setProducto(producto);
 
-            double stockActual = producto.getStock();
+            int stockActual = producto.getStock();
             int cantidadMovimiento = movimiento.getCantidad(); // Ya sabemos que es positivo seguro
 
             // LOGICA MATEMATICA SEGURA
