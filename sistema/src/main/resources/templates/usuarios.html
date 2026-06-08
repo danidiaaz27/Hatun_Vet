@@ -57,7 +57,12 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted">Contraseña:</label>
-                            <input type="password" id="clave" class="form-control" placeholder="Obligatorio para nuevos">
+                            <div class="input-group">
+                                <input type="password" id="clave" class="form-control" placeholder="Obligatorio para nuevos">
+                                <button class="btn btn-outline-secondary" type="button" id="btnToggleClave" title="Mostrar/Ocultar contraseña">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                            </div>
                             <small class="text-secondary" id="claveHelp" style="display:none;">Déjalo en blanco para mantener la actual.</small>
                         </div>
                         <div class="col-md-6">

@@ -37,10 +37,38 @@ $(document).ready(function() {
     const usuarioModal = new bootstrap.Modal(document.getElementById('usuarioModal'));
     cargarPerfiles();
 
+    // Mostrar / Ocultar contraseña
+    $('#btnToggleClave').click(function() {
+        const input = $('#clave');
+        const icon = $(this).find('i');
+        if (input.attr('type') === 'password') {
+            input.attr('type', 'text');
+            icon.removeClass('bi-eye-fill').addClass('bi-eye-slash-fill');
+        } else {
+            input.attr('type', 'password');
+            icon.removeClass('bi-eye-slash-fill').addClass('bi-eye-fill');
+        }
+    });
+
+    // Validar que en Nombre solo se ingresen letras y espacios en tiempo real
+    $('#nombre').on('input', function() {
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+    });
+
+    function validarPassword(pwd) {
+        if (pwd.length < 6) return "La contraseña debe tener al menos 6 caracteres.";
+        if (!/[A-Z]/.test(pwd)) return "La contraseña debe contener al menos una letra mayúscula.";
+        if (!/[a-z]/.test(pwd)) return "La contraseña debe contener al menos una letra minúscula.";
+        if (!/[0-9]/.test(pwd)) return "La contraseña debe contener al menos un número.";
+        if (!/[^a-zA-Z0-9\s]/.test(pwd)) return "La contraseña debe contener al menos un carácter especial (ej. @, $, !, %, *, #, ?, -).";
+        return null;
+    }
+
     $('#btnNuevoRegistro').click(() => {
         $('#formUsuario')[0].reset();
         $('#id').val('');
-        $('#clave').prop('required', true);
+        $('#clave').prop('required', true).attr('type', 'password');
+        $('#btnToggleClave i').removeClass('bi-eye-slash-fill').addClass('bi-eye-fill');
         $('#claveHelp').hide();
         $('#modalTitle').text('Nuevo Usuario');
         usuarioModal.show();
@@ -49,16 +77,48 @@ $(document).ready(function() {
     $('#formUsuario').submit(e => {
         e.preventDefault();
         const login = $('#usuario').val().trim();
+        const nombre = $('#nombre').val().trim();
+        const clave = $('#clave').val();
+        const id = $('#id').val() || null;
+
         if (login.includes(' ')) {
             Swal.fire('Error', 'El usuario no puede contener espacios', 'error');
             return;
         }
 
+        // Validar nombre (solo letras y espacios)
+        const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+        if (!regexNombre.test(nombre)) {
+            Swal.fire('Error', 'El nombre solo debe contener letras.', 'error');
+            return;
+        }
+
+        // Validar contraseña
+        if (!id) {
+            if (!clave) {
+                Swal.fire('Error', 'La contraseña es obligatoria para nuevos usuarios', 'error');
+                return;
+            }
+            const errorPwd = validarPassword(clave);
+            if (errorPwd) {
+                Swal.fire('Contraseña insegura', errorPwd, 'warning');
+                return;
+            }
+        } else {
+            if (clave.length > 0) {
+                const errorPwd = validarPassword(clave);
+                if (errorPwd) {
+                    Swal.fire('Contraseña insegura', errorPwd, 'warning');
+                    return;
+                }
+            }
+        }
+
         const payload = {
-            id: $('#id').val() || null,
-            nombre: $('#nombre').val().trim(),
+            id: id,
+            nombre: nombre,
             usuario: login,
-            passwordHash: $('#clave').val(),
+            passwordHash: clave,
             perfil: { id: $('#id_perfil').val() }
         };
 
@@ -85,7 +145,8 @@ $(document).ready(function() {
                     $('#nombre').val(res.data.nombre);
                     $('#usuario').val(res.data.usuario);
                     $('#id_perfil').val(res.data.perfil ? res.data.perfil.id : '');
-                    $('#clave').val('').prop('required', false);
+                    $('#clave').val('').prop('required', false).attr('type', 'password');
+                    $('#btnToggleClave i').removeClass('bi-eye-slash-fill').addClass('bi-eye-fill');
                     $('#claveHelp').show();
                     $('#modalTitle').text('Editar Usuario');
                     usuarioModal.show();

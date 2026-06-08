@@ -407,6 +407,39 @@ $(document).ready(function() {
             return;
         }
 
+        // Validaciones de Mascota
+        const nombrePet = $('#nombre').val().trim();
+        const razaPet = $('#raza').val().trim();
+        const colorPet = $('#color').val().trim();
+        const fechaNac = $('#fechaNacimiento').val();
+
+        if (/[0-9]/.test(nombrePet)) {
+            Swal.fire('Atención', 'El nombre de la mascota no puede contener números.', 'warning');
+            return;
+        }
+        if (/[0-9]/.test(razaPet)) {
+            Swal.fire('Atención', 'La raza de la mascota no puede contener números.', 'warning');
+            return;
+        }
+        if (/[0-9]/.test(colorPet)) {
+            Swal.fire('Atención', 'El color de la mascota no puede contener números.', 'warning');
+            return;
+        }
+        if (fechaNac) {
+            const dateNac = new Date(fechaNac + 'T00:00:00');
+            const anio = dateNac.getFullYear();
+            if (anio < 2008) {
+                Swal.fire('Atención', 'El año de la fecha de nacimiento no puede ser menor a 2008.', 'warning');
+                return;
+            }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (dateNac > today) {
+                Swal.fire('Atención', 'La fecha de nacimiento no puede ser posterior al día actual.', 'warning');
+                return;
+            }
+        }
+
         const mascotaBase = obtenerMascotaDesdeFormulario();
 
         if (!id && tieneRegistroRapido) {
@@ -432,6 +465,18 @@ $(document).ready(function() {
             })
             .catch(() => Swal.fire('Error', 'No se pudo guardar la mascota', 'error'));
     });
+
+    // Filtrar números en tiempo real en los campos de la mascota
+    $('#nombre, #raza, #color').on('input', function() {
+        this.value = this.value.replace(/[0-9]/g, '');
+    });
+
+    // Establecer fecha máxima para nacimiento de la mascota (hoy)
+    const todayStr = new Date().toISOString().split('T')[0];
+    const fechaNacEl = document.getElementById('fechaNacimiento');
+    if (fechaNacEl) {
+        fechaNacEl.setAttribute('max', todayStr);
+    }
 
     // Auto cargar
     cargarClientesSeleccion();

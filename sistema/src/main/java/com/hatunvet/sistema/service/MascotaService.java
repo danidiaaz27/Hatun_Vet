@@ -109,6 +109,8 @@ public class MascotaService {
 
         Cliente cliente = buscarOCrearCliente(request, tipoDocumento, numeroDocumento, nombreCompleto);
 
+        validarCampos(nombreMascota, request.raza(), request.color(), request.fechaNacimiento());
+
         Mascota mascota = new Mascota();
         mascota.setNombre(nombreMascota);
         mascota.setEspecie(trimToNull(request.especie()));
@@ -156,6 +158,8 @@ public class MascotaService {
             throw new IllegalArgumentException("El nombre de la mascota es obligatorio.");
         }
 
+        validarCampos(nombre, origen.getRaza(), origen.getColor(), origen.getFechaNacimiento());
+
         destino.setNombre(nombre);
         destino.setEspecie(trimToNull(origen.getEspecie()));
         destino.setRaza(trimToNull(origen.getRaza()));
@@ -176,6 +180,29 @@ public class MascotaService {
             }
         } else if (!preservarClienteExistente) {
             destino.setCliente(null);
+        }
+    }
+
+    private void validarCampos(String nombre, String raza, String color, java.time.LocalDate fechaNacimiento) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre de la mascota es obligatorio.");
+        }
+        if (nombre.matches(".*[0-9].*")) {
+            throw new IllegalArgumentException("El nombre de la mascota no puede contener números.");
+        }
+        if (raza != null && !raza.trim().isEmpty() && raza.matches(".*[0-9].*")) {
+            throw new IllegalArgumentException("La raza de la mascota no puede contener números.");
+        }
+        if (color != null && !color.trim().isEmpty() && color.matches(".*[0-9].*")) {
+            throw new IllegalArgumentException("El color de la mascota no puede contener números.");
+        }
+        if (fechaNacimiento != null) {
+            if (fechaNacimiento.getYear() < 2008) {
+                throw new IllegalArgumentException("La fecha de nacimiento no puede ser anterior al año 2008.");
+            }
+            if (fechaNacimiento.isAfter(java.time.LocalDate.now())) {
+                throw new IllegalArgumentException("La fecha de nacimiento no puede ser posterior a la fecha actual.");
+            }
         }
     }
 

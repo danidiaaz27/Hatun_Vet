@@ -53,6 +53,16 @@ $(document).ready(function() {
 
     $('#numeroDocumento').on('input', function() { this.value = this.value.replace(/[^0-9]/g, ''); });
 
+    // Validar nombre completo/razón social en tiempo real (solo letras, espacios, acentos, ñ, diéresis, punto, coma y &)
+    $('#nombreCompleto').on('input', function() {
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.,&]/g, '');
+    });
+
+    // Validar teléfono en tiempo real (solo números)
+    $('#telefono').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+
     $('#btnBuscarDoc').click(function() {
         const tipoDoc = $('#tipoDocumento').val();
         const numDoc = $('#numeroDocumento').val().trim();
@@ -101,12 +111,34 @@ $(document).ready(function() {
 
     $('#formCliente').submit(e => {
         e.preventDefault();
+        const tipoDoc = $('#tipoDocumento').val();
+        const numDoc = $('#numeroDocumento').val().trim();
+        const nombre = $('#nombreCompleto').val().trim();
+        const telf = $('#telefono').val().trim();
+
+        // Validaciones antes de enviar
+        if (tipoDoc === '1' && numDoc.length !== 8) {
+            return Swal.fire('Atención', 'El DNI debe tener exactamente 8 dígitos.', 'warning');
+        }
+        if (tipoDoc === '6' && numDoc.length !== 11) {
+            return Swal.fire('Atención', 'El RUC debe tener exactamente 11 dígitos.', 'warning');
+        }
+
+        const regexNombre = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s.,&]+$/;
+        if (!regexNombre.test(nombre)) {
+            return Swal.fire('Atención', 'El Nombre Completo o Razón Social solo debe contener letras.', 'warning');
+        }
+
+        if (telf.length > 0 && telf.length < 7) {
+            return Swal.fire('Atención', 'El número de teléfono debe tener al menos 7 dígitos.', 'warning');
+        }
+
         const data = {
             id: $('#id').val() || null,
-            tipoDocumento: $('#tipoDocumento').val(),
-            numeroDocumento: $('#numeroDocumento').val().trim(),
-            nombreCompleto: $('#nombreCompleto').val().trim(),
-            telefono: $('#telefono').val().trim(),
+            tipoDocumento: tipoDoc,
+            numeroDocumento: numDoc,
+            nombreCompleto: nombre,
+            telefono: telf,
             correo: $('#correo').val().trim()
         };
 
