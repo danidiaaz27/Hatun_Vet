@@ -10,6 +10,7 @@ import com.hatunvet.sistema.repository.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -47,7 +48,7 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("⏳ Iniciando la carga de datos maestros para HatunVet...");
         
         initPerfiles();
-        initUsuarios(); // <- Ahora creará los usuarios con sus perfiles asignados
+        initUsuarios(); 
         initConfiguracion();
         initCategorias();
         initProveedores();
@@ -59,13 +60,13 @@ public class DataInitializer implements CommandLineRunner {
     private void initPerfiles() {
         if (perfilRepository.count() == 0) {
             Perfil admin = new Perfil();
-            admin.setId("32b655d7-3c3d-11f1-adc7-50ebf6d2c599");
+            // ID removido para autogeneración
             admin.setNombre("Administrador");
             admin.setDescripcion("Acceso total a todos los módulos del sistema");
             admin.setEstado(true);
 
             Perfil vendedor = new Perfil();
-            vendedor.setId("21781535-5a0a-4e3c-a268-a7624bfcb09f");
+            // ID removido para autogeneración
             vendedor.setNombre("Vendedor");
             vendedor.setDescripcion("Encargado de Ventas");
             vendedor.setEstado(true);
@@ -78,27 +79,35 @@ public class DataInitializer implements CommandLineRunner {
 
     private void initUsuarios() {
         if (usuarioRepository.count() == 0) {
-            // Buscamos los perfiles que acabamos de asegurar que existen en la BD
-            Perfil perfilAdmin = perfilRepository.findById("32b655d7-3c3d-11f1-adc7-50ebf6d2c599").orElse(null);
-            Perfil perfilVendedor = perfilRepository.findById("21781535-5a0a-4e3c-a268-a7624bfcb09f").orElse(null);
+            // Buscamos todos los perfiles y los filtramos por nombre para evitar depender de IDs fijos
+            List<Perfil> perfiles = perfilRepository.findAll();
+            Perfil perfilAdmin = perfiles.stream()
+                    .filter(p -> "Administrador".equals(p.getNombre()))
+                    .findFirst()
+                    .orElse(null);
+
+            Perfil perfilVendedor = perfiles.stream()
+                    .filter(p -> "Vendedor".equals(p.getNombre()))
+                    .findFirst()
+                    .orElse(null);
 
             // Crear Usuario Administrador
             Usuario admin = new Usuario();
-            admin.setId("32d68284-3c3d-11f1-adc7-50ebf6d2c599");
+            // ID removido para autogeneración
             admin.setNombre("Administrador HatunVet");
             admin.setUsuario("admin");
             admin.setPasswordHash("$2a$10$ifojdEQ.cHInJoDazhbvu.Ou2cb4ewKjLoqOZnghY1gPR4Rkykx4i");
             admin.setActivo(true);
-            admin.setPerfil(perfilAdmin); // 👈 Vinculación corregida
+            admin.setPerfil(perfilAdmin); 
 
             // Crear Usuario Vendedor
             Usuario vendedor = new Usuario();
-            vendedor.setId("c53798d5-fb81-4bcd-872e-fdd108844563");
+            // ID removido para autogeneración
             vendedor.setNombre("Mateo Sanchez");
             vendedor.setUsuario("mateo");
             vendedor.setPasswordHash("$2a$10$1zZAfBNRu0D0oJuiZQkE3eQTpHBr/ApUSwDlsO/JTUA77mLjXbvc6");
             vendedor.setActivo(true);
-            vendedor.setPerfil(perfilVendedor); // 👈 Vinculación corregida
+            vendedor.setPerfil(perfilVendedor); 
 
             usuarioRepository.save(admin);
             usuarioRepository.save(vendedor);
@@ -109,7 +118,7 @@ public class DataInitializer implements CommandLineRunner {
     private void initConfiguracion() {
         if (configuracionRepository.count() == 0) {
             Configuracion config = new Configuracion();
-            config.setId("7d14d75d-edad-4a41-9321-8e69a1d67c6f");
+            // ID removido para autogeneración
             config.setNombreVeterinaria("HatunVet");
             config.setLogo("11fcb9db-7eee-483e-b1eb-ce6f33b4c0fc.png");
             config.setTelefono("+51 987 654 321");
@@ -131,19 +140,19 @@ public class DataInitializer implements CommandLineRunner {
     private void initCategorias() {
         if (categoriaRepository.count() == 0) {
             CategoriaProducto cat1 = new CategoriaProducto();
-            cat1.setId("287bb28b-3c77-11f1-b50c-50ebf6d2c599");
+            // ID removido para autogeneración
             cat1.setNombre("Medicamentos");
             cat1.setDescripcion("Pastillas, jarabes, inyectables");
             cat1.setEstado(true);
 
             CategoriaProducto cat2 = new CategoriaProducto();
-            cat2.setId("287bb6fe-3c77-11f1-b50c-50ebf6d2c599");
+            // ID removido para autogeneración
             cat2.setNombre("Accesorios");
             cat2.setDescripcion("Correas, platos, juguetes");
             cat2.setEstado(true);
 
             CategoriaProducto cat3 = new CategoriaProducto();
-            cat3.setId("287bb7db-3c77-11f1-b50c-50ebf6d2c599");
+            // ID removido para autogeneración
             cat3.setNombre("Alimentos");
             cat3.setDescripcion("Croquetas y comida húmeda");
             cat3.setEstado(true);
