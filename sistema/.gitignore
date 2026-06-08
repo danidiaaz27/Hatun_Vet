@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignorar variables de entorno
+sistema/.env
+
+# Ignorar configuraciones con credenciales
+sistema/src/main/resources/application.yml
