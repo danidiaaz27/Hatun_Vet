@@ -1,8 +1,10 @@
 package com.hatunvet.sistema.controller;
 
+import com.hatunvet.sistema.model.Cita;
 import com.hatunvet.sistema.model.HorarioVeterinario;
 import com.hatunvet.sistema.model.PermisoVeterinario;
 import com.hatunvet.sistema.model.Usuario;
+import com.hatunvet.sistema.repository.CitaRepository;
 import com.hatunvet.sistema.repository.HorarioVeterinarioRepository;
 import com.hatunvet.sistema.repository.PermisoVeterinarioRepository;
 import com.hatunvet.sistema.repository.UsuarioRepository;
@@ -10,6 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,13 +28,16 @@ public class MedicoController {
     private final UsuarioRepository usuarioRepository;
     private final HorarioVeterinarioRepository horarioRepository;
     private final PermisoVeterinarioRepository permisoRepository;
+    private final CitaRepository citaRepository;
 
     public MedicoController(UsuarioRepository usuarioRepository,
                             HorarioVeterinarioRepository horarioRepository,
-                            PermisoVeterinarioRepository permisoRepository) {
+                            PermisoVeterinarioRepository permisoRepository,
+                            CitaRepository citaRepository) {
         this.usuarioRepository = usuarioRepository;
         this.horarioRepository = horarioRepository;
         this.permisoRepository = permisoRepository;
+        this.citaRepository    = citaRepository;
     }
 
     // 1. Renderizar la vista principal de gestión
@@ -71,7 +80,6 @@ public class MedicoController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Validar solapamientos locales de este día para el mismo médico
             List<HorarioVeterinario> existentes = horarioRepository.findByVeterinarioIdAndDiaSemana(
                     nuevoHorario.getVeterinario().getId(), nuevoHorario.getDiaSemana());
             for (HorarioVeterinario h : existentes) {
@@ -170,7 +178,7 @@ public class MedicoController {
         }
     }
 
-    // 7. Togglear estado de un permiso (Activar/Desactivar)
+    // 7. Togglear estado de un permiso
     @PostMapping("/api/permisos/{id}/toggle")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> togglePermiso(@PathVariable Long id) {
@@ -208,6 +216,68 @@ public class MedicoController {
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "Error al eliminar la ausencia.");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // 9. SLOTS DISPONIBLES
+    // GET /medicos/api/slots-disponibles?medicoId=X&fecha=2026-06-08
+    @GetMapping("/api/slots-disponibles")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> obtenerSlotsDisponibles(
+            @RequestParam String medicoId,
+            @RequestParam String fecha) {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            LocalDate localDate = LocalDate.parse(fecha);
+            int diaSemana = localDate.getDayOfWeek().getValue(); // 1=Lunes ... 7=Domingo
+
+            // Horarios del médico para ese día
+            List<HorarioVeterinario> horarios = horarioRepository
+                    .findByVeterinarioIdAndDiaSemana(medicoId, diaSemana);
+
+            if (horarios.isEmpty()) {
+                response.put("success", true);
+                response.put("slots", new ArrayList<>());
+                response.put("mensaje", "El médico no trabaja ese día.");
+                return ResponseEntity.ok(response);
+            }
+
+            // Citas ya ocupadas ese día
+            LocalDateTime inicioDia = localDate.atStartOfDay();
+            LocalDateTime finDia    = localDate.atTime(23, 59, 59);
+            List<String> estadosOcupados = List.of("AGENDADA", "EN_ESPERA", "EN_ATENCION");
+
+            List<Cita> citasOcupadas = citaRepository
+                    .findByVeterinarioIdAndFechaHoraProgramadaBetweenAndEstadoIn(
+                            medicoId, inicioDia, finDia, estadosOcupados);
+
+            List<LocalTime> horasOcupadas = citasOcupadas.stream()
+                    .map(c -> c.getFechaHoraProgramada().toLocalTime()
+                            .withMinute(0).withSecond(0).withNano(0))
+                    .collect(Collectors.toList());
+
+            // Generar slots de 1 hora por cada franja
+            List<String> slotsDisponibles = new ArrayList<>();
+            for (HorarioVeterinario h : horarios) {
+                LocalTime cursor = h.getHoraInicio().withMinute(0);
+                LocalTime fin    = h.getHoraFin();
+                while (cursor.isBefore(fin)) {
+                    if (!horasOcupadas.contains(cursor)) {
+                        slotsDisponibles.add(String.format("%02d:%02d", cursor.getHour(), cursor.getMinute()));
+                    }
+                    cursor = cursor.plusHours(1);
+                }
+            }
+
+            response.put("success", true);
+            response.put("slots", slotsDisponibles);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al calcular slots: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }

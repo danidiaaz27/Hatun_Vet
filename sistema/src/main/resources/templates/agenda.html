@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Agenda y Recepción - HatunVet</title>
@@ -8,262 +9,415 @@
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <link th:href="@{/css/main.css}" rel="stylesheet">
     <style>
-        .fc-event { cursor: pointer; border-radius: 4px; border: none; padding: 2px 4px; }
-        .bg-agendada { background-color: #0d6efd; color: white; }
-        .bg-espera { background-color: #fd7e14; color: white; }
-        .bg-atencion { background-color: #198754; color: white; }
-        
-        /* Estilos para sugerencias de autocompletado */
+        /* ── Eventos del calendario ── */
+        .fc-event {
+            cursor: pointer;
+            border-radius: 6px !important;
+            border: none !important;
+            padding: 3px 6px !important;
+            font-size: 12px !important;
+        }
+
+        .bg-agendada {
+            background-color: #0A3D91 !important;
+            color: #fff !important;
+        }
+
+        .bg-espera {
+            background-color: #f59e0b !important;
+            color: #fff !important;
+        }
+
+        .bg-atencion {
+            background-color: #1a6e40 !important;
+            color: #fff !important;
+        }
+
+        .fc-event.bg-secondary {
+            background-color: #6b7a99 !important;
+            color: #fff !important;
+        }
+
+        /* ── Toolbar del calendario ── */
+        .fc .fc-toolbar-title {
+            font-size: 17px !important;
+            font-weight: 700 !important;
+            color: #1a2035;
+        }
+
+        .fc .fc-button {
+            background: #fff !important;
+            border: 1.5px solid rgba(10, 61, 145, 0.18) !important;
+            color: #1a2035 !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+            transition: all .15s;
+        }
+
+        .fc .fc-button:hover {
+            background: var(--vet-blue, #0A3D91) !important;
+            color: #fff !important;
+            border-color: var(--vet-blue) !important;
+        }
+
+        .fc .fc-button-active,
+        .fc .fc-button-primary:not(:disabled).fc-button-active {
+            background: var(--vet-blue, #0A3D91) !important;
+            color: #fff !important;
+            border-color: var(--vet-blue) !important;
+        }
+
+        .fc .fc-today-button {
+            text-transform: capitalize;
+        }
+
+        .fc-theme-standard td,
+        .fc-theme-standard th {
+            border-color: rgba(10, 61, 145, 0.08) !important;
+        }
+
+        .fc .fc-timegrid-slot {
+            height: 40px !important;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            font-weight: 700;
+            color: #1a2035;
+            font-size: 13px;
+            padding: 8px 4px;
+        }
+
+        .fc .fc-timegrid-axis {
+            font-size: 11px;
+            color: #8a9bc0;
+        }
+
+        .fc-day-today {
+            background: rgba(10, 61, 145, 0.04) !important;
+        }
+
+        /* ── Autocompletado ── */
         .autocomplete-suggestions {
             position: absolute;
             background: white;
-            border: 1px solid #dee2e6;
-            border-radius: 0 0 .375rem .375rem;
-            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+            border: 1.5px solid rgba(10, 61, 145, 0.15);
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 8px 24px rgba(10, 61, 145, 0.12);
             max-height: 200px;
             overflow-y: auto;
-            width: calc(100% - 24px); /* Ajustado para el padding */
+            width: calc(100% - 24px);
             z-index: 1050;
             margin-top: 2px;
             padding-left: 0;
             list-style: none;
         }
+
         .autocomplete-suggestion-item {
             cursor: pointer;
-            padding: .5rem 1rem;
-            border-bottom: 1px solid #f8f9fa;
-            font-size: 0.9rem;
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0f4fa;
+            font-size: 13.5px;
         }
+
         .autocomplete-suggestion-item:last-child {
             border-bottom: none;
         }
+
         .autocomplete-suggestion-item:hover {
-            background-color: #e9ecef;
-            color: #000;
-            font-weight: bold;
+            background: rgba(10, 61, 145, 0.06);
+            color: #0A3D91;
+            font-weight: 600;
         }
+
         .x-small {
             font-size: 0.75rem;
         }
+
+        /* Slot picker */
+        .slot-btn {
+            background: #fff;
+            border: 1.5px solid rgba(10, 61, 145, 0.20);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2035;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .slot-btn:hover {
+            border-color: var(--vet-blue);
+            color: var(--vet-blue);
+        }
+
+        .slot-btn.active {
+            background: var(--vet-blue);
+            color: #fff;
+            border-color: var(--vet-blue);
+        }
     </style>
 </head>
+
 <body>
-<div class="d-flex">
-    <div th:replace="~{sidebar :: sidebar(activeUri='/agenda')}"></div>
+    <div class="d-flex">
+        <div th:replace="~{sidebar :: sidebar(activeUri='/agenda')}"></div>
 
-    <main class="main-content w-100 p-4 bg-light">
-        <header class="mb-4 d-flex justify-content-between align-items-center">
-            <div>
-                <h2 class="h4 mb-0 fw-bold text-dark">Agenda Central (Counter)</h2>
-                <small class="text-muted">Gestión de reservas y Check-in de pacientes</small>
-            </div>
-            <button class="btn btn-dark fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
-                <i class="bi bi-calendar-plus me-1"></i> Agendar Cita
-            </button>
-        </header>
+        <main class="main-content w-100 p-4">
 
-        <div class="card p-4 bg-white shadow-sm border-0 rounded-3">
-            <div id="calendar"></div>
-        </div>
-    </main>
-</div>
-
-<div class="modal fade" id="modalNuevaCita" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form id="formNuevaCita">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i> Nueva Reserva de Cita</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <!-- Header -->
+            <header class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h2 class="page-title">Agenda Central (Counter)</h2>
+                    <p class="page-subtitle">Gestión de reservas y check-in de pacientes en tiempo real</p>
                 </div>
-                <div class="modal-body row g-3">
-                    <div class="col-12 text-center mb-2">
-                        <small class="text-primary fw-bold"><i class="bi bi-lightbulb-fill"></i> Tip LEAN: Sugiera horas atípicas (Ej. 10:05 o 10:15) para mejorar la puntualidad.</small>
+                <button class="btn-danger-vet d-flex align-items-center gap-2" data-bs-toggle="modal"
+                    data-bs-target="#modalNuevaCita">
+                    <i class="bi bi-plus-lg"></i> Agendar Cita
+                </button>
+            </header>
+
+            <!-- Calendario -->
+            <div class="card-custom p-4 bg-white">
+                <div id="calendar"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ═══ MODAL NUEVA CITA ═══ -->
+    <div class="modal fade" id="modalNuevaCita" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="border-radius: 16px; overflow: hidden; border: none;">
+                <form id="formNuevaCita">
+                    <div class="modal-header text-white" style="background: var(--vet-blue);">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i> Nueva Reserva de Cita
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    
-                    <!-- BÚSQUEDA Y DETALLES PRINCIPALES -->
-                    <div class="col-md-12">
-                        <div class="row g-3">
-                            <!-- Buscador de Dueño -->
-                            <div class="col-md-12 position-relative">
-                                <label class="form-label small fw-bold text-dark"><i class="bi bi-person-fill text-muted me-1"></i> Buscar Dueño (DNI o Nombre)</label>
-                                <div class="input-group shadow-sm">
-                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                                    <input type="text" id="buscarDuenoInput" class="form-control border-start-0 bg-white" placeholder="Escriba DNI, RUC o Nombre del Propietario..." autocomplete="off">
-                                    <button type="button" class="btn btn-outline-secondary border-start-0" id="btnLimpiarDueno" style="display: none;"><i class="bi bi-x-lg"></i></button>
-                                </div>
-                                <ul id="resultadosBusquedaDueno" class="autocomplete-suggestions shadow-lg" style="display: none;"></ul>
-                                <input type="hidden" id="duenoIdSeleccionado">
-                            </div>
+                    <div class="modal-body row g-3 p-4">
+                        <div class="col-12 text-center mb-1">
+                            <small class="fw-bold" style="color: var(--vet-blue);">
+                                <i class="bi bi-lightbulb-fill me-1"></i>
+                                Tip LEAN: Sugiera horas atípicas (Ej. 10:05 o 10:15) para mejorar la puntualidad.
+                            </small>
+                        </div>
 
-                            <!-- Selector de Mascota -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-dark"><i class="bi bi-paw-fill text-muted me-1"></i> Seleccionar Mascota</label>
-                                <select id="mascotaId" class="form-select shadow-sm" required disabled>
-                                    <option value="">-- Primero busque un dueño --</option>
-                                </select>
-                            </div>
-
-                            <!-- Selector de Médico Veterinario -->
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-dark"><i class="bi bi-heart-pulse-fill text-muted me-1"></i> Médico Veterinario</label>
-                                <select id="medicoId" class="form-select shadow-sm" required>
-                                    <option value="">Cargando médicos...</option>
-                                </select>
-                            </div>
-                            
-                            <!-- Botón para Mostrar Registro Rápido -->
-                            <div class="col-12 my-2">
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold border-2" id="btnToggleRegistroRapido">
-                                    <i class="bi bi-plus-circle-fill me-1"></i> ¿Cliente o Mascota Nueva? Registro Rápido
+                        <!-- Buscador dueño -->
+                        <div class="col-12 position-relative">
+                            <label class="label-vet"><i class="bi bi-person-fill me-1"></i> Buscar Dueño (DNI o
+                                Nombre)</label>
+                            <div class="d-flex gap-2">
+                                <input type="text" id="buscarDuenoInput" class="input-vet flex-grow-1"
+                                    placeholder="Escriba DNI, RUC o Nombre del Propietario..." autocomplete="off">
+                                <button type="button" class="btn btn-outline-secondary" id="btnLimpiarDueno"
+                                    style="display:none; border-radius:8px;">
+                                    <i class="bi bi-x-lg"></i>
                                 </button>
                             </div>
+                            <ul id="resultadosBusquedaDueno" class="autocomplete-suggestions shadow-lg"
+                                style="display:none;"></ul>
+                            <input type="hidden" id="duenoIdSeleccionado">
+                        </div>
+
+                        <!-- Mascota y Médico -->
+                        <div class="col-md-6">
+                            <label class="label-vet"><i class="bi bi-paw-fill me-1"></i> Seleccionar Mascota</label>
+                            <select id="mascotaId" class="form-select"
+                                style="border-radius:8px; border: 1.5px solid rgba(10,61,145,0.15);" required disabled>
+                                <option value="">-- Primero busque un dueño --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="label-vet"><i class="bi bi-heart-pulse-fill me-1"></i> Médico
+                                Veterinario</label>
+                            <select id="medicoId" class="form-select"
+                                style="border-radius:8px; border: 1.5px solid rgba(10,61,145,0.15);" required>
+                                <option value="">Cargando médicos...</option>
+                            </select>
+                        </div>
+
+                        <!-- Toggle registro rápido -->
+                        <div class="col-12">
+                            <button type="button" class="btn btn-outline-primary w-100 fw-bold"
+                                id="btnToggleRegistroRapido" style="border-radius:8px; border-width:2px;">
+                                <i class="bi bi-plus-circle-fill me-1"></i> ¿Cliente o Mascota Nueva? Registro Rápido
+                            </button>
+                        </div>
+
+                        <!-- Registro rápido colapsable -->
+                        <div class="col-12" id="seccionRegistroRapido" style="display:none;">
+                            <div class="p-3 rounded-3"
+                                style="background:#f0f4fa; border: 1.5px solid rgba(10,61,145,0.15);">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="fw-bold" style="color: var(--vet-blue);">
+                                        <i class="bi bi-person-plus-fill me-1"></i> Registro Rápido de Cliente y Mascota
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        id="btnCerrarRegRapidoHeader" style="border-radius:6px;">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-12"><span class="badge" style="background: var(--vet-blue);">Datos
+                                            del Propietario</span></div>
+                                    <div class="col-md-4">
+                                        <label class="label-vet">Tipo Doc.</label>
+                                        <select id="regTipoDoc" class="form-select form-select-sm"
+                                            style="border-radius:6px;">
+                                            <option value="1">DNI</option>
+                                            <option value="6">RUC</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="label-vet">Num. Documento</label>
+                                        <input type="text" id="regNumDoc" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="8 dígitos para DNI, 11 para RUC">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="label-vet">Nombre Completo</label>
+                                        <input type="text" id="regNombreDueno" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="Nombre completo del dueño">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Teléfono</label>
+                                        <input type="text" id="regTelefono" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="Ej. 987654321">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Correo (Opcional)</label>
+                                        <input type="email" id="regCorreo" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="ejemplo@correo.com">
+                                    </div>
+
+                                    <div class="col-12 my-1">
+                                        <hr style="border-color: rgba(10,61,145,0.12);">
+                                    </div>
+
+                                    <div class="col-12"><span class="badge" style="background: var(--vet-blue);">Datos
+                                            de la Mascota</span></div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Nombre de la Mascota</label>
+                                        <input type="text" id="regNombreMascota" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="Ej. Tobias">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Especie</label>
+                                        <select id="regEspecie" class="form-select form-select-sm"
+                                            style="border-radius:6px;">
+                                            <option value="Perro">Perro</option>
+                                            <option value="Gato">Gato</option>
+                                            <option value="Conejo">Conejo</option>
+                                            <option value="Ave">Ave</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Raza</label>
+                                        <input type="text" id="regRaza" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="Ej. Pug, Criollo">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Sexo</label>
+                                        <select id="regSexo" class="form-select form-select-sm"
+                                            style="border-radius:6px;">
+                                            <option value="M">Macho</option>
+                                            <option value="F">Hembra</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Fecha de Nacimiento</label>
+                                        <input type="date" id="regFechaNac" class="form-control form-control-sm"
+                                            style="border-radius:6px;" min="2008-01-01">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="label-vet">Color</label>
+                                        <input type="text" id="regColor" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="Ej. Blanco y marrón">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="label-vet">Observaciones / Alergias</label>
+                                        <input type="text" id="regObservaciones" class="form-control form-control-sm"
+                                            style="border-radius:6px;" placeholder="Ej. Alérgico a vacunas...">
+                                    </div>
+                                    <div class="col-12 mt-2 d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn-secondary-vet btn-sm"
+                                            id="btnCancelarRegRapido">Cancelar</button>
+                                        <button type="button" class="btn-primary-vet btn-sm"
+                                            id="btnGuardarRegRapido">Registrar y Seleccionar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha, Hora y Motivo -->
+                        <div class="col-md-6">
+                            <label class="label-vet"><i class="bi bi-calendar-event me-1"></i> Fecha de Cita</label>
+                            <input type="date" id="fechaCita" class="input-vet" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="label-vet"><i class="bi bi-clock me-1"></i> Hora</label>
+                            <input type="hidden" id="horaCita" required>
+                            <div id="contenedorSlots" class="d-flex flex-wrap gap-2 mt-1"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="label-vet"><i class="bi bi-chat-left-text me-1"></i> Motivo de
+                                Consulta</label>
+                            <input type="text" id="motivoCita" class="input-vet"
+                                placeholder="Ej. Vacunación, Decaimiento, Consulta de rutina..." required>
                         </div>
                     </div>
-
-                    <!-- REGISTRO RÁPIDO (SECCIÓN COLAPSABLE) -->
-                    <div class="col-12" id="seccionRegistroRapido" style="display: none;">
-                        <div class="card border-primary border-2 shadow-sm bg-light">
-                            <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
-                                <span class="fw-bold"><i class="bi bi-person-plus-fill me-1"></i> Registro Rápido de Cliente y Mascota</span>
-                                <button type="button" class="btn-close btn-close-white btn-sm" id="btnCerrarRegRapidoHeader"></button>
-                            </div>
-                            <div class="card-body p-3 row g-2">
-                                <!-- Info Cliente -->
-                                <div class="col-12 mb-1">
-                                    <span class="badge bg-secondary">Datos del Propietario</span>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label x-small fw-bold">Tipo Doc.</label>
-                                    <select id="regTipoDoc" class="form-select form-select-sm">
-                                        <option value="1">DNI</option>
-                                        <option value="6">RUC</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="form-label x-small fw-bold">Num. Documento</label>
-                                    <input type="text" id="regNumDoc" class="form-control form-control-sm" placeholder="8 dígitos para DNI, 11 para RUC">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label x-small fw-bold">Nombre Completo del Propietario</label>
-                                    <input type="text" id="regNombreDueno" class="form-control form-control-sm" placeholder="Nombre completo del dueño">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Teléfono</label>
-                                    <input type="text" id="regTelefono" class="form-control form-control-sm" placeholder="Ej. 987654321">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Correo (Opcional)</label>
-                                    <input type="email" id="regCorreo" class="form-control form-control-sm" placeholder="ejemplo@correo.com">
-                                </div>
-
-                                <div class="col-12 my-2 border-bottom"></div>
-
-                                <!-- Info Mascota -->
-                                <div class="col-12 mb-1">
-                                    <span class="badge bg-secondary">Datos de la Mascota</span>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Nombre de la Mascota</label>
-                                    <input type="text" id="regNombreMascota" class="form-control form-control-sm" placeholder="Ej. Tobias">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Especie</label>
-                                    <select id="regEspecie" class="form-select form-select-sm">
-                                        <option value="Perro">Perro</option>
-                                        <option value="Gato">Gato</option>
-                                        <option value="Conejo">Conejo</option>
-                                        <option value="Ave">Ave</option>
-                                        <option value="Otro">Otro</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Raza</label>
-                                    <input type="text" id="regRaza" class="form-control form-control-sm" placeholder="Ej. Pug, Criollo">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Sexo</label>
-                                    <select id="regSexo" class="form-select form-select-sm">
-                                        <option value="M">Macho</option>
-                                        <option value="F">Hembra</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Fecha de Nacimiento</label>
-                                    <input type="date" id="regFechaNac" class="form-control form-control-sm" min="2008-01-01">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label x-small fw-bold">Color</label>
-                                    <input type="text" id="regColor" class="form-control form-control-sm" placeholder="Ej. Blanco y marrón">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label x-small fw-bold">Observaciones / Alergias</label>
-                                    <input type="text" id="regObservaciones" class="form-control form-control-sm" placeholder="Ej. Alérgico a vacunas, etc.">
-                                </div>
-
-                                <div class="col-12 mt-3 text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" id="btnCancelarRegRapido">Cancelar</button>
-                                    <button type="button" class="btn btn-sm btn-primary fw-bold" id="btnGuardarRegRapido">Registrar y Seleccionar</button>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="modal-footer" style="background:#f0f4fa;">
+                        <button type="button" class="btn-secondary-vet" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn-primary-vet">
+                            <i class="bi bi-calendar-check me-1"></i> Agendar
+                        </button>
                     </div>
-
-                    <!-- DATOS DE FECHA, HORA Y MOTIVO -->
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-dark"><i class="bi bi-calendar-event text-muted me-1"></i> Fecha de Cita</label>
-                        <input type="date" id="fechaCita" class="form-control shadow-sm" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold text-dark"><i class="bi bi-clock text-muted me-1"></i> Hora (Sugerir Atípica)</label>
-                        <input type="time" id="horaCita" class="form-control shadow-sm" step="300" required>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label small fw-bold text-dark"><i class="bi bi-chat-left-text text-muted me-1"></i> Motivo de Consulta</label>
-                        <input type="text" id="motivoCita" class="form-control shadow-sm" placeholder="Ej. Vacunación, Decaimiento, Consulta de rutina..." required>
-                    </div>
-                </div>
-                <div class="modal-footer shadow-sm bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-dark fw-bold">Agendar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="modalCheckIn" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold"><i class="bi bi-person-check-fill me-2"></i> Recepción de Paciente</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div class="alert alert-warning border-warning fw-bold text-dark mb-4" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2 text-danger"></i>
-                    PROTOCOLO OBLIGATORIO:<br>
-                    <span class="fw-normal">Recuerde informar al cliente que toda evaluación médica tiene un <strong>costo base de consulta</strong> antes de ingresarlo al consultorio.</span>
-                </div>
-                
-                <h5 id="lblMotivoCheckIn" class="mb-3 text-secondary">Motivo: --</h5>
-                <input type="hidden" id="citaIdCheckIn">
-                
-                <div class="form-check form-switch d-flex justify-content-center gap-2 mb-3">
-                    <input class="form-check-input fs-5" type="checkbox" id="checkAvisoCosto" required>
-                    <label class="form-check-label fw-bold mt-1" for="checkAvisoCosto">Confirmo que el cliente aceptó el costo base</label>
-                </div>
-            </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" id="btnProcesarCheckIn" class="btn btn-primary btn-lg fw-bold px-5">Marcar Llegada (Pasar a Espera)</button>
+                </form>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/agenda.js}"></script>
+    <!-- ═══ MODAL CHECK-IN ═══ -->
+    <div class="modal fade" id="modalCheckIn" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
+                <div class="modal-header text-white" style="background: var(--vet-blue);">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-check-fill me-2"></i> Recepción de Paciente
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div class="mb-4 p-3 rounded-3" style="background:#fff8e1; border:1.5px solid #f6c84b;">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 d-block mb-2" style="color: var(--vet-red);"></i>
+                        <strong>PROTOCOLO OBLIGATORIO:</strong><br>
+                        <span class="text-muted small">Recuerde informar al cliente que toda evaluación médica tiene un
+                            <strong>costo base de consulta</strong> antes de ingresarlo al consultorio.</span>
+                    </div>
+                    <h6 id="lblMotivoCheckIn" class="mb-3 fw-bold" style="color:#1a2035;">Motivo: --</h6>
+                    <input type="hidden" id="citaIdCheckIn">
+                    <div class="form-check form-switch d-flex justify-content-center gap-2 mb-3">
+                        <input class="form-check-input fs-5" type="checkbox" id="checkAvisoCosto" required>
+                        <label class="form-check-label fw-bold mt-1" for="checkAvisoCosto">Confirmo que el cliente
+                            aceptó el costo base</label>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center" style="background:#f0f4fa;">
+                    <button type="button" id="btnProcesarCheckIn" class="btn-primary-vet px-5">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Marcar Llegada (Pasar a Espera)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/agenda.js}"></script>
 </body>
+
 </html>
