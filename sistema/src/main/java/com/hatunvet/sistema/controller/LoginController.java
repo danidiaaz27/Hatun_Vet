@@ -87,11 +87,18 @@ public class LoginController {
         return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("123456");
     }
 
+    // ==============================================================================
+    // --- MENÚ: Construcción de secciones ---
+    // ==============================================================================
+
     private List<MenuSeccion> construirSeccionesMenu(List<Opcion> opcionesOrdenadas) {
         Map<String, List<Opcion>> secciones = new LinkedHashMap<>();
         secciones.put("VENTAS", new ArrayList<>());
-        secciones.put("GROOMING", new ArrayList<>());
-        secciones.put("ADMINISTRACIÓN", new ArrayList<>());
+        secciones.put("OPERACIONES Y CITAS", new ArrayList<>());
+        secciones.put("PACIENTES Y CLIENTES", new ArrayList<>());
+        secciones.put("INVENTARIO Y LOGÍSTICA", new ArrayList<>());
+        secciones.put("REPORTES Y ANALÍTICA", new ArrayList<>());
+        secciones.put("CONFIGURACIÓN Y SEGURIDAD", new ArrayList<>());
 
         for (Opcion opcion : opcionesOrdenadas) {
             String seccion = obtenerSeccion(opcion.getRuta());
@@ -105,43 +112,54 @@ public class LoginController {
     }
 
     private String obtenerSeccion(String ruta) {
-        if (ruta == null) {
-            return "ADMINISTRACIÓN";
-        }
+        if (ruta == null) return "CONFIGURACIÓN Y SEGURIDAD";
 
-        if ("/dashboard".equals(ruta) || ruta.startsWith("/ventas/")) {
-            return "VENTAS";
-        }
-        if (ruta.startsWith("/banos-cortes")) {
-            return "GROOMING";
-        }
-        return "ADMINISTRACIÓN";
+        return switch (ruta) {
+            case "/dashboard", "/ventas/pos", "/ventas/historial", "/caja" -> "VENTAS";
+            case "/agenda", "/banos-cortes", "/torre-control"              -> "OPERACIONES Y CITAS";
+            case "/mascotas", "/clientes"                                  -> "PACIENTES Y CLIENTES";
+            case "/inventario", "/productos/listar",
+                 "/categorias", "/proveedores/listar"                      -> "INVENTARIO Y LOGÍSTICA";
+            case "/reportes"                                               -> "REPORTES Y ANALÍTICA";
+            default                                                        -> "CONFIGURACIÓN Y SEGURIDAD";
+        };
     }
 
     private int getOrdenMenu(String ruta) {
-        if (ruta == null) {
-            return 999;
-        }
+        if (ruta == null) return 999;
 
         return switch (ruta) {
-            case "/dashboard" -> 10;
-            case "/ventas/pos" -> 20;
-            case "/ventas/historial" -> 30;
-            case "/banos-cortes" -> 40;
-            case "/mascotas" -> 45;
-            case "/inventario" -> 50;
-            case "/categorias" -> 60;
-            case "/productos/listar" -> 70;
-            case "/proveedores/listar" -> 80;
-            case "/clientes" -> 90;
-            case "/perfiles/listar" -> 100;
-            case "/usuarios/listar" -> 110;
-            case "/medicos/horarios" -> 115;
-            case "/reportes" -> 120;
-            case "/configuracion" -> 130;
-            default -> 500;
+            // VENTAS
+            case "/dashboard"          -> 10;
+            case "/ventas/pos"         -> 20;
+            case "/ventas/historial"   -> 30;
+            case "/caja"               -> 40;
+            // OPERACIONES Y CITAS
+            case "/agenda"             -> 50;
+            case "/banos-cortes"       -> 60;
+            case "/torre-control"      -> 70;
+            // PACIENTES Y CLIENTES
+            case "/mascotas"           -> 80;
+            case "/clientes"           -> 90;
+            // INVENTARIO Y LOGÍSTICA
+            case "/inventario"         -> 100;
+            case "/productos/listar"   -> 110;
+            case "/categorias"         -> 120;
+            case "/proveedores/listar" -> 130;
+            // REPORTES
+            case "/reportes"           -> 140;
+            // CONFIGURACIÓN Y SEGURIDAD
+            case "/configuracion"      -> 150;
+            case "/perfiles/listar"    -> 160;
+            case "/usuarios/listar"    -> 170;
+            case "/medicos/horarios"   -> 180;
+            default                    -> 500;
         };
     }
+
+    // ==============================================================================
+    // --- CLASE INTERNA: MenuSeccion ---
+    // ==============================================================================
 
     public static class MenuSeccion {
         private final String titulo;
@@ -152,12 +170,7 @@ public class LoginController {
             this.opciones = opciones;
         }
 
-        public String getTitulo() {
-            return titulo;
-        }
-
-        public List<Opcion> getOpciones() {
-            return opciones;
-        }
+        public String getTitulo() { return titulo; }
+        public List<Opcion> getOpciones() { return opciones; }
     }
 }
