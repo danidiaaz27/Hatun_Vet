@@ -3,12 +3,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalNuevaCita = new bootstrap.Modal(document.getElementById('modalNuevaCita'));
     const modalCheckIn = new bootstrap.Modal(document.getElementById('modalCheckIn'));
 
+    let clientesList = []; // Para almacenar los clientes en memoria
+
     // 1. Inicializar FullCalendar
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek', // Vista de semana con horas
         locale: 'es',
-        slotMinTime: '08:00:00', // Horario de apertura clínica
-        slotMaxTime: '20:00:00', // Horario de cierre clínica
+        slotMinTime: '00:00:00', // Permitir ver todo el día
+        slotMaxTime: '24:00:00',
+        scrollTime: '08:00:00',  // Auto-desplazar a las 8:00 AM para enfocar el horario laboral
         allDaySlot: false,
         headerToolbar: {
             left: 'prev,next today',
@@ -27,9 +30,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         if(cita.estado === 'EN_ATENCION') colorClass = 'bg-atencion';
                         if(cita.estado === 'FINALIZADA') colorClass = 'bg-secondary';
 
+                        // Construir el título con nombre de mascota y dueño para mejor visualización
+                        let mascotaNombre = cita.mascota ? cita.mascota.nombre : 'Sin Mascota';
+                        let duenoNombre = (cita.mascota && cita.mascota.cliente) ? cita.mascota.cliente.nombreCompleto : 'Sin Dueño';
+                        let titulo = `${mascotaNombre} (${duenoNombre}) - ${cita.motivoPrincipal}`;
+
                         return {
                             id: cita.id,
-                            title: cita.motivoPrincipal + ` (${cita.estado})`,
+                            title: titulo,
                             start: cita.fechaHoraProgramada,
                             className: colorClass,
                             extendedProps: { estado: cita.estado }
@@ -56,18 +64,270 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     calendar.render();
 
-    // 2. Guardar Nueva Cita
+    // 2. Cargar Médicos y Clientes al iniciar
+    cargarMedicos();
+    cargarClientes();
+
+    function cargarMedicos() {
+        fetch('/usuarios/api/veterinarios')
+            .then(r => r.json())
+            .then(res => {
+                const select = document.getElementById('medicoId');
+                select.innerHTML = '<option value="">-- Seleccione un Médico --</option>';
+                if (res.success && res.data) {
+                    res.data.forEach(med => {
+                        select.innerHTML += `<option value="${med.id}">Dr(a). ${med.nombre}</option>`;
+                    });
+                } else {
+                    select.innerHTML = '<option value="">Error al cargar médicos</option>';
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('medicoId').innerHTML = '<option value="">Error al cargar médicos</option>';
+            });
+    }
+
+    function cargarClientes() {
+        fetch('/clientes/api/listar')
+            .then(r => r.json())
+            .then(res => {
+                if (res.data) {
+                    clientesList = res.data;
+                }
+            })
+            .catch(err => console.error("Error al precargar clientes:", err));
+    }
+
+    // 3. Autocompletado de Propietario (Dueño)
+    const buscarDuenoInput = document.getElementById('buscarDuenoInput');
+    const resultadosBusquedaDueno = document.getElementById('resultadosBusquedaDueno');
+    const duenoIdSeleccionado = document.getElementById('duenoIdSeleccionado');
+    const btnLimpiarDueno = document.getElementById('btnLimpiarDueno');
+    const mascotaSelect = document.getElementById('mascotaId');
+
+    buscarDuenoInput.addEventListener('input', function() {
+        const query = this.value.trim().toLowerCase();
+        resultadosBusquedaDueno.innerHTML = '';
+        
+        if (query.length < 2) {
+            resultadosBusquedaDueno.style.display = 'none';
+            return;
+        }
+
+        const filtrados = clientesList.filter(c => 
+            c.nombreCompleto.toLowerCase().includes(query) || 
+            c.numeroDocumento.includes(query)
+        );
+
+        if (filtrados.length === 0) {
+            resultadosBusquedaDueno.innerHTML = '<li class="autocomplete-suggestion-item text-muted">No se encontraron resultados</li>';
+            resultadosBusquedaDueno.style.display = 'block';
+            return;
+        }
+
+        filtrados.forEach(c => {
+            const li = document.createElement('li');
+            li.className = 'autocomplete-suggestion-item';
+            li.innerHTML = `<strong>${c.nombreCompleto}</strong> <span class="text-muted small">(${c.numeroDocumento})</span>`;
+            li.addEventListener('click', function() {
+                seleccionarPropietario(c);
+            });
+            resultadosBusquedaDueno.appendChild(li);
+        });
+
+        resultadosBusquedaDueno.style.display = 'block';
+    });
+
+    // Cerrar sugerencias al hacer clic afuera
+    document.addEventListener('click', function(e) {
+        if (e.target !== buscarDuenoInput && e.target !== resultadosBusquedaDueno) {
+            resultadosBusquedaDueno.style.display = 'none';
+        }
+    });
+
+    function seleccionarPropietario(cliente) {
+        buscarDuenoInput.value = `${cliente.nombreCompleto} (${cliente.numeroDocumento})`;
+        duenoIdSeleccionado.value = cliente.id;
+        buscarDuenoInput.disabled = true;
+        btnLimpiarDueno.style.display = 'block';
+        resultadosBusquedaDueno.style.display = 'none';
+        
+        // Cargar las mascotas del cliente
+        cargarMascotasCliente(cliente.id);
+    }
+
+    btnLimpiarDueno.addEventListener('click', function() {
+        limpiarSeleccionPropietario();
+    });
+
+    function limpiarSeleccionPropietario() {
+        buscarDuenoInput.value = '';
+        buscarDuenoInput.disabled = false;
+        duenoIdSeleccionado.value = '';
+        btnLimpiarDueno.style.display = 'none';
+        
+        mascotaSelect.innerHTML = '<option value="">-- Primero busque un dueño --</option>';
+        mascotaSelect.disabled = true;
+    }
+
+    function cargarMascotasCliente(clienteId, mascotaIdSeleccionar = null) {
+        mascotaSelect.innerHTML = '<option value="">Cargando mascotas...</option>';
+        mascotaSelect.disabled = true;
+
+        fetch(`/mascotas/api/cliente/${clienteId}`)
+            .then(r => r.json())
+            .then(res => {
+                mascotaSelect.innerHTML = '';
+                if (res.success && res.data && res.data.length > 0) {
+                    res.data.forEach(m => {
+                        const selectedAttr = (mascotaIdSeleccionar && m.id == mascotaIdSeleccionar) ? 'selected' : '';
+                        mascotaSelect.innerHTML += `<option value="${m.id}" ${selectedAttr}>${m.nombre} (${m.especie} - ${m.raza || 'Sin raza'})</option>`;
+                    });
+                    mascotaSelect.disabled = false;
+                } else {
+                    mascotaSelect.innerHTML = '<option value="">El cliente no tiene mascotas registradas</option>';
+                    mascotaSelect.disabled = true;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                mascotaSelect.innerHTML = '<option value="">Error al cargar mascotas</option>';
+            });
+    }
+
+    // 4. Registro Rápido Collapsible Logic
+    const btnToggleRegistroRapido = document.getElementById('btnToggleRegistroRapido');
+    const seccionRegistroRapido = document.getElementById('seccionRegistroRapido');
+    const btnCancelarRegRapido = document.getElementById('btnCancelarRegRapido');
+    const btnCerrarRegRapidoHeader = document.getElementById('btnCerrarRegRapidoHeader');
+    const btnGuardarRegRapido = document.getElementById('btnGuardarRegRapido');
+
+    btnToggleRegistroRapido.addEventListener('click', function() {
+        limpiarSeleccionPropietario();
+        seccionRegistroRapido.style.display = 'block';
+        this.style.display = 'none';
+    });
+
+    function ocultarRegistroRapido() {
+        seccionRegistroRapido.style.display = 'none';
+        btnToggleRegistroRapido.style.display = 'block';
+        // Limpiar campos del registro rápido
+        document.getElementById('regNumDoc').value = '';
+        document.getElementById('regNombreDueno').value = '';
+        document.getElementById('regTelefono').value = '';
+        document.getElementById('regCorreo').value = '';
+        document.getElementById('regNombreMascota').value = '';
+        document.getElementById('regRaza').value = '';
+        document.getElementById('regFechaNac').value = '';
+        document.getElementById('regColor').value = '';
+        document.getElementById('regObservaciones').value = '';
+    }
+
+    btnCancelarRegRapido.addEventListener('click', ocultarRegistroRapido);
+    btnCerrarRegRapidoHeader.addEventListener('click', ocultarRegistroRapido);
+
+    btnGuardarRegRapido.addEventListener('click', function() {
+        const numDoc = document.getElementById('regNumDoc').value.trim();
+        const nombreDueno = document.getElementById('regNombreDueno').value.trim();
+        const nombreMascota = document.getElementById('regNombreMascota').value.trim();
+
+        if (!numDoc || !nombreDueno || !nombreMascota) {
+            Swal.fire('Atención', 'El documento del dueño, nombre del dueño y nombre de la mascota son obligatorios.', 'warning');
+            return;
+        }
+
+        const tipoDoc = document.getElementById('regTipoDoc').value;
+        if (tipoDoc === "1" && numDoc.length !== 8) {
+            Swal.fire('Atención', 'El DNI debe tener exactamente 8 dígitos.', 'warning');
+            return;
+        }
+        if (tipoDoc === "6" && numDoc.length !== 11) {
+            Swal.fire('Atención', 'El RUC debe tener exactamente 11 dígitos.', 'warning');
+            return;
+        }
+
+        // Construir request body
+        const reqPayload = {
+            tipoDocumento: tipoDoc,
+            numeroDocumento: numDoc,
+            nombreCompleto: nombreDueno,
+            telefono: document.getElementById('regTelefono').value.trim() || null,
+            correo: document.getElementById('regCorreo').value.trim() || null,
+            nombreMascota: nombreMascota,
+            especie: document.getElementById('regEspecie').value,
+            raza: document.getElementById('regRaza').value.trim() || null,
+            sexo: document.getElementById('regSexo').value,
+            fechaNacimiento: document.getElementById('regFechaNac').value || null,
+            color: document.getElementById('regColor').value.trim() || null,
+            observaciones: document.getElementById('regObservaciones').value.trim() || null
+        };
+
+        fetch('/mascotas/api/registro-rapido', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reqPayload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                Swal.fire('Registrado', 'Cliente y mascota registrados con éxito.', 'success');
+                
+                // Recargar clientes locales para incluir al nuevo
+                cargarClientes();
+
+                // Establecer como seleccionado en el formulario principal
+                const clienteNuevoObj = {
+                    id: res.clienteId,
+                    nombreCompleto: nombreDueno,
+                    numeroDocumento: numDoc
+                };
+                
+                ocultarRegistroRapido();
+                
+                // Rellenar buscador principal
+                buscarDuenoInput.value = `${clienteNuevoObj.nombreCompleto} (${clienteNuevoObj.numeroDocumento})`;
+                duenoIdSeleccionado.value = clienteNuevoObj.id;
+                buscarDuenoInput.disabled = true;
+                btnLimpiarDueno.style.display = 'block';
+
+                // Cargar mascotas y autoseleccionar la nueva mascota
+                cargarMascotasCliente(res.clienteId, res.mascotaId);
+
+            } else {
+                Swal.fire('Error', res.message || 'Error al guardar registro rápido.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Error', 'Error en el servidor al realizar el registro rápido.', 'error');
+        });
+    });
+
+    // 5. Guardar Nueva Cita
     document.getElementById('formNuevaCita').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // CORRECCIÓN APLICADA: .value en lugar de .val
         const fecha = document.getElementById('fechaCita').value;
         const hora = document.getElementById('horaCita').value;
         const fechaHora = `${fecha}T${hora}:00`;
 
+        const mascotaVal = document.getElementById('mascotaId').value;
+        const medicoVal = document.getElementById('medicoId').value;
+
+        if (!mascotaVal) {
+            Swal.fire('Atención', 'Debe seleccionar una mascota válida.', 'warning');
+            return;
+        }
+
+        if (!medicoVal) {
+            Swal.fire('Atención', 'Debe seleccionar un médico veterinario.', 'warning');
+            return;
+        }
+
         const payload = {
-            mascota: { id: document.getElementById('mascotaId').value }, // Requiere IDs válidos en tu BD
-            veterinario: { id: document.getElementById('medicoId').value },
+            mascota: { id: parseInt(mascotaVal) }, 
+            veterinario: { id: medicoVal },
             fechaHoraProgramada: fechaHora,
             motivoPrincipal: document.getElementById('motivoCita').value
         };
@@ -83,14 +343,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalNuevaCita.hide();
                 calendar.refetchEvents(); // Recargar el calendario
                 Swal.fire('Éxito', res.message, 'success');
+                
+                // Reset form and state
                 this.reset();
+                limpiarSeleccionPropietario();
+                ocultarRegistroRapido();
             } else {
-                Swal.fire('Error', res.message, 'error');
+                Swal.fire('Conflicto o Error', res.message, 'error');
             }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Error', 'No se pudo guardar la cita.', 'error');
         });
     });
 
-    // 3. Procesar el Check-In (Pasar paciente a En Espera)
+    // 6. Procesar el Check-In (Pasar paciente a En Espera)
     document.getElementById('btnProcesarCheckIn').addEventListener('click', function() {
         if (!document.getElementById('checkAvisoCosto').checked) {
             Swal.fire('Atención', 'Debe confirmar que informó el costo base al cliente.', 'warning');
@@ -115,6 +383,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     Swal.fire('Error', res.message, 'error');
                 }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerText = "Marcar Llegada (Pasar a Espera)";
+                console.error(err);
+                Swal.fire('Error', 'No se pudo procesar el check-in.', 'error');
             });
     });
 });

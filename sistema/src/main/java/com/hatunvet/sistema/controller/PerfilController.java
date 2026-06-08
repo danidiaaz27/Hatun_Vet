@@ -101,9 +101,17 @@ public class PerfilController {
     @ResponseBody
     public Map<String, Object> apiEliminar(@PathVariable String id) {
         Map<String, Object> response = new HashMap<>();
-        boolean success = perfilService.eliminar(id);
-        response.put("success", success);
-        response.put("message", success ? "Perfil eliminado" : "Error al eliminar. Verifique que no haya usuarios usándolo.");
+        try {
+            boolean success = perfilService.eliminar(id);
+            response.put("success", success);
+            response.put("message", success ? "Perfil eliminado" : "Error al eliminar. Verifique que no haya usuarios usándolo.");
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "Error al intentar eliminar el perfil: " + e.getMessage());
+        }
         return response;
     }
 

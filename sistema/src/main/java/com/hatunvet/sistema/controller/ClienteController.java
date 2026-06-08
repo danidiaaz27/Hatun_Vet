@@ -85,9 +85,10 @@ public class ClienteController {
                 clienteRepository.findById(cliente.getId()).ifPresent(c -> cliente.setFechaRegistro(c.getFechaRegistro()));
             }
 
-            clienteRepository.save(cliente);
+            Cliente saved = clienteRepository.save(cliente);
             res.put("success", true);
             res.put("message", "Cliente guardado correctamente");
+            res.put("data", saved);
         } catch (Exception e) {
             res.put("success", false);
             res.put("message", "Error interno al guardar el cliente.");

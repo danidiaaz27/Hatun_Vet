@@ -136,6 +136,7 @@ public class LoginController {
             case "/clientes" -> 90;
             case "/perfiles/listar" -> 100;
             case "/usuarios/listar" -> 110;
+            case "/medicos/horarios" -> 115;
             case "/reportes" -> 120;
             case "/configuracion" -> 130;
             default -> 500;

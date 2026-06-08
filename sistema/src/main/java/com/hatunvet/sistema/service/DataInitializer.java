@@ -10,6 +10,7 @@ import com.hatunvet.sistema.repository.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -23,6 +24,7 @@ public class DataInitializer implements CommandLineRunner {
     private final ProveedorRepository proveedorRepository;
     private final ProductoRepository productoRepository;
     private final ClienteRepository clienteRepository;
+    private final OpcionRepository opcionRepository;
 
     // Inyección de dependencias por constructor
     public DataInitializer(
@@ -32,7 +34,8 @@ public class DataInitializer implements CommandLineRunner {
             CategoriaProductoRepository categoriaRepository,
             ProveedorRepository proveedorRepository,
             ProductoRepository productoRepository,
-            ClienteRepository clienteRepository) {
+            ClienteRepository clienteRepository,
+            OpcionRepository opcionRepository) {
         this.perfilRepository = perfilRepository;
         this.usuarioRepository = usuarioRepository;
         this.configuracionRepository = configuracionRepository;
@@ -40,6 +43,7 @@ public class DataInitializer implements CommandLineRunner {
         this.proveedorRepository = proveedorRepository;
         this.productoRepository = productoRepository;
         this.clienteRepository = clienteRepository;
+        this.opcionRepository = opcionRepository;
     }
 
     @Override
@@ -48,6 +52,7 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("⏳ Iniciando la carga de datos maestros para HatunVet...");
         
         initPerfiles();
+        initOpciones(); 
         initUsuarios(); 
         initConfiguracion();
         initCategorias();
@@ -60,26 +65,70 @@ public class DataInitializer implements CommandLineRunner {
     private void initPerfiles() {
         if (perfilRepository.count() == 0) {
             Perfil admin = new Perfil();
-            // ID removido para autogeneración
             admin.setNombre("Administrador");
             admin.setDescripcion("Acceso total a todos los módulos del sistema");
             admin.setEstado(true);
 
             Perfil vendedor = new Perfil();
-            // ID removido para autogeneración
             vendedor.setNombre("Vendedor");
             vendedor.setDescripcion("Encargado de Ventas");
             vendedor.setEstado(true);
 
+            Perfil veterinario = new Perfil();
+            veterinario.setNombre("Veterinario");
+            veterinario.setDescripcion("Personal médico encargado de la atención clínica y consultas");
+            veterinario.setEstado(true);
+
             perfilRepository.save(admin);
             perfilRepository.save(vendedor);
+            perfilRepository.save(veterinario);
             System.out.println(" -> Perfiles registrados.");
         }
     }
 
+    private void initOpciones() {
+        if (opcionRepository.count() == 0) {
+            List<Opcion> lista = new ArrayList<>();
+            lista.add(crearOpcion("Dashboard", "/dashboard", "bi bi-speedometer2"));
+            lista.add(crearOpcion("Ventas (POS)", "/ventas/pos", "bi bi-cart-fill"));
+            lista.add(crearOpcion("Historial Ventas", "/ventas/historial", "bi bi-receipt-cutoff"));
+            lista.add(crearOpcion("Baños y Cortes", "/banos-cortes", "bi bi-scissors"));
+            lista.add(crearOpcion("Mascotas", "/mascotas", "bi bi-paw"));
+            lista.add(crearOpcion("Inventario", "/inventario", "bi bi-box-seam"));
+            lista.add(crearOpcion("Categorías", "/categorias", "bi bi-tags"));
+            lista.add(crearOpcion("Productos", "/productos/listar", "bi bi-bag-plus"));
+            lista.add(crearOpcion("Proveedores", "/proveedores/listar", "bi bi-truck"));
+            lista.add(crearOpcion("Clientes", "/clientes", "bi bi-people"));
+            lista.add(crearOpcion("Perfiles", "/perfiles/listar", "bi bi-shield-lock"));
+            lista.add(crearOpcion("Usuarios", "/usuarios/listar", "bi bi-person-gear"));
+            lista.add(crearOpcion("Horarios y Permisos", "/medicos/horarios", "bi bi-clock-history"));
+            lista.add(crearOpcion("Reportes", "/reportes", "bi bi-graph-up-arrow"));
+            lista.add(crearOpcion("Configuración", "/configuracion", "bi bi-gear"));
+
+            List<Opcion> guardadas = opcionRepository.saveAll(lista);
+
+            // Vinculamos todas las opciones al Administrador buscando por nombre
+            Perfil admin = perfilRepository.findAll().stream()
+                    .filter(p -> "Administrador".equals(p.getNombre()))
+                    .findFirst().orElse(null);
+            if (admin != null) {
+                admin.getOpciones().addAll(guardadas);
+                perfilRepository.save(admin);
+                System.out.println(" -> 15 módulos del sistema vinculados al Administrador.");
+            }
+        }
+    }
+
+    private Opcion crearOpcion(String nombre, String ruta, String icono) {
+        Opcion o = new Opcion();
+        o.setNombre(nombre);
+        o.setRuta(ruta);
+        o.setIcono(icono);
+        return o;
+    }
+
     private void initUsuarios() {
         if (usuarioRepository.count() == 0) {
-            // Buscamos todos los perfiles y los filtramos por nombre para evitar depender de IDs fijos
             List<Perfil> perfiles = perfilRepository.findAll();
             Perfil perfilAdmin = perfiles.stream()
                     .filter(p -> "Administrador".equals(p.getNombre()))
@@ -93,7 +142,6 @@ public class DataInitializer implements CommandLineRunner {
 
             // Crear Usuario Administrador
             Usuario admin = new Usuario();
-            // ID removido para autogeneración
             admin.setNombre("Administrador HatunVet");
             admin.setUsuario("admin");
             admin.setPasswordHash("$2a$10$ifojdEQ.cHInJoDazhbvu.Ou2cb4ewKjLoqOZnghY1gPR4Rkykx4i");
@@ -102,7 +150,6 @@ public class DataInitializer implements CommandLineRunner {
 
             // Crear Usuario Vendedor
             Usuario vendedor = new Usuario();
-            // ID removido para autogeneración
             vendedor.setNombre("Mateo Sanchez");
             vendedor.setUsuario("mateo");
             vendedor.setPasswordHash("$2a$10$1zZAfBNRu0D0oJuiZQkE3eQTpHBr/ApUSwDlsO/JTUA77mLjXbvc6");
@@ -118,7 +165,6 @@ public class DataInitializer implements CommandLineRunner {
     private void initConfiguracion() {
         if (configuracionRepository.count() == 0) {
             Configuracion config = new Configuracion();
-            // ID removido para autogeneración
             config.setNombreVeterinaria("HatunVet");
             config.setLogo("11fcb9db-7eee-483e-b1eb-ce6f33b4c0fc.png");
             config.setTelefono("+51 987 654 321");
@@ -140,19 +186,16 @@ public class DataInitializer implements CommandLineRunner {
     private void initCategorias() {
         if (categoriaRepository.count() == 0) {
             CategoriaProducto cat1 = new CategoriaProducto();
-            // ID removido para autogeneración
             cat1.setNombre("Medicamentos");
             cat1.setDescripcion("Pastillas, jarabes, inyectables");
             cat1.setEstado(true);
 
             CategoriaProducto cat2 = new CategoriaProducto();
-            // ID removido para autogeneración
             cat2.setNombre("Accesorios");
             cat2.setDescripcion("Correas, platos, juguetes");
             cat2.setEstado(true);
 
             CategoriaProducto cat3 = new CategoriaProducto();
-            // ID removido para autogeneración
             cat3.setNombre("Alimentos");
             cat3.setDescripcion("Croquetas y comida húmeda");
             cat3.setEstado(true);

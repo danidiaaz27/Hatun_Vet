@@ -62,6 +62,10 @@ public class PerfilService {
 
     @Transactional
     public boolean eliminar(String id) {
+        Perfil perfil = perfilRepository.findById(id).orElse(null);
+        if (perfil != null && List.of("Administrador", "Vendedor", "Veterinario").contains(perfil.getNombre())) {
+            throw new IllegalArgumentException("No se pueden eliminar los perfiles base del sistema (Administrador, Vendedor o Veterinario).");
+        }
         if (perfilRepository.existsById(id)) {
             perfilRepository.deleteById(id);
             return true;

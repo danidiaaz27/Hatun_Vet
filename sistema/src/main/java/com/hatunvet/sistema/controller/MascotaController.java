@@ -58,6 +58,15 @@ public class MascotaController {
         return response;
     }
 
+    @GetMapping("/api/cliente/{clienteId}")
+    @ResponseBody
+    public Map<String, Object> listarPorCliente(@PathVariable Integer clienteId) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("data", mascotaService.obtenerMascotasPorCliente(clienteId));
+        return response;
+    }
+
     @PostMapping("/api/registro-rapido")
     @ResponseBody
     public Map<String, Object> registroRapido(@RequestBody MascotaService.RegistroRapidoRequest request) {
