@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Baños y Cortes - HatunVet</title>
@@ -17,8 +18,8 @@
         .grooming-card {
             background: #fff;
             border-radius: 16px;
-            border: 1.5px solid rgba(10,61,145,0.10);
-            box-shadow: 0 4px 18px rgba(10,61,145,0.07);
+            border: 1.5px solid rgba(10, 61, 145, 0.10);
+            box-shadow: 0 4px 18px rgba(10, 61, 145, 0.07);
             padding: 20px 22px 18px;
             transition: box-shadow .2s, transform .2s;
             display: flex;
@@ -27,7 +28,7 @@
         }
 
         .grooming-card:hover {
-            box-shadow: 0 8px 28px rgba(10,61,145,0.13);
+            box-shadow: 0 8px 28px rgba(10, 61, 145, 0.13);
             transform: translateY(-2px);
         }
 
@@ -40,15 +41,21 @@
         }
 
         .mascota-avatar {
-            width: 52px; height: 52px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
-            background: rgba(10,61,145,0.08);
-            display: flex; align-items: center; justify-content: center;
+            background: rgba(10, 61, 145, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 22px;
             flex-shrink: 0;
         }
 
-        .mascota-info { flex: 1; }
+        .mascota-info {
+            flex: 1;
+        }
+
         .mascota-nombre {
             font-size: 17px;
             font-weight: 700;
@@ -70,10 +77,26 @@
             white-space: nowrap;
         }
 
-        .badge-pendiente  { background: #fff8e1; color: #b45309; }
-        .badge-terminado  { background: #e8f5ee; color: #1a6e40; }
-        .badge-pagado     { background: #fff8e1; color: #b45309; border: 1.5px solid #f6c84b; }
-        .badge-finalizado { background: #e8f5ee; color: #1a6e40; }
+        .badge-pendiente {
+            background: #fff8e1;
+            color: #b45309;
+        }
+
+        .badge-terminado {
+            background: #e8f5ee;
+            color: #1a6e40;
+        }
+
+        .badge-pagado {
+            background: #fff8e1;
+            color: #b45309;
+            border: 1.5px solid #f6c84b;
+        }
+
+        .badge-finalizado {
+            background: #e8f5ee;
+            color: #1a6e40;
+        }
 
         /* Info row (dueño, doc, servicio) */
         .grooming-info-row {
@@ -82,7 +105,7 @@
             gap: 6px 18px;
             font-size: 13px;
             color: #4a5568;
-            border-top: 1px solid rgba(10,61,145,0.07);
+            border-top: 1px solid rgba(10, 61, 145, 0.07);
             padding-top: 12px;
         }
 
@@ -92,7 +115,10 @@
             gap: 5px;
         }
 
-        .grooming-info-row i { color: #8a9bc0; font-size: 13px; }
+        .grooming-info-row i {
+            color: #8a9bc0;
+            font-size: 13px;
+        }
 
         /* Botones de acción en cards */
         .grooming-card-actions {
@@ -101,7 +127,13 @@
             margin-top: 4px;
         }
 
-        .grooming-card-actions .btn { flex: 1; font-size: 13px; font-weight: 600; border-radius: 8px; padding: 9px; }
+        .grooming-card-actions .btn {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            padding: 9px;
+        }
 
         /* Fecha */
         .grooming-fecha {
@@ -121,15 +153,32 @@
             margin-bottom: 20px;
         }
 
-        .grooming-info-text { font-size: 13px; color: #6b7a99; }
+        .grooming-info-text {
+            font-size: 13px;
+            color: #6b7a99;
+        }
 
         /* Búsqueda modal */
-        .mascota-result-item { cursor: pointer; transition: background-color 0.15s ease; }
-        .mascota-result-item:hover, .mascota-result-item.active { background-color: rgba(13,110,253,0.08); }
+        .mascota-result-item {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .mascota-result-item:hover,
+        .mascota-result-item.active {
+            background-color: rgba(13, 110, 253, 0.08);
+        }
+
         .avatar-pill-sm {
-            width: 36px; height: 36px; border-radius: 50%;
-            display: inline-flex; align-items: center; justify-content: center;
-            background: var(--vet-blue, #0A3D91); color: #fff; font-weight: 700;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--vet-blue, #0A3D91);
+            color: #fff;
+            font-weight: 700;
         }
 
         /* Empty state */
@@ -139,128 +188,142 @@
             padding: 60px 20px;
             color: #8a9bc0;
         }
-        .grooming-empty i { font-size: 48px; display: block; margin-bottom: 12px; }
+
+        .grooming-empty i {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="d-flex">
-    <div th:replace="~{sidebar :: sidebar(activeUri='/banos-cortes')}"></div>
+    <div class="d-flex">
+        <div th:replace="~{sidebar :: sidebar(activeUri='/banos-cortes')}"></div>
 
-    <main class="main-content w-100 p-4">
+        <main class="main-content w-100 p-4">
 
-        <!-- Header -->
-        <header class="d-flex justify-content-between align-items-start mb-4">
-            <div>
-                <h2 class="page-title">Control de Baños y Cortes</h2>
-                <p class="page-subtitle">Gestiona y controla el horario de grooming de hoy en vista de cards</p>
-            </div>
-            <button class="btn-new" id="btnNuevoServicio">
-                <i class="bi bi-plus-lg"></i> Nuevo Registro
-            </button>
-        </header>
+            <!-- Header -->
+            <header class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h2 class="page-title">Control de Baños y Cortes</h2>
+                    <p class="page-subtitle">Gestiona y controla el horario de grooming de hoy en vista de cards</p>
+                </div>
+                <button class="btn-new" id="btnNuevoServicio">
+                    <i class="bi bi-plus-lg"></i> Nuevo Registro
+                </button>
+            </header>
 
-        <!-- Controles -->
-        <div class="grooming-controls">
-            <span class="grooming-info-text" id="lblConteo">Cargando registros...</span>
-            <div class="d-flex gap-2 align-items-center">
-                <select class="form-select form-select-sm" id="filtroEstado" style="width:160px;">
-                    <option value="">Todos los estados</option>
-                    <option value="PENDIENTE">Pendiente</option>
-                    <option value="TERMINADO">Terminado</option>
-                    <option value="PAGADO">Pagado</option>
-                </select>
-                <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-outline-secondary" id="btnPrev">
-                        <i class="bi bi-chevron-left"></i> Anterior
-                    </button>
-                    <button class="btn btn-sm btn-primary px-3" id="btnPagActual" disabled>1</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="btnNext">
-                        Siguiente <i class="bi bi-chevron-right"></i>
-                    </button>
+            <!-- Controles -->
+            <div class="grooming-controls">
+                <span class="grooming-info-text" id="lblConteo">Cargando registros...</span>
+                <div class="d-flex gap-2 align-items-center">
+                    <select class="form-select form-select-sm" id="filtroEstado" style="width:160px;">
+                        <option value="">Todos los estados</option>
+                        <option value="PENDIENTE">Pendiente</option>
+                        <option value="TERMINADO">Terminado</option>
+                        <option value="PAGADO">Pagado</option>
+                    </select>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-secondary" id="btnPrev">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </button>
+                        <button class="btn btn-sm btn-primary px-3" id="btnPagActual" disabled>1</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnNext">
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Grid de cards -->
-        <div class="grooming-grid" id="groomingGrid">
-            <div class="grooming-empty">
-                <i class="bi bi-arrow-repeat"></i>
-                Cargando servicios...
-            </div>
-        </div>
-
-    </main>
-</div>
-
-<!-- Modal Nuevo Registro -->
-<div class="modal fade" id="modalServicio" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="formServicio">
-                <div class="modal-header text-white" style="background: var(--vet-blue);">
-                    <h5 class="modal-title">Registrar Servicio de Grooming</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <!-- Grid de cards -->
+            <div class="grooming-grid" id="groomingGrid">
+                <div class="grooming-empty">
+                    <i class="bi bi-arrow-repeat"></i>
+                    Cargando servicios...
                 </div>
-                <div class="modal-body">
-                    <input type="hidden" id="mascotaId" value="">
-                    <div class="row g-3">
-                        <div class="col-12">
-                            <label class="label-vet"><i class="bi bi-search me-1"></i> Buscar mascota</label>
-                            <div class="input-group">
-                                <input type="text" class="input-vet" id="txtBuscarMascota" placeholder="ID o nombre..." autocomplete="off" style="border-radius: 8px 0 0 8px;">
-                                <button class="btn btn-primary" type="button" id="btnBuscarMascota">Buscar</button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal Nuevo Registro -->
+    <div class="modal fade" id="modalServicio" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="formServicio">
+                    <div class="modal-header text-white" style="background: var(--vet-blue);">
+                        <h5 class="modal-title">Registrar Servicio de Grooming</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="mascotaId" value="">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="label-vet"><i class="bi bi-search me-1"></i> Buscar mascota</label>
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="input-vet flex-grow-1" id="txtBuscarMascota"
+                                        placeholder="ID o nombre..." autocomplete="off">
+                                    <button class="btn btn-primary px-3" type="button"
+                                        id="btnBuscarMascota">Buscar</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <div id="panelResultadosMascota" class="list-group shadow-sm d-none" style="max-height:220px;overflow-y:auto;"></div>
-                            <div id="panelMascotaSeleccionada" class="alert alert-light border d-none mb-0">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-pill-sm" id="lblMascotaInicial">?</div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-bold" id="lblMascotaNombre">—</div>
-                                        <small class="text-muted" id="lblMascotaDetalle">—</small>
-                                        <div class="small mt-1" id="lblDuenoDetalle">—</div>
-                                        <div class="small text-muted" id="lblFechaRegistroMascota"></div>
+                            <div class="col-12">
+                                <div id="panelResultadosMascota" class="list-group shadow-sm d-none"
+                                    style="max-height:220px;overflow-y:auto;"></div>
+                                <div id="panelMascotaSeleccionada" class="alert alert-light border d-none mb-0">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-pill-sm" id="lblMascotaInicial">?</div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold" id="lblMascotaNombre">—</div>
+                                            <small class="text-muted" id="lblMascotaDetalle">—</small>
+                                            <div class="small mt-1" id="lblDuenoDetalle">—</div>
+                                            <div class="small text-muted" id="lblFechaRegistroMascota"></div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            id="btnLimpiarMascota">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiarMascota">
-                                        <i class="bi bi-x-lg"></i>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="label-vet">Tipo de Servicio</label>
+                                <div class="input-group">
+                                    <select id="tipoServicioSelect" class="form-select"></select>
+                                    <input type="text" id="tipoServicioInput" class="form-control d-none"
+                                        placeholder="Nuevo servicio...">
+                                    <button class="btn btn-outline-secondary" type="button" id="btnAlternarTipo">
+                                        <i class="bi bi-plus-lg"></i> Nuevo
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-12">
-                            <label class="label-vet">Tipo de Servicio</label>
-                            <div class="input-group">
-                                <select id="tipoServicioSelect" class="form-select"></select>
-                                <input type="text" id="tipoServicioInput" class="form-control d-none" placeholder="Nuevo servicio...">
-                                <button class="btn btn-outline-secondary" type="button" id="btnAlternarTipo">
-                                    <i class="bi bi-plus-lg"></i> Nuevo
-                                </button>
+                            <div class="col-12">
+                                <label class="label-vet">Detalles / Observaciones</label>
+                                <textarea id="detallesExtra" class="input-vet" rows="2"
+                                    placeholder="Shampoo de avena, corte estilo león..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="label-vet" style="color: var(--vet-red);">Precio a Cobrar (S/)</label>
+                                <input type="number" id="precio" class="input-vet"
+                                    style="font-size:18px;font-weight:700;" step="0.50" min="1" required>
                             </div>
                         </div>
-                        <div class="col-12">
-                            <label class="label-vet">Detalles / Observaciones</label>
-                            <textarea id="detallesExtra" class="input-vet" rows="2" placeholder="Shampoo de avena, corte estilo león..."></textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="label-vet" style="color: var(--vet-red);">Precio a Cobrar (S/)</label>
-                            <input type="number" id="precio" class="input-vet" style="font-size:18px;font-weight:700;" step="0.50" min="1" required>
-                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary-vet" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn-primary-vet" id="btnGuardarServicio">Guardar Registro</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary-vet" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn-primary-vet" id="btnGuardarServicio">Guardar Registro</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/banos-cortes.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/banos-cortes.js}"></script>
 </body>
+
 </html>
