@@ -7,6 +7,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/usuarios")
@@ -28,6 +30,18 @@ public class UsuarioController {
     public Map<String, Object> apiListar() {
         Map<String, Object> response = new HashMap<>();
         response.put("data", usuarioService.listarUsuarios());
+        return response;
+    }
+
+    @GetMapping("/api/veterinarios")
+    @ResponseBody
+    public Map<String, Object> apiListarVeterinarios() {
+        Map<String, Object> response = new HashMap<>();
+        List<Usuario> veterinarios = usuarioService.listarUsuarios().stream()
+                .filter(u -> u.isActivo() && u.getPerfil() != null && "Veterinario".equalsIgnoreCase(u.getPerfil().getNombre()))
+                .collect(Collectors.toList());
+        response.put("success", true);
+        response.put("data", veterinarios);
         return response;
     }
 

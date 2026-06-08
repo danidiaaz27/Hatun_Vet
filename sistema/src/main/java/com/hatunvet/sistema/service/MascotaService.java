@@ -34,6 +34,11 @@ public class MascotaService {
     }
 
     @Transactional(readOnly = true)
+    public List<Mascota> obtenerMascotasPorCliente(Integer clienteId) {
+        return mascotaRepository.findByClienteId(clienteId);
+    }
+
+    @Transactional(readOnly = true)
     public List<Mascota> buscarPorIdONombre(String valor) {
         String texto = trimToEmpty(valor);
         if (texto.isEmpty()) {

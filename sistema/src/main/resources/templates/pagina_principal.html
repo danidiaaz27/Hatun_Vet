@@ -282,6 +282,28 @@
 
 </section>
 
+<!-- MEDICOS DISPONIBLES -->
+<section id="equipo" class="section bg-light">
+    <div class="section-title">
+        <h2>Nuestro Equipo Médico</h2>
+        <p>Conoce a los veterinarios listos para atender a tus mascotas</p>
+    </div>
+    
+    <div style="padding-bottom: 40px; display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto;">
+        <div th:each="medico : ${medicos}" style="width: 280px; background: white; border-radius: 10px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border: 1px solid #eee;">
+            <div style="width: 100px; height: 100px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                <i class="fa-solid fa-user-doctor" style="font-size: 40px; color: #0a3d91;"></i>
+            </div>
+            <h3 th:text="${medico.nombre}" style="font-size: 1.25rem; font-weight: bold; margin-bottom: 5px; color: #333;">Dr. Nombre</h3>
+            <p class="small fw-bold" th:text="${medico.perfil.nombre}" style="color: #c9302c; margin-bottom: 10px;">Veterinario</p>
+            <p class="text-muted small" style="font-size: 0.85rem; margin-bottom: 0;">Especialista en medicina veterinaria general, cirugías y atención de emergencias.</p>
+        </div>
+        <div th:if="${#lists.isEmpty(medicos)}" class="text-center text-muted w-100 py-4">
+            No hay médicos programados disponibles actualmente en la web.
+        </div>
+    </div>
+</section>
+
 <!-- HORARIO -->
 <section id="horario" class="section">
 

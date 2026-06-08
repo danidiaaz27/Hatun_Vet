@@ -12,6 +12,39 @@
         .bg-agendada { background-color: #0d6efd; color: white; }
         .bg-espera { background-color: #fd7e14; color: white; }
         .bg-atencion { background-color: #198754; color: white; }
+        
+        /* Estilos para sugerencias de autocompletado */
+        .autocomplete-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 .375rem .375rem;
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 24px); /* Ajustado para el padding */
+            z-index: 1050;
+            margin-top: 2px;
+            padding-left: 0;
+            list-style: none;
+        }
+        .autocomplete-suggestion-item {
+            cursor: pointer;
+            padding: .5rem 1rem;
+            border-bottom: 1px solid #f8f9fa;
+            font-size: 0.9rem;
+        }
+        .autocomplete-suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .autocomplete-suggestion-item:hover {
+            background-color: #e9ecef;
+            color: #000;
+            font-weight: bold;
+        }
+        .x-small {
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 <body>
@@ -36,38 +69,161 @@
 </div>
 
 <div class="modal fade" id="modalNuevaCita" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="formNuevaCita">
                 <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i> Nueva Reserva</h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i> Nueva Reserva de Cita</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body row g-3">
                     <div class="col-12 text-center mb-2">
                         <small class="text-primary fw-bold"><i class="bi bi-lightbulb-fill"></i> Tip LEAN: Sugiera horas atípicas (Ej. 10:05 o 10:15) para mejorar la puntualidad.</small>
                     </div>
+                    
+                    <!-- BÚSQUEDA Y DETALLES PRINCIPALES -->
+                    <div class="col-md-12">
+                        <div class="row g-3">
+                            <!-- Buscador de Dueño -->
+                            <div class="col-md-12 position-relative">
+                                <label class="form-label small fw-bold text-dark"><i class="bi bi-person-fill text-muted me-1"></i> Buscar Dueño (DNI o Nombre)</label>
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                                    <input type="text" id="buscarDuenoInput" class="form-control border-start-0 bg-white" placeholder="Escriba DNI, RUC o Nombre del Propietario..." autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary border-start-0" id="btnLimpiarDueno" style="display: none;"><i class="bi bi-x-lg"></i></button>
+                                </div>
+                                <ul id="resultadosBusquedaDueno" class="autocomplete-suggestions shadow-lg" style="display: none;"></ul>
+                                <input type="hidden" id="duenoIdSeleccionado">
+                            </div>
+
+                            <!-- Selector de Mascota -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark"><i class="bi bi-paw-fill text-muted me-1"></i> Seleccionar Mascota</label>
+                                <select id="mascotaId" class="form-select shadow-sm" required disabled>
+                                    <option value="">-- Primero busque un dueño --</option>
+                                </select>
+                            </div>
+
+                            <!-- Selector de Médico Veterinario -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark"><i class="bi bi-heart-pulse-fill text-muted me-1"></i> Médico Veterinario</label>
+                                <select id="medicoId" class="form-select shadow-sm" required>
+                                    <option value="">Cargando médicos...</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Botón para Mostrar Registro Rápido -->
+                            <div class="col-12 my-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold border-2" id="btnToggleRegistroRapido">
+                                    <i class="bi bi-plus-circle-fill me-1"></i> ¿Cliente o Mascota Nueva? Registro Rápido
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REGISTRO RÁPIDO (SECCIÓN COLAPSABLE) -->
+                    <div class="col-12" id="seccionRegistroRapido" style="display: none;">
+                        <div class="card border-primary border-2 shadow-sm bg-light">
+                            <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+                                <span class="fw-bold"><i class="bi bi-person-plus-fill me-1"></i> Registro Rápido de Cliente y Mascota</span>
+                                <button type="button" class="btn-close btn-close-white btn-sm" id="btnCerrarRegRapidoHeader"></button>
+                            </div>
+                            <div class="card-body p-3 row g-2">
+                                <!-- Info Cliente -->
+                                <div class="col-12 mb-1">
+                                    <span class="badge bg-secondary">Datos del Propietario</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label x-small fw-bold">Tipo Doc.</label>
+                                    <select id="regTipoDoc" class="form-select form-select-sm">
+                                        <option value="1">DNI</option>
+                                        <option value="6">RUC</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label x-small fw-bold">Num. Documento</label>
+                                    <input type="text" id="regNumDoc" class="form-control form-control-sm" placeholder="8 dígitos para DNI, 11 para RUC">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label x-small fw-bold">Nombre Completo del Propietario</label>
+                                    <input type="text" id="regNombreDueno" class="form-control form-control-sm" placeholder="Nombre completo del dueño">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Teléfono</label>
+                                    <input type="text" id="regTelefono" class="form-control form-control-sm" placeholder="Ej. 987654321">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Correo (Opcional)</label>
+                                    <input type="email" id="regCorreo" class="form-control form-control-sm" placeholder="ejemplo@correo.com">
+                                </div>
+
+                                <div class="col-12 my-2 border-bottom"></div>
+
+                                <!-- Info Mascota -->
+                                <div class="col-12 mb-1">
+                                    <span class="badge bg-secondary">Datos de la Mascota</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Nombre de la Mascota</label>
+                                    <input type="text" id="regNombreMascota" class="form-control form-control-sm" placeholder="Ej. Tobias">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Especie</label>
+                                    <select id="regEspecie" class="form-select form-select-sm">
+                                        <option value="Perro">Perro</option>
+                                        <option value="Gato">Gato</option>
+                                        <option value="Conejo">Conejo</option>
+                                        <option value="Ave">Ave</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Raza</label>
+                                    <input type="text" id="regRaza" class="form-control form-control-sm" placeholder="Ej. Pug, Criollo">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Sexo</label>
+                                    <select id="regSexo" class="form-select form-select-sm">
+                                        <option value="M">Macho</option>
+                                        <option value="F">Hembra</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Fecha de Nacimiento</label>
+                                    <input type="date" id="regFechaNac" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label x-small fw-bold">Color</label>
+                                    <input type="text" id="regColor" class="form-control form-control-sm" placeholder="Ej. Blanco y marrón">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label x-small fw-bold">Observaciones / Alergias</label>
+                                    <input type="text" id="regObservaciones" class="form-control form-control-sm" placeholder="Ej. Alérgico a vacunas, etc.">
+                                </div>
+
+                                <div class="col-12 mt-3 text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" id="btnCancelarRegRapido">Cancelar</button>
+                                    <button type="button" class="btn btn-sm btn-primary fw-bold" id="btnGuardarRegRapido">Registrar y Seleccionar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DATOS DE FECHA, HORA Y MOTIVO -->
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">ID Mascota (Temporal)</label>
-                        <input type="text" id="mascotaId" class="form-control" required>
+                        <label class="form-label small fw-bold text-dark"><i class="bi bi-calendar-event text-muted me-1"></i> Fecha de Cita</label>
+                        <input type="date" id="fechaCita" class="form-control shadow-sm" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold">ID Médico (Temporal)</label>
-                        <input type="text" id="medicoId" class="form-control" required>
+                        <label class="form-label small fw-bold text-dark"><i class="bi bi-clock text-muted me-1"></i> Hora (Sugerir Atípica)</label>
+                        <input type="time" id="horaCita" class="form-control shadow-sm" step="300" required>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold">Fecha de Cita</label>
-                        <input type="date" id="fechaCita" class="form-control" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold">Hora (Sugerir Atípica)</label>
-                        <input type="time" id="horaCita" class="form-control" step="300" required> </div>
                     <div class="col-12">
-                        <label class="form-label small fw-bold">Motivo de Consulta</label>
-                        <input type="text" id="motivoCita" class="form-control" placeholder="Ej. Vacunación, Decaimiento..." required>
+                        <label class="form-label small fw-bold text-dark"><i class="bi bi-chat-left-text text-muted me-1"></i> Motivo de Consulta</label>
+                        <input type="text" id="motivoCita" class="form-control shadow-sm" placeholder="Ej. Vacunación, Decaimiento, Consulta de rutina..." required>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer shadow-sm bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-dark fw-bold">Agendar</button>
                 </div>

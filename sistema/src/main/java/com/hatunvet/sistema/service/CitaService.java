@@ -19,13 +19,18 @@ public class CitaService {
     private final ConsultaClinicaRepository consultaRepository;
     private final ConsultaInsumoRepository insumoRepository;
     private final ServicioTerceroRepository terceroRepository;
+    private final HorarioVeterinarioRepository horarioRepository;
+    private final PermisoVeterinarioRepository permisoRepository;
 
     public CitaService(CitaRepository citaRepository, ConsultaClinicaRepository consultaRepository, 
-                       ConsultaInsumoRepository insumoRepository, ServicioTerceroRepository terceroRepository) {
+                       ConsultaInsumoRepository insumoRepository, ServicioTerceroRepository terceroRepository,
+                       HorarioVeterinarioRepository horarioRepository, PermisoVeterinarioRepository permisoRepository) {
         this.citaRepository = citaRepository;
         this.consultaRepository = consultaRepository;
         this.insumoRepository = insumoRepository;
         this.terceroRepository = terceroRepository;
+        this.horarioRepository = horarioRepository;
+        this.permisoRepository = permisoRepository;
     }
 
     public List<Cita> obtenerTodasLasCitas() {
@@ -34,6 +39,57 @@ public class CitaService {
 
     @Transactional
     public Cita guardarCita(Cita cita) {
+        if (cita.getVeterinario() == null || cita.getVeterinario().getId() == null) {
+            throw new IllegalArgumentException("Debe seleccionar un médico.");
+        }
+        if (cita.getFechaHoraProgramada() == null) {
+            throw new IllegalArgumentException("La fecha y hora programada es obligatoria.");
+        }
+
+        String vetId = cita.getVeterinario().getId();
+        LocalDateTime fechaHora = cita.getFechaHoraProgramada();
+
+        // 1. Validar Horario Laboral Semanal (solo si el médico tiene algún horario configurado en BD)
+        int diaSemanaJava = fechaHora.getDayOfWeek().getValue(); // 1 = Lunes, 7 = Domingo
+        java.time.LocalTime horaCita = fechaHora.toLocalTime();
+
+        List<HorarioVeterinario> todosLosHorarios = horarioRepository.findByVeterinarioId(vetId);
+        if (!todosLosHorarios.isEmpty()) {
+            List<HorarioVeterinario> horariosHoy = horarioRepository.findByVeterinarioIdAndDiaSemana(vetId, diaSemanaJava);
+            if (horariosHoy.isEmpty()) {
+                throw new IllegalArgumentException("El médico seleccionado no labora el día de la semana programado.");
+            }
+            boolean cumpleHorario = false;
+            for (HorarioVeterinario h : horariosHoy) {
+                if (!horaCita.isBefore(h.getHoraInicio()) && !horaCita.isAfter(h.getHoraFin())) {
+                    cumpleHorario = true;
+                    break;
+                }
+            }
+            if (!cumpleHorario) {
+                throw new IllegalArgumentException("La hora seleccionada (" + horaCita + ") está fuera del horario laboral del médico para este día.");
+            }
+        }
+
+        // 2. Validar Permisos / Inasistencias activas
+        List<PermisoVeterinario> permisosActivos = permisoRepository.findActivePermissionsOverlapping(vetId, fechaHora);
+        if (!permisosActivos.isEmpty()) {
+            PermisoVeterinario p = permisosActivos.get(0);
+            throw new IllegalArgumentException("El médico seleccionado no está disponible en esta fecha debido a un permiso: " + p.getMotivo() + ".");
+        }
+
+        // 3. Validar Cruces / Conflictos de Cita en la misma hora (bloques idénticos)
+        List<Cita> citasCoincidentes = citaRepository.findAll().stream()
+                .filter(c -> c.getVeterinario() != null && c.getVeterinario().getId().equals(vetId))
+                .filter(c -> cita.getId() == null || !c.getId().equals(cita.getId())) // Ignorar si es la misma al editar
+                .filter(c -> c.getFechaHoraProgramada().equals(fechaHora))
+                .filter(c -> List.of("AGENDADA", "EN_ESPERA", "EN_ATENCION").contains(c.getEstado()))
+                .toList();
+
+        if (!citasCoincidentes.isEmpty()) {
+            throw new IllegalArgumentException("El médico ya tiene otra cita programada para esta misma hora.");
+        }
+
         return citaRepository.save(cita);
     }
 
