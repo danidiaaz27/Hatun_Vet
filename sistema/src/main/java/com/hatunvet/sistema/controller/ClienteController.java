@@ -63,6 +63,23 @@ public class ClienteController {
                 return res;
             }
 
+            // Validar que el nombre solo contenga letras, espacios y puntuación básica
+            if (!cliente.getNombreCompleto().matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s.,&]+$")) {
+                res.put("success", false);
+                res.put("message", "El nombre completo o razón social contiene caracteres no válidos.");
+                return res;
+            }
+
+            // Validar que el teléfono solo contenga números
+            if (cliente.getTelefono() != null && !cliente.getTelefono().trim().isEmpty()) {
+                cliente.setTelefono(cliente.getTelefono().trim());
+                if (!cliente.getTelefono().matches("^[0-9]+$")) {
+                    res.put("success", false);
+                    res.put("message", "El teléfono solo debe contener números.");
+                    return res;
+                }
+            }
+
             if ("1".equals(cliente.getTipoDocumento()) && cliente.getNumeroDocumento().length() != 8) {
                 res.put("success", false);
                 res.put("message", "El DNI debe tener exactamente 8 dígitos.");

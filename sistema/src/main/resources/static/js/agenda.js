@@ -237,6 +237,37 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        const regRazaVal = document.getElementById('regRaza').value.trim();
+        const regColorVal = document.getElementById('regColor').value.trim();
+        const regFechaNacVal = document.getElementById('regFechaNac').value;
+
+        if (/[0-9]/.test(nombreMascota)) {
+            Swal.fire('Atención', 'El nombre de la mascota no puede contener números.', 'warning');
+            return;
+        }
+        if (/[0-9]/.test(regRazaVal)) {
+            Swal.fire('Atención', 'La raza de la mascota no puede contener números.', 'warning');
+            return;
+        }
+        if (/[0-9]/.test(regColorVal)) {
+            Swal.fire('Atención', 'El color de la mascota no puede contener números.', 'warning');
+            return;
+        }
+        if (regFechaNacVal) {
+            const dateNac = new Date(regFechaNacVal + 'T00:00:00');
+            const anio = dateNac.getFullYear();
+            if (anio < 2008) {
+                Swal.fire('Atención', 'El año de la fecha de nacimiento no puede ser menor a 2008.', 'warning');
+                return;
+            }
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            if (dateNac > today) {
+                Swal.fire('Atención', 'La fecha de nacimiento no puede ser posterior al día actual.', 'warning');
+                return;
+            }
+        }
+
         const tipoDoc = document.getElementById('regTipoDoc').value;
         if (tipoDoc === "1" && numDoc.length !== 8) {
             Swal.fire('Atención', 'El DNI debe tener exactamente 8 dígitos.', 'warning');
@@ -311,6 +342,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const fecha = document.getElementById('fechaCita').value;
         const hora = document.getElementById('horaCita').value;
         const fechaHora = `${fecha}T${hora}:00`;
+
+        // Validar fecha no anterior a hoy
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const selectedDate = new Date(`${fecha}T00:00:00`);
+        if (selectedDate < today) {
+            Swal.fire('Atención', 'No se puede agendar una cita para un día anterior a la fecha actual.', 'warning');
+            return;
+        }
 
         const mascotaVal = document.getElementById('mascotaId').value;
         const medicoVal = document.getElementById('medicoId').value;
@@ -391,4 +431,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire('Error', 'No se pudo procesar el check-in.', 'error');
             });
     });
+
+    // Filtros en tiempo real para quitar números en campos de mascota de Registro Rápido
+    $('#regNombreMascota, #regRaza, #regColor').on('input', function() {
+        this.value = this.value.replace(/[0-9]/g, '');
+    });
+
+    // Establecer fecha mínima para la cita y fecha máxima para nacimiento de mascota
+    const todayStr = new Date().toISOString().split('T')[0];
+    const fechaCitaEl = document.getElementById('fechaCita');
+    if (fechaCitaEl) {
+        fechaCitaEl.setAttribute('min', todayStr);
+    }
+    const regFechaNacEl = document.getElementById('regFechaNac');
+    if (regFechaNacEl) {
+        regFechaNacEl.setAttribute('max', todayStr);
+    }
 });

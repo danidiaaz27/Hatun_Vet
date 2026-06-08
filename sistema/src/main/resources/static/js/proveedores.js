@@ -98,7 +98,15 @@ $(document).ready(function() {
     });
 
     $('#telefono').on('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 15);
+        let val = this.value.replace(/[^0-9]/g, '');
+        if (val.length > 0 && val[0] !== '9') {
+            val = '';
+        }
+        this.value = val.slice(0, 9);
+    });
+
+    $('#contacto').on('input', function() {
+        this.value = this.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
     });
 
     $('#formProveedor').submit(function(e) {
@@ -116,6 +124,24 @@ $(document).ready(function() {
             return;
         }
 
+        const telf = $('#telefono').val().trim();
+        const contacto = $('#contacto').val().trim();
+
+        if (telf.length > 0) {
+            if (telf.length !== 9 || !telf.startsWith('9')) {
+                Swal.fire('Validación', 'El teléfono debe tener exactamente 9 dígitos y comenzar con 9.', 'warning');
+                return;
+            }
+        }
+
+        if (contacto.length > 0) {
+            const regexContacto = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/;
+            if (!regexContacto.test(contacto)) {
+                Swal.fire('Validación', 'La persona de contacto solo debe contener letras.', 'warning');
+                return;
+            }
+        }
+
         // VALIDACIÓN 3: Bloqueo anti-doble clic
         const btnGuardar = $('#btnGuardarProveedor');
         btnGuardar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
@@ -124,10 +150,10 @@ $(document).ready(function() {
             id: $('#id').val() || null,
             nombre: $('#nombre').val().trim(),
             ruc,
-            telefono: $('#telefono').val().trim(),
+            telefono: telf,
             correo: $('#correo').val().trim(),
             direccion: $('#direccion').val().trim(),
-            contacto: $('#contacto').val().trim(),
+            contacto: contacto,
             estado: $('#estado').val() === 'true'
         };
 

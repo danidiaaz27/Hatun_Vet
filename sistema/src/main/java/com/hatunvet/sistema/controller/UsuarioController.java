@@ -80,6 +80,40 @@ public class UsuarioController {
                 return response;
             }
 
+            // Validar nombre (solo letras y espacios)
+            if (!usuario.getNombre().matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]+$")) {
+                response.put("success", false);
+                response.put("message", "El nombre del usuario solo debe contener letras y espacios.");
+                return response;
+            }
+
+            // Validar contraseña segura
+            String password = usuario.getPasswordHash(); // Contiene texto plano enviado por cliente
+            boolean esNuevo = (usuario.getId() == null || usuario.getId().isEmpty());
+
+            if (esNuevo) {
+                if (password == null || password.trim().isEmpty()) {
+                    response.put("success", false);
+                    response.put("message", "La contraseña es obligatoria para nuevos usuarios.");
+                    return response;
+                }
+                String errorPwd = validarPasswordBackend(password);
+                if (errorPwd != null) {
+                    response.put("success", false);
+                    response.put("message", errorPwd);
+                    return response;
+                }
+            } else {
+                if (password != null && !password.trim().isEmpty()) {
+                    String errorPwd = validarPasswordBackend(password);
+                    if (errorPwd != null) {
+                        response.put("success", false);
+                        response.put("message", errorPwd);
+                        return response;
+                    }
+                }
+            }
+
             usuarioService.guardarUsuario(usuario);
             response.put("success", true);
             response.put("message", "Usuario guardado correctamente");
@@ -117,5 +151,24 @@ public class UsuarioController {
             response.put("message", "Error al eliminar: " + e.getMessage());
         }
         return response;
+    }
+
+    private String validarPasswordBackend(String pwd) {
+        if (pwd.length() < 6) {
+            return "La contraseña debe tener al menos 6 caracteres.";
+        }
+        if (!pwd.matches(".*[A-Z].*")) {
+            return "La contraseña debe contener al menos una letra mayúscula.";
+        }
+        if (!pwd.matches(".*[a-z].*")) {
+            return "La contraseña debe contener al menos una letra minúscula.";
+        }
+        if (!pwd.matches(".*[0-9].*")) {
+            return "La contraseña debe contener al menos un número.";
+        }
+        if (!pwd.matches(".*[^a-zA-Z0-9\\s].*")) {
+            return "La contraseña debe contener al menos un carácter especial (ej. @, $, !, %, *, #, ?).";
+        }
+        return null;
     }
 }

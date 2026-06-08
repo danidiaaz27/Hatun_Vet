@@ -50,6 +50,22 @@ public class ProveedorService {
             throw new IllegalArgumentException("El RUC ingresado no es válido en Perú (Debe iniciar con 10, 15, 17 o 20).");
         }
 
+        // Validar teléfono (opcional, pero si está presente debe ser de 9 dígitos y empezar con 9)
+        if (proveedor.getTelefono() != null && !proveedor.getTelefono().trim().isEmpty()) {
+            proveedor.setTelefono(proveedor.getTelefono().trim());
+            if (!proveedor.getTelefono().matches("^9[0-9]{8}$")) {
+                throw new IllegalArgumentException("El teléfono debe tener exactamente 9 dígitos y comenzar con 9.");
+            }
+        }
+
+        // Validar persona de contacto (opcional, pero si está presente solo debe contener letras y espacios)
+        if (proveedor.getContacto() != null && !proveedor.getContacto().trim().isEmpty()) {
+            proveedor.setContacto(proveedor.getContacto().trim());
+            if (!proveedor.getContacto().matches("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s]+$")) {
+                throw new IllegalArgumentException("El nombre del contacto solo debe contener letras y espacios.");
+            }
+        }
+
         Optional<Proveedor> existente = proveedorRepository.findByRuc(proveedor.getRuc());
         if (existente.isPresent() && (proveedor.getId() == null || !existente.get().getId().equals(proveedor.getId()))) {
             throw new IllegalArgumentException("Ya existe un proveedor registrado con ese RUC.");
