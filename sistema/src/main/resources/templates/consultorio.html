@@ -7,124 +7,372 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link th:href="@{/css/main.css}" rel="stylesheet">
     <style>
-        .espera-card { border-left: 5px solid #fd7e14; transition: transform 0.2s; cursor: pointer; }
-        .espera-card:hover { transform: translateX(5px); }
-        .atencion-panel { border-top: 5px solid #198754; }
+        /* ── Cola de espera ── */
+        .espera-card {
+            background: #fff;
+            border-radius: 14px;
+            border: 1.5px solid rgba(10,61,145,0.10);
+            box-shadow: 0 2px 10px rgba(10,61,145,0.06);
+            padding: 16px 18px;
+            transition: transform .2s, box-shadow .2s;
+            cursor: pointer;
+        }
+        .espera-card:hover { transform: translateX(4px); box-shadow: 0 4px 18px rgba(10,61,145,0.12); }
+
+        /* ── Panel activo (azul oscuro) ── */
+        .panel-activo-wrapper {
+            background: linear-gradient(135deg, #0d2d6e 0%, #0A3D91 100%);
+            border-radius: 18px;
+            padding: 28px 30px;
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(10,61,145,0.20);
+        }
+
+        .panel-activo-wrapper .badge-encurso {
+            background: rgba(255,255,255,0.15);
+            color: #6ef0a0;
+            border: 1.5px solid #6ef0a0;
+            border-radius: 50px;
+            padding: 5px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+
+        .panel-activo-wrapper .vitals-row {
+            background: rgba(255,255,255,0.10);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel-activo-wrapper .vital-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .panel-activo-wrapper .vital-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .panel-activo-wrapper .vital-label.required { color: #ff8a8a; }
+
+        .panel-activo-wrapper .vital-input-inner {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.12);
+            border: 1.5px solid rgba(255,255,255,0.20);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .panel-activo-wrapper .vital-input-inner:focus-within {
+            border-color: rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.18);
+        }
+
+        .panel-activo-wrapper .vital-input-inner input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            padding: 8px 12px;
+            width: 100%;
+            outline: none;
+        }
+
+        .panel-activo-wrapper .vital-input-inner input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .panel-activo-wrapper .vital-unit {
+            padding: 0 10px;
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Secciones de texto (síntomas, etc.) */
+        .panel-activo-wrapper .seccion-clinica {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+        }
+
+        .panel-activo-wrapper .seccion-clinica label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a2035;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 8px;
+        }
+
+        .panel-activo-wrapper .seccion-clinica textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            resize: vertical;
+            font-size: 14px;
+            color: #3a4560;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        /* Botones inferiores */
+        .panel-activo-wrapper .acciones-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .btn-accion-sec {
+            background: rgba(255,255,255,0.10);
+            border: 1.5px solid rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .18s;
+        }
+        .btn-accion-sec:hover { background: rgba(255,255,255,0.18); }
+        .btn-accion-sec:disabled { opacity: .4; cursor: not-allowed; }
+
+        .btn-guardar-anamnesis {
+            background: var(--vet-blue, #0A3D91);
+            border: 2px solid rgba(255,255,255,0.4);
+            color: #fff;
+            border-radius: 8px;
+            padding: 9px 22px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: background .18s;
+        }
+        .btn-guardar-anamnesis:hover { background: #072d6b; }
+
+        .btn-finalizar-cobrar {
+            background: #1a2035;
+            border: none;
+            color: #fff;
+            border-radius: 8px;
+            padding: 9px 22px;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: background .18s;
+        }
+        .btn-finalizar-cobrar:hover { background: #0d1220; }
+
+        /* Panel vacío */
+        .panel-vacio {
+            background: #fff;
+            border-radius: 18px;
+            border: 2px dashed rgba(10,61,145,0.15);
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        /* Encabezado espera */
+        .espera-header {
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1.5px solid rgba(10,61,145,0.10);
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(10,61,145,0.05);
+        }
     </style>
 </head>
 <body>
 <div class="d-flex">
     <div th:replace="~{sidebar :: sidebar(activeUri='/consultorio')}"></div>
 
-    <main class="main-content w-100 p-4 bg-light">
-        <header class="mb-4">
-            <h2 class="h4 mb-0 fw-bold text-dark"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Torre de Control Clínica</h2>
-            <small class="text-muted">Gestión de triaje, anamnesis y derivaciones</small>
+    <main class="main-content w-100 p-4">
+
+        <!-- Header -->
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="page-title"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Torre de Control Clínica</h2>
+                <p class="page-subtitle">Gestión de triaje, anamnesis y derivaciones</p>
+            </div>
         </header>
 
         <div class="row g-4">
+
+            <!-- Cola de espera -->
             <div class="col-md-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-secondary mb-0">En Espera</h5>
-                    <span class="badge bg-warning text-dark rounded-pill" id="contadorEspera">0</span>
+                <div class="espera-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill text-muted"></i>
+                        <span class="fw-bold" style="color:#1a2035;">En Espera</span>
+                    </div>
+                    <span class="badge rounded-pill text-dark fw-bold px-3 py-2"
+                          style="background:#fff8e1; border:1.5px solid #f6c84b; font-size:13px;"
+                          id="contadorEspera">0</span>
                 </div>
-                <div id="listaEspera" class="d-flex flex-column gap-2"></div>
+                <div id="listaEspera" class="d-flex flex-column gap-2">
+                    <!-- Cards de espera inyectadas por JS -->
+                </div>
             </div>
 
+            <!-- Panel consultorio -->
             <div class="col-md-8">
-                <h5 class="fw-bold text-success mb-3">Consultorio (En Atención)</h5>
-                
-                <div id="panelVacio" class="card shadow-sm border-0 p-5 text-center atencion-panel">
-                    <div class="text-muted mb-3"><i class="bi bi-clipboard2-pulse display-1 opacity-25"></i></div>
+
+                <!-- Vacío -->
+                <div id="panelVacio" class="panel-vacio">
+                    <i class="bi bi-clipboard2-pulse display-1 text-muted opacity-25 d-block mb-3"></i>
                     <h4 class="fw-bold text-secondary">Consultorio Libre</h4>
                     <p class="text-muted">Seleccione un paciente de la cola de espera para iniciar la evaluación médica.</p>
                 </div>
 
-                <div id="panelActivo" class="card shadow-sm border-0 atencion-panel" style="display: none;">
-                    <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                <!-- Activo -->
+                <div id="panelActivo" class="panel-activo-wrapper" style="display:none;">
+
+                    <!-- Título + estado -->
+                    <div class="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
                         <div>
-                            <h5 class="fw-bold text-dark mb-0" id="lblMotivoActivo">Motivo de Cita</h5>
-                            <small class="text-muted"><i class="bi bi-clock-history"></i> Iniciado: <span id="lblHoraInicio">--:--</span></small>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="bi bi-file-medical" style="font-size:20px; color:rgba(255,255,255,0.8);"></i>
+                                <h5 class="fw-bold mb-0 text-white" id="lblMotivoActivo">Motivo de Cita</h5>
+                            </div>
+                            <small style="color:rgba(255,255,255,0.6);">
+                                <i class="bi bi-clock-history me-1"></i> Iniciado: <span id="lblHoraInicio">--:--</span>
+                            </small>
                         </div>
-                        <div>
-                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 py-2 rounded-pill">EN CURSO</span>
-                            <button type="button" id="btnVerHistorial" class="btn btn-sm btn-outline-primary ms-3 fw-bold">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge-encurso">● EN CURSO</span>
+                            <button type="button" id="btnVerHistorial"
+                                    class="btn btn-sm btn-outline-light fw-bold">
                                 <i class="bi bi-clock-history me-1"></i> Ver Historial Previo
                             </button>
                         </div>
                     </div>
-                    
-                    <div class="card-body p-4">
-                        <form id="formAnamnesis">
-                            <input type="hidden" id="citaActivaId">
-                            <input type="hidden" id="mascotaActivaId">
-                            
-                            <div class="alert alert-info border-info bg-info bg-opacity-10 py-2 px-3 mb-4">
-                                <small class="fw-bold"><i class="bi bi-info-circle-fill me-1"></i> Constantes Vitales:</small> 
-                                <small>Complete los datos obligatorios para poder guardar el registro.</small>
-                            </div>
 
-                            <div class="row g-3 mb-4">
+                    <hr style="border-color:rgba(255,255,255,0.15); margin: 16px 0;">
+
+                    <form id="formAnamnesis">
+                        <input type="hidden" id="citaActivaId">
+                        <input type="hidden" id="mascotaActivaId">
+
+                        <!-- Alerta vitales -->
+                        <div class="alert mb-4 py-2 px-3"
+                             style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:rgba(255,255,255,0.9);">
+                            <small class="fw-bold"><i class="bi bi-info-circle-fill me-1"></i> Constantes Vitales:</small>
+                            <small> Complete los datos obligatorios para poder guardar el registro.</small>
+                        </div>
+
+                        <!-- Vitales -->
+                        <div class="vitals-row">
+                            <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-danger">Peso (Kg) *</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="number" id="pesoKg" class="form-control fw-bold" step="0.01" min="0.1" required>
-                                        <span class="input-group-text">kg</span>
+                                    <div class="vital-input-group">
+                                        <span class="vital-label required"><i class="bi bi-box-seam"></i> Peso (Kg) *</span>
+                                        <div class="vital-input-inner">
+                                            <span style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
+                                            <input type="number" id="pesoKg" placeholder="Ingrese el peso" step="0.01" min="0.1" required>
+                                            <span class="vital-unit">kg</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small fw-bold text-danger">Temperatura (°C) *</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="number" id="tempC" class="form-control fw-bold" step="0.1" min="10" max="45" required>
-                                        <span class="input-group-text">°C</span>
+                                    <div class="vital-input-group">
+                                        <span class="vital-label required"><i class="bi bi-thermometer-half"></i> Temperatura (°C) *</span>
+                                        <div class="vital-input-inner">
+                                            <span style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
+                                            <input type="number" id="tempC" placeholder="Ingrese la temperatura" step="0.1" min="10" max="45" required>
+                                            <span class="vital-unit">°C</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label small fw-bold">Frec. Cardíaca</label>
-                                    <div class="input-group input-group-sm">
-                                        <input type="number" id="frecCard" class="form-control" min="0">
-                                        <span class="input-group-text">bpm</span>
+                                    <div class="vital-input-group">
+                                        <span class="vital-label"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</span>
+                                        <div class="vital-input-inner">
+                                            <span style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
+                                            <input type="number" id="frecCard" placeholder="Ingrese la frecuencia" min="0">
+                                            <span class="vital-unit">bpm</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-danger">Síntomas Reportados *</label>
-                                <textarea id="sintomas" class="form-control form-control-sm" rows="2" required></textarea>
-                            </div>
+                        <!-- Síntomas -->
+                        <div class="seccion-clinica">
+                            <label><i class="bi bi-chat-left-text" style="color:#0A3D91;"></i> Síntomas Reportados *</label>
+                            <textarea id="sintomas" rows="2" placeholder="Describa los síntomas reportados por el tutor..." required></textarea>
+                        </div>
 
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold text-danger">Diagnóstico Presuntivo *</label>
-                                <textarea id="diagnostico" class="form-control form-control-sm" rows="2" required></textarea>
-                            </div>
+                        <!-- Diagnóstico -->
+                        <div class="seccion-clinica">
+                            <label><i class="bi bi-bandaid" style="color:#0A3D91;"></i> Diagnóstico Presuntivo *</label>
+                            <textarea id="diagnostico" rows="2" placeholder="Ingrese el diagnóstico presuntivo..." required></textarea>
+                        </div>
 
-                            <div class="mb-4">
-                                <label class="form-label small fw-bold">Tratamiento Indicado (Interno/Externo) *</label>
-                                <textarea id="tratamiento" class="form-control form-control-sm" rows="3" required></textarea>
+                        <!-- Tratamiento -->
+                        <div class="seccion-clinica">
+                            <label><i class="bi bi-pencil" style="color:#0A3D91;"></i> Tratamiento Indicado (Interno/Externo) *</label>
+                            <textarea id="tratamiento" rows="3" placeholder="Describa el tratamiento indicado..." required></textarea>
+                        </div>
+
+                        <!-- Acciones -->
+                        <div class="acciones-footer">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn-accion-sec" disabled>
+                                    <i class="bi bi-box-seam"></i> Jalar Insumo
+                                </button>
+                                <button type="button" class="btn-accion-sec" disabled>
+                                    <i class="bi bi-flask"></i> Orden Lab.
+                                </button>
                             </div>
-                            <hr>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm me-2" disabled><i class="bi bi-box-seam me-1"></i> Jalar Insumo</button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled><i class="bi bi-flask me-1"></i> Orden Lab.</button>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <button type="submit" id="btnGuardarAnamnesis" class="btn btn-primary fw-bold px-4">Guardar Registro</button>
-                                    <button type="button" id="btnFinalizarConsulta" class="btn btn-dark fw-bold px-4"><i class="bi bi-check2-circle me-1"></i> Finalizar y Cobrar</button>
-                                </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" id="btnGuardarAnamnesis" class="btn-guardar-anamnesis">
+                                    <i class="bi bi-floppy"></i> Guardar Registro
+                                </button>
+                                <button type="button" id="btnFinalizarConsulta" class="btn-finalizar-cobrar">
+                                    <i class="bi bi-check2-circle"></i> Finalizar y Cobrar
+                                </button>
                             </div>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </main>
 </div>
 
+<!-- Modal Historial -->
 <div class="modal fade" id="modalHistorial" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header text-white" style="background: var(--vet-blue);">
                 <h5 class="modal-title fw-bold"><i class="bi bi-journal-medical me-2"></i> Historial Clínico de la Mascota</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>

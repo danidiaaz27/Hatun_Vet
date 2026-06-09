@@ -3,36 +3,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalNuevaCita = new bootstrap.Modal(document.getElementById('modalNuevaCita'));
     const modalCheckIn = new bootstrap.Modal(document.getElementById('modalCheckIn'));
 
-    let clientesList = []; // Para almacenar los clientes en memoria
+    let clientesList = [];
+    let slotSeleccionado = null; // slot elegido por el usuario
 
     // 1. Inicializar FullCalendar
     const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'timeGridWeek', // Vista de semana con horas
+        initialView: 'timeGridWeek',
         locale: 'es',
-        slotMinTime: '00:00:00', // Permitir ver todo el día
+        slotMinTime: '00:00:00',
         slotMaxTime: '24:00:00',
-        scrollTime: '08:00:00',  // Auto-desplazar a las 8:00 AM para enfocar el horario laboral
+        scrollTime: '08:00:00',
         allDaySlot: false,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        // Cargar eventos desde nuestro backend
         events: function(fetchInfo, successCallback, failureCallback) {
             fetch('/api/citas')
                 .then(response => response.json())
                 .then(data => {
                     let events = data.map(cita => {
-                        // Asignar colores según nuestro motor de estados
                         let colorClass = 'bg-agendada';
-                        if(cita.estado === 'EN_ESPERA') colorClass = 'bg-espera';
-                        if(cita.estado === 'EN_ATENCION') colorClass = 'bg-atencion';
-                        if(cita.estado === 'FINALIZADA') colorClass = 'bg-secondary';
+                        if (cita.estado === 'EN_ESPERA')   colorClass = 'bg-espera';
+                        if (cita.estado === 'EN_ATENCION') colorClass = 'bg-atencion';
+                        if (cita.estado === 'FINALIZADA')  colorClass = 'bg-secondary';
 
-                        // Construir el título con nombre de mascota y dueño para mejor visualización
                         let mascotaNombre = cita.mascota ? cita.mascota.nombre : 'Sin Mascota';
-                        let duenoNombre = (cita.mascota && cita.mascota.cliente) ? cita.mascota.cliente.nombreCompleto : 'Sin Dueño';
+                        let duenoNombre = (cita.mascota && cita.mascota.cliente)
+                            ? cita.mascota.cliente.nombreCompleto : 'Sin Dueño';
                         let titulo = `${mascotaNombre} (${duenoNombre}) - ${cita.motivoPrincipal}`;
 
                         return {
@@ -47,11 +46,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .catch(error => failureCallback(error));
         },
-        // Al hacer clic en una cita existente
         eventClick: function(info) {
             const estado = info.event.extendedProps.estado;
-            
-            // Si está agendada, el Counter hace el Check-in
             if (estado === 'AGENDADA') {
                 document.getElementById('citaIdCheckIn').value = info.event.id;
                 document.getElementById('lblMotivoCheckIn').innerText = `Motivo: ${info.event.title}`;
@@ -91,32 +87,24 @@ document.addEventListener('DOMContentLoaded', function() {
     function cargarClientes() {
         fetch('/clientes/api/listar')
             .then(r => r.json())
-            .then(res => {
-                if (res.data) {
-                    clientesList = res.data;
-                }
-            })
+            .then(res => { if (res.data) clientesList = res.data; })
             .catch(err => console.error("Error al precargar clientes:", err));
     }
 
-    // 3. Autocompletado de Propietario (Dueño)
-    const buscarDuenoInput = document.getElementById('buscarDuenoInput');
+    // 3. Autocompletado de Propietario
+    const buscarDuenoInput       = document.getElementById('buscarDuenoInput');
     const resultadosBusquedaDueno = document.getElementById('resultadosBusquedaDueno');
-    const duenoIdSeleccionado = document.getElementById('duenoIdSeleccionado');
-    const btnLimpiarDueno = document.getElementById('btnLimpiarDueno');
-    const mascotaSelect = document.getElementById('mascotaId');
+    const duenoIdSeleccionado    = document.getElementById('duenoIdSeleccionado');
+    const btnLimpiarDueno        = document.getElementById('btnLimpiarDueno');
+    const mascotaSelect          = document.getElementById('mascotaId');
 
     buscarDuenoInput.addEventListener('input', function() {
         const query = this.value.trim().toLowerCase();
         resultadosBusquedaDueno.innerHTML = '';
-        
-        if (query.length < 2) {
-            resultadosBusquedaDueno.style.display = 'none';
-            return;
-        }
+        if (query.length < 2) { resultadosBusquedaDueno.style.display = 'none'; return; }
 
-        const filtrados = clientesList.filter(c => 
-            c.nombreCompleto.toLowerCase().includes(query) || 
+        const filtrados = clientesList.filter(c =>
+            c.nombreCompleto.toLowerCase().includes(query) ||
             c.numeroDocumento.includes(query)
         );
 
@@ -130,16 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const li = document.createElement('li');
             li.className = 'autocomplete-suggestion-item';
             li.innerHTML = `<strong>${c.nombreCompleto}</strong> <span class="text-muted small">(${c.numeroDocumento})</span>`;
-            li.addEventListener('click', function() {
-                seleccionarPropietario(c);
-            });
+            li.addEventListener('click', function() { seleccionarPropietario(c); });
             resultadosBusquedaDueno.appendChild(li);
         });
-
         resultadosBusquedaDueno.style.display = 'block';
     });
 
-    // Cerrar sugerencias al hacer clic afuera
     document.addEventListener('click', function(e) {
         if (e.target !== buscarDuenoInput && e.target !== resultadosBusquedaDueno) {
             resultadosBusquedaDueno.style.display = 'none';
@@ -152,21 +136,16 @@ document.addEventListener('DOMContentLoaded', function() {
         buscarDuenoInput.disabled = true;
         btnLimpiarDueno.style.display = 'block';
         resultadosBusquedaDueno.style.display = 'none';
-        
-        // Cargar las mascotas del cliente
         cargarMascotasCliente(cliente.id);
     }
 
-    btnLimpiarDueno.addEventListener('click', function() {
-        limpiarSeleccionPropietario();
-    });
+    btnLimpiarDueno.addEventListener('click', limpiarSeleccionPropietario);
 
     function limpiarSeleccionPropietario() {
         buscarDuenoInput.value = '';
         buscarDuenoInput.disabled = false;
         duenoIdSeleccionado.value = '';
         btnLimpiarDueno.style.display = 'none';
-        
         mascotaSelect.innerHTML = '<option value="">-- Primero busque un dueño --</option>';
         mascotaSelect.disabled = true;
     }
@@ -174,15 +153,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function cargarMascotasCliente(clienteId, mascotaIdSeleccionar = null) {
         mascotaSelect.innerHTML = '<option value="">Cargando mascotas...</option>';
         mascotaSelect.disabled = true;
-
         fetch(`/mascotas/api/cliente/${clienteId}`)
             .then(r => r.json())
             .then(res => {
                 mascotaSelect.innerHTML = '';
                 if (res.success && res.data && res.data.length > 0) {
                     res.data.forEach(m => {
-                        const selectedAttr = (mascotaIdSeleccionar && m.id == mascotaIdSeleccionar) ? 'selected' : '';
-                        mascotaSelect.innerHTML += `<option value="${m.id}" ${selectedAttr}>${m.nombre} (${m.especie} - ${m.raza || 'Sin raza'})</option>`;
+                        const sel = (mascotaIdSeleccionar && m.id == mascotaIdSeleccionar) ? 'selected' : '';
+                        mascotaSelect.innerHTML += `<option value="${m.id}" ${sel}>${m.nombre} (${m.especie} - ${m.raza || 'Sin raza'})</option>`;
                     });
                     mascotaSelect.disabled = false;
                 } else {
@@ -196,12 +174,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // 4. Registro Rápido Collapsible Logic
-    const btnToggleRegistroRapido = document.getElementById('btnToggleRegistroRapido');
-    const seccionRegistroRapido = document.getElementById('seccionRegistroRapido');
-    const btnCancelarRegRapido = document.getElementById('btnCancelarRegRapido');
+    // 4. Registro Rápido
+    const btnToggleRegistroRapido  = document.getElementById('btnToggleRegistroRapido');
+    const seccionRegistroRapido    = document.getElementById('seccionRegistroRapido');
+    const btnCancelarRegRapido     = document.getElementById('btnCancelarRegRapido');
     const btnCerrarRegRapidoHeader = document.getElementById('btnCerrarRegRapidoHeader');
-    const btnGuardarRegRapido = document.getElementById('btnGuardarRegRapido');
+    const btnGuardarRegRapido      = document.getElementById('btnGuardarRegRapido');
 
     btnToggleRegistroRapido.addEventListener('click', function() {
         limpiarSeleccionPropietario();
@@ -212,24 +190,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function ocultarRegistroRapido() {
         seccionRegistroRapido.style.display = 'none';
         btnToggleRegistroRapido.style.display = 'block';
-        // Limpiar campos del registro rápido
-        document.getElementById('regNumDoc').value = '';
-        document.getElementById('regNombreDueno').value = '';
-        document.getElementById('regTelefono').value = '';
-        document.getElementById('regCorreo').value = '';
-        document.getElementById('regNombreMascota').value = '';
-        document.getElementById('regRaza').value = '';
-        document.getElementById('regFechaNac').value = '';
-        document.getElementById('regColor').value = '';
-        document.getElementById('regObservaciones').value = '';
+        ['regNumDoc','regNombreDueno','regTelefono','regCorreo',
+         'regNombreMascota','regRaza','regFechaNac','regColor','regObservaciones']
+            .forEach(id => { document.getElementById(id).value = ''; });
     }
 
     btnCancelarRegRapido.addEventListener('click', ocultarRegistroRapido);
     btnCerrarRegRapidoHeader.addEventListener('click', ocultarRegistroRapido);
 
     btnGuardarRegRapido.addEventListener('click', function() {
-        const numDoc = document.getElementById('regNumDoc').value.trim();
-        const nombreDueno = document.getElementById('regNombreDueno').value.trim();
+        const numDoc       = document.getElementById('regNumDoc').value.trim();
+        const nombreDueno  = document.getElementById('regNombreDueno').value.trim();
         const nombreMascota = document.getElementById('regNombreMascota').value.trim();
 
         if (!numDoc || !nombreDueno || !nombreMascota) {
@@ -237,55 +208,32 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const regRazaVal = document.getElementById('regRaza').value.trim();
-        const regColorVal = document.getElementById('regColor').value.trim();
+        const regRazaVal    = document.getElementById('regRaza').value.trim();
+        const regColorVal   = document.getElementById('regColor').value.trim();
         const regFechaNacVal = document.getElementById('regFechaNac').value;
 
-        if (/[0-9]/.test(nombreMascota)) {
-            Swal.fire('Atención', 'El nombre de la mascota no puede contener números.', 'warning');
-            return;
-        }
-        if (/[0-9]/.test(regRazaVal)) {
-            Swal.fire('Atención', 'La raza de la mascota no puede contener números.', 'warning');
-            return;
-        }
-        if (/[0-9]/.test(regColorVal)) {
-            Swal.fire('Atención', 'El color de la mascota no puede contener números.', 'warning');
-            return;
-        }
+        if (/[0-9]/.test(nombreMascota)) { Swal.fire('Atención', 'El nombre de la mascota no puede contener números.', 'warning'); return; }
+        if (/[0-9]/.test(regRazaVal))    { Swal.fire('Atención', 'La raza no puede contener números.', 'warning'); return; }
+        if (/[0-9]/.test(regColorVal))   { Swal.fire('Atención', 'El color no puede contener números.', 'warning'); return; }
+
         if (regFechaNacVal) {
             const dateNac = new Date(regFechaNacVal + 'T00:00:00');
-            const anio = dateNac.getFullYear();
-            if (anio < 2008) {
-                Swal.fire('Atención', 'El año de la fecha de nacimiento no puede ser menor a 2008.', 'warning');
-                return;
-            }
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (dateNac > today) {
-                Swal.fire('Atención', 'La fecha de nacimiento no puede ser posterior al día actual.', 'warning');
-                return;
-            }
+            if (dateNac.getFullYear() < 2008) { Swal.fire('Atención', 'El año no puede ser menor a 2008.', 'warning'); return; }
+            const today = new Date(); today.setHours(0,0,0,0);
+            if (dateNac > today) { Swal.fire('Atención', 'La fecha no puede ser posterior a hoy.', 'warning'); return; }
         }
 
         const tipoDoc = document.getElementById('regTipoDoc').value;
-        if (tipoDoc === "1" && numDoc.length !== 8) {
-            Swal.fire('Atención', 'El DNI debe tener exactamente 8 dígitos.', 'warning');
-            return;
-        }
-        if (tipoDoc === "6" && numDoc.length !== 11) {
-            Swal.fire('Atención', 'El RUC debe tener exactamente 11 dígitos.', 'warning');
-            return;
-        }
+        if (tipoDoc === "1" && numDoc.length !== 8)  { Swal.fire('Atención', 'El DNI debe tener 8 dígitos.', 'warning'); return; }
+        if (tipoDoc === "6" && numDoc.length !== 11) { Swal.fire('Atención', 'El RUC debe tener 11 dígitos.', 'warning'); return; }
 
-        // Construir request body
         const reqPayload = {
             tipoDocumento: tipoDoc,
             numeroDocumento: numDoc,
             nombreCompleto: nombreDueno,
             telefono: document.getElementById('regTelefono').value.trim() || null,
             correo: document.getElementById('regCorreo').value.trim() || null,
-            nombreMascota: nombreMascota,
+            nombreMascota,
             especie: document.getElementById('regEspecie').value,
             raza: document.getElementById('regRaza').value.trim() || null,
             sexo: document.getElementById('regSexo').value,
@@ -303,70 +251,94 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => {
             if (res.success) {
                 Swal.fire('Registrado', 'Cliente y mascota registrados con éxito.', 'success');
-                
-                // Recargar clientes locales para incluir al nuevo
                 cargarClientes();
-
-                // Establecer como seleccionado en el formulario principal
-                const clienteNuevoObj = {
-                    id: res.clienteId,
-                    nombreCompleto: nombreDueno,
-                    numeroDocumento: numDoc
-                };
-                
                 ocultarRegistroRapido();
-                
-                // Rellenar buscador principal
-                buscarDuenoInput.value = `${clienteNuevoObj.nombreCompleto} (${clienteNuevoObj.numeroDocumento})`;
-                duenoIdSeleccionado.value = clienteNuevoObj.id;
+                buscarDuenoInput.value = `${nombreDueno} (${numDoc})`;
+                duenoIdSeleccionado.value = res.clienteId;
                 buscarDuenoInput.disabled = true;
                 btnLimpiarDueno.style.display = 'block';
-
-                // Cargar mascotas y autoseleccionar la nueva mascota
                 cargarMascotasCliente(res.clienteId, res.mascotaId);
-
             } else {
                 Swal.fire('Error', res.message || 'Error al guardar registro rápido.', 'error');
             }
         })
-        .catch(err => {
-            console.error(err);
-            Swal.fire('Error', 'Error en el servidor al realizar el registro rápido.', 'error');
-        });
+        .catch(err => { console.error(err); Swal.fire('Error', 'Error en el servidor.', 'error'); });
     });
 
-    // 5. Guardar Nueva Cita
+    // 5. SLOT PICKER — cargar horarios disponibles al cambiar médico o fecha
+    function cargarSlots() {
+        const medicoId = document.getElementById('medicoId').value;
+        const fecha    = document.getElementById('fechaCita').value;
+        const contenedor = document.getElementById('contenedorSlots');
+
+        // Limpiar slot previo
+        slotSeleccionado = null;
+        document.getElementById('horaCita').value = '';
+        contenedor.innerHTML = '';
+
+        if (!medicoId || !fecha) return;
+
+        contenedor.innerHTML = '<small class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span> Cargando horarios...</small>';
+
+        fetch(`/medicos/api/slots-disponibles?medicoId=${encodeURIComponent(medicoId)}&fecha=${fecha}`)
+            .then(r => r.json())
+            .then(res => {
+                contenedor.innerHTML = '';
+                if (!res.success || !res.slots || res.slots.length === 0) {
+                    contenedor.innerHTML = '<small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>El médico no tiene horario disponible ese día.</small>';
+                    return;
+                }
+                res.slots.forEach(slot => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'slot-btn';
+                    btn.textContent = slot;
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        slotSeleccionado = slot;
+                        document.getElementById('horaCita').value = slot;
+                    });
+                    contenedor.appendChild(btn);
+                });
+            })
+            .catch(() => {
+                contenedor.innerHTML = '<small class="text-danger"><i class="bi bi-x-circle me-1"></i>Error al cargar horarios.</small>';
+            });
+    }
+
+    document.getElementById('medicoId').addEventListener('change', cargarSlots);
+    document.getElementById('fechaCita').addEventListener('change', cargarSlots);
+
+    // 6. Guardar Nueva Cita
     document.getElementById('formNuevaCita').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const fecha = document.getElementById('fechaCita').value;
-        const hora = document.getElementById('horaCita').value;
+        const hora  = document.getElementById('horaCita').value;
+
+        if (!hora) {
+            Swal.fire('Atención', 'Debe seleccionar un horario disponible.', 'warning');
+            return;
+        }
+
         const fechaHora = `${fecha}T${hora}:00`;
 
-        // Validar fecha no anterior a hoy
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = new Date(); today.setHours(0,0,0,0);
         const selectedDate = new Date(`${fecha}T00:00:00`);
         if (selectedDate < today) {
-            Swal.fire('Atención', 'No se puede agendar una cita para un día anterior a la fecha actual.', 'warning');
+            Swal.fire('Atención', 'No se puede agendar una cita para un día anterior a hoy.', 'warning');
             return;
         }
 
         const mascotaVal = document.getElementById('mascotaId').value;
-        const medicoVal = document.getElementById('medicoId').value;
+        const medicoVal  = document.getElementById('medicoId').value;
 
-        if (!mascotaVal) {
-            Swal.fire('Atención', 'Debe seleccionar una mascota válida.', 'warning');
-            return;
-        }
-
-        if (!medicoVal) {
-            Swal.fire('Atención', 'Debe seleccionar un médico veterinario.', 'warning');
-            return;
-        }
+        if (!mascotaVal) { Swal.fire('Atención', 'Debe seleccionar una mascota válida.', 'warning'); return; }
+        if (!medicoVal)  { Swal.fire('Atención', 'Debe seleccionar un médico veterinario.', 'warning'); return; }
 
         const payload = {
-            mascota: { id: parseInt(mascotaVal) }, 
+            mascota: { id: parseInt(mascotaVal) },
             veterinario: { id: medicoVal },
             fechaHoraProgramada: fechaHora,
             motivoPrincipal: document.getElementById('motivoCita').value
@@ -381,30 +353,26 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => {
             if (res.success) {
                 modalNuevaCita.hide();
-                calendar.refetchEvents(); // Recargar el calendario
+                calendar.refetchEvents();
                 Swal.fire('Éxito', res.message, 'success');
-                
-                // Reset form and state
                 this.reset();
                 limpiarSeleccionPropietario();
                 ocultarRegistroRapido();
+                document.getElementById('contenedorSlots').innerHTML = '';
+                slotSeleccionado = null;
             } else {
                 Swal.fire('Conflicto o Error', res.message, 'error');
             }
         })
-        .catch(err => {
-            console.error(err);
-            Swal.fire('Error', 'No se pudo guardar la cita.', 'error');
-        });
+        .catch(err => { console.error(err); Swal.fire('Error', 'No se pudo guardar la cita.', 'error'); });
     });
 
-    // 6. Procesar el Check-In (Pasar paciente a En Espera)
+    // 7. Check-In
     document.getElementById('btnProcesarCheckIn').addEventListener('click', function() {
         if (!document.getElementById('checkAvisoCosto').checked) {
             Swal.fire('Atención', 'Debe confirmar que informó el costo base al cliente.', 'warning');
             return;
         }
-
         const idCita = document.getElementById('citaIdCheckIn').value;
         const btn = this;
         btn.disabled = true;
@@ -415,7 +383,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => {
                 btn.disabled = false;
                 btn.innerText = "Marcar Llegada (Pasar a Espera)";
-                
                 if (res.success) {
                     modalCheckIn.hide();
                     calendar.refetchEvents();
@@ -432,19 +399,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 
-    // Filtros en tiempo real para quitar números en campos de mascota de Registro Rápido
+    // Filtros numéricos en campos de mascota
     $('#regNombreMascota, #regRaza, #regColor').on('input', function() {
         this.value = this.value.replace(/[0-9]/g, '');
     });
 
-    // Establecer fecha mínima para la cita y fecha máxima para nacimiento de mascota
+    // Fechas mínimas/máximas
     const todayStr = new Date().toISOString().split('T')[0];
     const fechaCitaEl = document.getElementById('fechaCita');
-    if (fechaCitaEl) {
-        fechaCitaEl.setAttribute('min', todayStr);
-    }
+    if (fechaCitaEl) fechaCitaEl.setAttribute('min', todayStr);
     const regFechaNacEl = document.getElementById('regFechaNac');
-    if (regFechaNacEl) {
-        regFechaNacEl.setAttribute('max', todayStr);
-    }
+    if (regFechaNacEl) regFechaNacEl.setAttribute('max', todayStr);
 });
