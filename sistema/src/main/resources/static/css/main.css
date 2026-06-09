@@ -402,3 +402,46 @@ body {
     scrollbar-width: none;     /* Firefox */
     -ms-overflow-style: none;  /* IE/Edge */
 }
+
+/* ── POS: override para layout full-screen ── */
+body:has(.pos-wrapper) .main-content {
+    margin-left: 0;
+    padding: 0;
+}
+
+.pos-wrapper {
+    margin-left: 260px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: calc(100vw - 260px);
+}
+
+.pos-layout {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.pos-carrito {
+    width: 400px !important;
+    min-width: 400px !important;
+    flex-shrink: 0 !important;
+}
+
+.pos-productos {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+}
+
+.productos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+}
+
+.product-card-img,
+.product-card-img img {
+    height: 140px !important;
+}
