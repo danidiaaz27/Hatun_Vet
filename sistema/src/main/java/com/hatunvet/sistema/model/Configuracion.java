@@ -47,6 +47,16 @@ public class Configuracion {
     @Column(columnDefinition = "TEXT")
     private String vision;
 
+    @Column(name = "horario_lunes_viernes", length = 50)
+    private String horarioLunesViernes;
+
+    @Column(name = "horario_sabado", length = 50)
+    private String horarioSabado;
+
+    @Column(name = "horario_domingo", length = 50)
+    private String horarioDomingo;
+
+    // --- GETTERS Y SETTERS ---
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getNombreVeterinaria() { return nombreVeterinaria; }
@@ -73,4 +83,10 @@ public class Configuracion {
     public void setMision(String mision) { this.mision = mision; }
     public String getVision() { return vision; }
     public void setVision(String vision) { this.vision = vision; }
+    public String getHorarioLunesViernes() { return horarioLunesViernes; }
+    public void setHorarioLunesViernes(String horarioLunesViernes) { this.horarioLunesViernes = horarioLunesViernes; }
+    public String getHorarioSabado() { return horarioSabado; }
+    public void setHorarioSabado(String horarioSabado) { this.horarioSabado = horarioSabado; }
+    public String getHorarioDomingo() { return horarioDomingo; }
+    public void setHorarioDomingo(String horarioDomingo) { this.horarioDomingo = horarioDomingo; }
 }

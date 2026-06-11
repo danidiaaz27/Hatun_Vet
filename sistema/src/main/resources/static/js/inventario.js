@@ -47,7 +47,7 @@ $(document).ready(function() {
             },
             {
                 data: 'categoria',
-                render: data => data ? `<span class="cat-pill">${data}</span>` : '<span class="text-muted small">—</span>'
+                render: data => (data && data.nombre) ? `<span class="cat-pill">${data.nombre}</span>` : '<span class="text-muted small">—</span>'
             },
             {
                 data: 'stock',

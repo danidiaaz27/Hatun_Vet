@@ -80,7 +80,7 @@
         </div>
 
         <h1>
-            <span th:text="${config.textoHero}">Bienvenidos a HatunVet</span>
+            <span th:text="${config.textoHero}">BIENVENIDOS A HATUNVET</span>
         </h1>
 
         <p>
@@ -304,7 +304,7 @@
     </div>
 </section>
 
-<!-- HORARIO -->
+<!-- HORARIO — reemplaza la sección id="horario" en pagina_principal.html -->
 <section id="horario" class="section">
 
     <div class="section-title">
@@ -315,17 +315,23 @@
 
         <div class="schedule-item">
             <span>Lunes - Viernes</span>
-            <strong>8:00 AM - 8:00 PM</strong>
+            <strong th:text="${config.horarioLunesViernes != null and !#strings.isEmpty(config.horarioLunesViernes)} ? ${config.horarioLunesViernes} : '8:00 AM - 8:00 PM'">
+                8:00 AM - 8:00 PM
+            </strong>
         </div>
 
         <div class="schedule-item">
             <span>Sábado</span>
-            <strong>9:00 AM - 6:00 PM</strong>
+            <strong th:text="${config.horarioSabado != null and !#strings.isEmpty(config.horarioSabado)} ? ${config.horarioSabado} : '9:00 AM - 6:00 PM'">
+                9:00 AM - 6:00 PM
+            </strong>
         </div>
 
-        <div class="schedule-item closed">
+        <div th:with="domText=${config.horarioDomingo != null and !#strings.isEmpty(config.horarioDomingo)} ? ${config.horarioDomingo} : 'Cerrado'"
+             th:classappend="${domText == 'Cerrado'} ? 'closed' : ''"
+             class="schedule-item">
             <span>Domingo</span>
-            <strong>Cerrado</strong>
+            <strong th:text="${domText}">Cerrado</strong>
         </div>
 
     </div>

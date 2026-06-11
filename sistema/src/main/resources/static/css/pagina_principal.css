@@ -1,3 +1,7 @@
+@font-face {
+    font-family: 'RichelaKids';
+    src: url('/Fonts/RichelaKids.otf') format('opentype');
+}
 *{
     margin:0;
     padding:0;
@@ -153,13 +157,15 @@ body{
     backdrop-filter:blur(10px);
 }
 
-.hero h1{
-    font-size:65px;
+.hero h1 span{
+    font-family:'RichelaKids' !important;
+    font-size:78px;
     margin-bottom:25px;
 }
 
+
 .hero h1 span{
-    color:#ffb4b4;
+    color:#ffffff;
 }
 
 .hero p{
@@ -583,3 +589,4 @@ body{
         font-size:38px;
     }
 }
+

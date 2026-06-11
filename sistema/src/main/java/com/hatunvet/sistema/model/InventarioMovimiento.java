@@ -1,5 +1,6 @@
 package com.hatunvet.sistema.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,9 +13,9 @@ public class InventarioMovimiento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relacionamos el movimiento directamente con el Producto
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "categoria", "proveedor"})
     private Producto producto;
 
     @Column(name = "tipo_movimiento", nullable = false)
