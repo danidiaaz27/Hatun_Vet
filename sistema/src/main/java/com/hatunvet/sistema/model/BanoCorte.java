@@ -27,6 +27,16 @@ public class BanoCorte {
     @JsonProperty("mascotaId")
     private Long mascotaId;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "producto_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private Producto producto;
+
+    @Transient
+    @JsonProperty("productoId")
+    private String productoId;
+
+
     @Column(name = "nombre_mascota", nullable = false)
     private String nombreMascota;
 
@@ -47,6 +57,9 @@ public class BanoCorte {
     // ESTÁNDAR FINANCIERO RESTAURADO
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal precio;
+
+    @Column(name = "total_cobrado", nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalCobrado = BigDecimal.ZERO;
 
     private String estado;
 
@@ -99,4 +112,18 @@ public class BanoCorte {
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+
+    public Producto getProducto() { return producto; }
+    public void setProducto(Producto producto) { this.producto = producto; }
+
+    public String getProductoId() {
+        if (producto != null && producto.getId() != null) {
+            return producto.getId();
+        }
+        return productoId;
+    }
+    public void setProductoId(String productoId) { this.productoId = productoId; }
+
+    public BigDecimal getTotalCobrado() { return totalCobrado; }
+    public void setTotalCobrado(BigDecimal totalCobrado) { this.totalCobrado = totalCobrado; }
 }

@@ -115,7 +115,7 @@ public class LoginController {
         if (ruta == null) return "CONFIGURACIÓN Y SEGURIDAD";
 
         return switch (ruta) {
-            case "/dashboard", "/ventas/pos", "/ventas/historial", "/caja" -> "VENTAS";
+            case "/dashboard", "/ventas/pos", "/ventas/historial", "/caja", "/promociones" -> "VENTAS";
             case "/agenda", "/banos-cortes", "/torre-control"              -> "OPERACIONES Y CITAS";
             case "/mascotas", "/clientes"                                  -> "PACIENTES Y CLIENTES";
             case "/inventario", "/productos/listar",
@@ -134,6 +134,7 @@ public class LoginController {
             case "/ventas/pos"         -> 20;
             case "/ventas/historial"   -> 30;
             case "/caja"               -> 40;
+            case "/promociones"        -> 45;
             // OPERACIONES Y CITAS
             case "/agenda"             -> 50;
             case "/banos-cortes"       -> 60;

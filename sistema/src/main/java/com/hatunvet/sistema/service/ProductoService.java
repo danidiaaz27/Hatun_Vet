@@ -31,6 +31,11 @@ public class ProductoService {
     }
 
     @Transactional(readOnly = true)
+    public List<Producto> listarServiciosActivos() {
+        return productoRepository.findByEsServicioTrueAndEstadoTrue();
+    }
+
+    @Transactional(readOnly = true)
     public Optional<Producto> obtenerPorId(String id) {
         return productoRepository.findById(id);
     }
@@ -47,6 +52,26 @@ public class ProductoService {
         }
         if (producto.getStock() < 0) {
             throw new IllegalArgumentException("El stock inicial no puede ser negativo.");
+        }
+
+        if (producto.isFraccionable()) {
+            if (producto.getUnidadMedida() == null || producto.getUnidadMedida().trim().isEmpty()) {
+                throw new IllegalArgumentException("La unidad de medida es obligatoria para productos fraccionables.");
+            }
+            if (producto.getCapacidadTotal() == null || producto.getCapacidadTotal().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("La capacidad total debe ser mayor a 0.");
+            }
+            if (producto.getPrecioFraccionado() == null || producto.getPrecioFraccionado().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("El precio fraccionado debe ser mayor a 0.");
+            }
+            if (producto.getStockFraccionado() == null) {
+                producto.setStockFraccionado(BigDecimal.ZERO);
+            }
+        } else {
+            producto.setUnidadMedida(null);
+            producto.setCapacidadTotal(null);
+            producto.setPrecioFraccionado(null);
+            producto.setStockFraccionado(BigDecimal.ZERO);
         }
 
         // VALIDACIÓN 2: Evitar códigos duplicados

@@ -17,4 +17,8 @@ public interface ConsultaClinicaRepository extends JpaRepository<ConsultaClinica
     // Consulta para la línea de tiempo (Historial Perpetuo)
     @Query("SELECT c FROM ConsultaClinica c WHERE c.cita.mascota.id = :mascotaId ORDER BY c.fechaAtencion DESC")
     List<ConsultaClinica> findHistorialByMascotaId(@Param("mascotaId") String mascotaId);
+
+    // Consulta para obtener próximas alertas (citas o vacunas) a partir de una fecha de referencia
+    @Query("SELECT c FROM ConsultaClinica c WHERE (c.fechaProximaCita IS NOT NULL AND c.fechaProximaCita >= :fechaReferencia) OR (c.fechaProximaVacuna IS NOT NULL AND c.fechaProximaVacuna >= :fechaReferencia) OR (c.fechaProximaDesparasitacion IS NOT NULL AND c.fechaProximaDesparasitacion >= :fechaReferencia)")
+    List<ConsultaClinica> findAlertasVigentes(@Param("fechaReferencia") java.time.LocalDate fechaReferencia);
 }

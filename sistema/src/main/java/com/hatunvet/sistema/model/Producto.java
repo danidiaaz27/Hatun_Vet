@@ -42,6 +42,25 @@ public class Producto {
     @Column(nullable = false)
     private boolean estado = true;
 
+    @Column(name = "es_servicio", nullable = false)
+    private boolean esServicio = false;
+
+
+    @Column(nullable = false)
+    private boolean fraccionable = false;
+
+    @Column(name = "unidad_medida", length = 20)
+    private String unidadMedida;
+
+    @Column(name = "capacidad_total", precision = 10, scale = 2)
+    private BigDecimal capacidadTotal;
+
+    @Column(name = "stock_fraccionado", precision = 10, scale = 2, nullable = false)
+    private BigDecimal stockFraccionado = BigDecimal.ZERO;
+
+    @Column(name = "precio_fraccionado", precision = 10, scale = 2)
+    private BigDecimal precioFraccionado;
+
     // --- GETTERS Y SETTERS ---
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -72,4 +91,23 @@ public class Producto {
 
     public boolean isEstado() { return estado; }
     public void setEstado(boolean estado) { this.estado = estado; }
+
+    public boolean isEsServicio() { return esServicio; }
+    public void setEsServicio(boolean esServicio) { this.esServicio = esServicio; }
+
+
+    public boolean isFraccionable() { return fraccionable; }
+    public void setFraccionable(boolean fraccionable) { this.fraccionable = fraccionable; }
+
+    public String getUnidadMedida() { return unidadMedida; }
+    public void setUnidadMedida(String unidadMedida) { this.unidadMedida = unidadMedida; }
+
+    public BigDecimal getCapacidadTotal() { return capacidadTotal; }
+    public void setCapacidadTotal(BigDecimal capacidadTotal) { this.capacidadTotal = capacidadTotal; }
+
+    public BigDecimal getStockFraccionado() { return stockFraccionado; }
+    public void setStockFraccionado(BigDecimal stockFraccionado) { this.stockFraccionado = stockFraccionado; }
+
+    public BigDecimal getPrecioFraccionado() { return precioFraccionado; }
+    public void setPrecioFraccionado(BigDecimal precioFraccionado) { this.precioFraccionado = precioFraccionado; }
 }

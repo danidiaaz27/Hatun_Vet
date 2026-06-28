@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const API_URL = '/api/citas';
     let pacienteEnAtencionId = null;
     let mascotaActualId = null;
+    let idCitaCargada = null;
     const modalHistorial = new bootstrap.Modal(document.getElementById('modalHistorial'));
 
     function cargarTorreControl() {
@@ -51,8 +52,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Detectar si el médico ya tiene a alguien En Atención
                     if (cita.estado === 'EN_ATENCION') {
                         hayPacienteActivo = true;
-                        pacienteEnAtencionId = cita.id;
-                        mascotaActualId = cita.mascota?.id;
+                        
+                        if (pacienteEnAtencionId !== cita.id) {
+                            pacienteEnAtencionId = cita.id;
+                            mascotaActualId = cita.mascota?.id;
+                        }
                         
                         document.getElementById('lblMotivoActivo').innerText = cita.motivoPrincipal;
                         
@@ -63,6 +67,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.getElementById('lblHoraInicio').innerText = new Date(fechaInicio).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
                         document.getElementById('citaActivaId').value = cita.id;
                         document.getElementById('mascotaActivaId').value = mascotaActualId;
+
+                        // Cargar datos de la consulta activa (anamnesis) solo una vez para esta cita
+                        if (idCitaCargada !== cita.id) {
+                            idCitaCargada = cita.id;
+                            cargarConsultaActiva(cita.id);
+                        }
                     }
                 });
 
@@ -77,6 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('formAnamnesis').reset();
                     pacienteEnAtencionId = null;
                     mascotaActualId = null;
+                    idCitaCargada = null;
                 }
 
                 document.querySelectorAll('.btn-iniciar').forEach(btn => {
@@ -86,6 +97,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             })
             .catch(err => console.error("Error al cargar la Torre de Control:", err));
+    }
+
+    function cargarConsultaActiva(citaId) {
+        fetch(`${API_URL}/${citaId}/consulta`)
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    const data = res.data;
+                    document.getElementById('pesoKg').value = data.pesoKg || '';
+                    document.getElementById('tempC').value = data.temperaturaC || '';
+                    document.getElementById('frecCard').value = data.frecuenciaCardiaca || '';
+                    document.getElementById('sintomas').value = data.sintomas || '';
+                    document.getElementById('diagnostico').value = data.diagnosticoPresuntivo || '';
+                    document.getElementById('tratamiento').value = data.tratamientoIndicado || '';
+                    document.getElementById('fechaProximaCita').value = data.fechaProximaCita || '';
+                    document.getElementById('nombreProximaVacuna').value = data.nombreProximaVacuna || '';
+                    document.getElementById('fechaProximaVacuna').value = data.fechaProximaVacuna || '';
+                    document.getElementById('nombreProximoDesparasitante').value = data.nombreProximoDesparasitante || '';
+                    document.getElementById('fechaProximaDesparasitacion').value = data.fechaProximaDesparasitacion || '';
+                } else {
+                    // Si no tiene registro, limpiar campos para evitar datos viejos
+                    document.getElementById('formAnamnesis').reset();
+                    document.getElementById('citaActivaId').value = citaId;
+                    document.getElementById('mascotaActivaId').value = mascotaActualId;
+                }
+            })
+            .catch(err => console.error("Error al cargar la consulta activa:", err));
     }
 
     function iniciarAtencion(idCita) {
@@ -112,7 +150,12 @@ document.addEventListener('DOMContentLoaded', function() {
             frecuenciaCardiaca: parseInt(document.getElementById('frecCard').value) || null,
             sintomas: document.getElementById('sintomas').value,
             diagnosticoPresuntivo: document.getElementById('diagnostico').value,
-            tratamientoIndicado: document.getElementById('tratamiento').value
+            tratamientoIndicado: document.getElementById('tratamiento').value,
+            fechaProximaCita: document.getElementById('fechaProximaCita').value || null,
+            nombreProximaVacuna: document.getElementById('nombreProximaVacuna').value || null,
+            fechaProximaVacuna: document.getElementById('fechaProximaVacuna').value || null,
+            nombreProximoDesparasitante: document.getElementById('nombreProximoDesparasitante').value || null,
+            fechaProximaDesparasitacion: document.getElementById('fechaProximaDesparasitacion').value || null
         };
 
         btn.disabled = true;
@@ -127,8 +170,11 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(res => {
             btn.disabled = false;
             btn.innerText = "Guardar Registro";
-            if (res.success) Swal.fire('Actualizado', 'Anamnesis guardada correctamente.', 'success');
-            else Swal.fire('Error', res.message, 'error');
+            if (res.success) {
+                Swal.fire('Actualizado', 'Anamnesis guardada correctamente.', 'success');
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
         });
     });
 
@@ -196,6 +242,189 @@ document.addEventListener('DOMContentLoaded', function() {
                 modalHistorial.show();
             });
     });
+
+    // --- LÓGICA DE INSUMOS FRACCIONADOS ---
+    const modalJalarInsumo = new bootstrap.Modal(document.getElementById('modalJalarInsumo'));
+    let listaProductosInsumos = [];
+
+    document.getElementById('btnJalarInsumo').addEventListener('click', function() {
+        if (!pacienteEnAtencionId) {
+            Swal.fire('Atención', 'Debe iniciar atención a un paciente de la cola de espera primero.', 'warning');
+            return;
+        }
+
+        // Verificar si la consulta ya existe (se guardó anamnesis)
+        fetch(`${API_URL}/${pacienteEnAtencionId}/consulta`)
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && res.data) {
+                    // Cargar catálogo de productos y los insumos ya consumidos
+                    cargarCatalogoInsumos();
+                    cargarInsumosConsumidos();
+                    modalJalarInsumo.show();
+                } else {
+                    Swal.fire('Guarde el Registro Primero', 'Debe guardar la anamnesis (peso, temperatura, etc.) al menos una vez antes de registrar insumos.', 'warning');
+                }
+            })
+            .catch(err => console.error("Error al validar consulta activa:", err));
+    });
+
+    function cargarCatalogoInsumos() {
+        fetch('/productos/api/listar')
+            .then(r => r.json())
+            .then(res => {
+                if (res.data) {
+                    listaProductosInsumos = res.data.filter(p => p.estado);
+                    const select = document.getElementById('insumoProducto');
+                    select.innerHTML = '<option value="">Seleccione un insumo...</option>';
+                    
+                    listaProductosInsumos.forEach(p => {
+                        const fraccTxt = p.fraccionable ? ` [Fraccionable: ${p.unidadMedida}]` : ' [Unidad]';
+                        select.innerHTML += `<option value="${p.id}">${p.nombre} (Código: ${p.codigo})${fraccTxt}</option>`;
+                    });
+                    
+                    document.getElementById('infoStockInsumo').style.display = 'none';
+                }
+            })
+            .catch(err => console.error("Error al cargar catálogo de insumos:", err));
+    }
+
+    document.getElementById('insumoProducto').addEventListener('change', function() {
+        const prodId = this.value;
+        const infoDiv = document.getElementById('infoStockInsumo');
+        
+        if (!prodId) {
+            infoDiv.style.display = 'none';
+            return;
+        }
+        
+        const p = listaProductosInsumos.find(prod => prod.id === prodId);
+        if (p) {
+            infoDiv.style.display = 'block';
+            document.getElementById('lblNombreInsumoInfo').innerText = p.nombre;
+            document.getElementById('lblStockGeneralInfo').innerText = p.stock;
+            
+            if (p.fraccionable) {
+                document.getElementById('lblEnvaseAbiertoContainer').style.display = 'inline';
+                document.getElementById('lblStockFraccionadoInfo').innerText = `${parseFloat(p.stockFraccionado || 0).toFixed(2)} ${p.unidadMedida}`;
+                document.getElementById('lblPrecioInsumoInfo').innerText = `S/ ${parseFloat(p.precioFraccionado).toFixed(2)} por ${p.unidadMedida}`;
+                document.getElementById('lblUnidadInsumo').innerText = p.unidadMedida;
+            } else {
+                document.getElementById('lblEnvaseAbiertoContainer').style.display = 'none';
+                document.getElementById('lblPrecioInsumoInfo').innerText = `S/ ${parseFloat(p.precio).toFixed(2)} por unidad`;
+                document.getElementById('lblUnidadInsumo').innerText = 'unidad(es)';
+            }
+        }
+    });
+
+    document.getElementById('formRegistrarInsumo').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const prodId = document.getElementById('insumoProducto').value;
+        const cant = parseFloat(document.getElementById('insumoCantidad').value);
+        
+        if (!prodId || isNaN(cant) || cant <= 0) {
+            Swal.fire('Cantidad inválida', 'Ingrese una cantidad mayor a 0.', 'warning');
+            return;
+        }
+
+        const payload = {
+            productoId: prodId,
+            cantidadUsada: cant
+        };
+
+        fetch(`${API_URL}/${pacienteEnAtencionId}/insumos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                Swal.fire('Éxito', res.message, 'success');
+                document.getElementById('insumoCantidad').value = '';
+                // Recargar catálogo para ver stock actualizado
+                cargarCatalogoInsumos();
+                cargarInsumosConsumidos();
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        })
+        .catch(err => console.error("Error al registrar insumo:", err));
+    });
+
+    function cargarInsumosConsumidos() {
+        fetch(`${API_URL}/${pacienteEnAtencionId}/insumos`)
+            .then(r => r.json())
+            .then(insumos => {
+                const tbody = document.querySelector('#tablaInsumosAgregados tbody');
+                tbody.innerHTML = '';
+                
+                if (!insumos || insumos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No hay insumos registrados para esta consulta.</td></tr>';
+                    return;
+                }
+                
+                let total = 0;
+                insumos.forEach(ins => {
+                    total += ins.precioCobrado;
+                    tbody.innerHTML += `
+                        <tr class="border-bottom">
+                            <td class="ps-3 fw-bold text-dark">${ins.productoNombre}</td>
+                            <td class="text-center">${parseFloat(ins.cantidadUsada).toFixed(2)} ${ins.unidadMedida}</td>
+                            <td class="text-end">S/ ${parseFloat(ins.precioCobrado).toFixed(2)}</td>
+                            <td class="text-end pe-3">
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-revertir-insumo" data-id="${ins.id}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                tbody.innerHTML += `
+                    <tr class="table-light fw-bold">
+                        <td colspan="2" class="ps-3 text-secondary text-uppercase small">Subtotal Insumos</td>
+                        <td class="text-end text-primary">S/ ${total.toFixed(2)}</td>
+                        <td></td>
+                    </tr>
+                `;
+                
+                // Conectar botones de eliminar
+                document.querySelectorAll('.btn-revertir-insumo').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        revertirInsumo(this.getAttribute('data-id'));
+                    });
+                });
+            })
+            .catch(err => console.error("Error al cargar insumos consumidos:", err));
+    }
+
+    function revertirInsumo(insumoId) {
+        Swal.fire({
+            title: '¿Retirar insumo?',
+            text: "Se reintegrará la cantidad al stock correspondiente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, retirar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`${API_URL}/insumos/${insumoId}`, { method: 'DELETE' })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            Swal.fire('Retirado', res.message, 'success');
+                            cargarCatalogoInsumos();
+                            cargarInsumosConsumidos();
+                        } else {
+                            Swal.fire('Error', res.message, 'error');
+                        }
+                    })
+                    .catch(err => console.error("Error al revertir insumo:", err));
+            }
+        });
+    }
 
     cargarTorreControl();
     setInterval(cargarTorreControl, 10000); 

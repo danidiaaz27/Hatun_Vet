@@ -234,6 +234,9 @@
                 <button type="button" class="btn-danger-vet d-flex align-items-center gap-2" onclick="abrirModalCitasCobro()">
                     <i class="bi bi-heart-pulse-fill"></i> Cobrar Citas Médicas
                 </button>
+                <button type="button" class="btn-primary-vet d-flex align-items-center gap-2" onclick="abrirModalGroomingCobro()">
+                    <i class="bi bi-scissors"></i> Cobrar Grooming
+                </button>
                 <div class="pos-reloj" id="relojActual">00:00:00</div>
             </div>
         </div>
@@ -328,6 +331,21 @@
             </div>
             <div class="modal-body" style="background:#f0f4fa;">
                 <div id="listaCitasPorCobrar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Grooming -->
+<div class="modal fade" id="modalGroomingCobro" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
+            <div class="modal-header text-white" style="background: var(--vet-blue, #0A3D91);">
+                <h5 class="modal-title fw-bold"><i class="bi bi-scissors me-2"></i> Servicios de Grooming — Pendientes de Cobro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background:#f0f4fa;">
+                <div id="listaGroomingPorCobrar"></div>
             </div>
         </div>
     </div>

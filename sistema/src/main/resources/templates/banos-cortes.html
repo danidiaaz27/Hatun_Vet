@@ -222,7 +222,9 @@
                     <select class="form-select form-select-sm" id="filtroEstado" style="width:160px;">
                         <option value="">Todos los estados</option>
                         <option value="PENDIENTE">Pendiente</option>
+                        <option value="EN_PROCESO">En Proceso</option>
                         <option value="TERMINADO">Terminado</option>
+                        <option value="PAGO_PARCIAL">Pago Parcial</option>
                         <option value="PAGADO">Pagado</option>
                     </select>
                     <div class="d-flex gap-1">
@@ -289,15 +291,10 @@
                                 </div>
                             </div>
                             <div class="col-12">
-                                <label class="label-vet">Tipo de Servicio</label>
-                                <div class="input-group">
-                                    <select id="tipoServicioSelect" class="form-select"></select>
-                                    <input type="text" id="tipoServicioInput" class="form-control d-none"
-                                        placeholder="Nuevo servicio...">
-                                    <button class="btn btn-outline-secondary" type="button" id="btnAlternarTipo">
-                                        <i class="bi bi-plus-lg"></i> Nuevo
-                                    </button>
-                                </div>
+                                <label class="label-vet">Tipo de Servicio *</label>
+                                <select id="tipoServicioSelect" class="form-select" required>
+                                    <option value="">-- Seleccione un Servicio --</option>
+                                </select>
                             </div>
                             <div class="col-12">
                                 <label class="label-vet">Detalles / Observaciones</label>

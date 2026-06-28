@@ -18,6 +18,8 @@ public interface CitaRepository extends JpaRepository<Cita, String> {
 
     List<Cita> findByEstado(String estado);
 
+    List<Cita> findByEstadoIn(List<String> estados);
+
     // ── NUEVO: para calcular slots ocupados por médico en una fecha ──
     List<Cita> findByVeterinarioIdAndFechaHoraProgramadaBetweenAndEstadoIn(
             String veterinarioId,

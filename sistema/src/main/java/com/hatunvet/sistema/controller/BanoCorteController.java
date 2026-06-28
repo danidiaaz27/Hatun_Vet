@@ -3,8 +3,10 @@ package com.hatunvet.sistema.controller;
 import com.hatunvet.sistema.model.BanoCorte;
 import com.hatunvet.sistema.model.Cliente;
 import com.hatunvet.sistema.model.Mascota;
+import com.hatunvet.sistema.model.Producto;
 import com.hatunvet.sistema.repository.BanoCorteRepository;
 import com.hatunvet.sistema.repository.MascotaRepository;
+import com.hatunvet.sistema.repository.ProductoRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +21,12 @@ public class BanoCorteController {
 
     private final BanoCorteRepository banoCorteRepository;
     private final MascotaRepository mascotaRepository;
+    private final ProductoRepository productoRepository;
 
-    public BanoCorteController(BanoCorteRepository banoCorteRepository, MascotaRepository mascotaRepository) {
+    public BanoCorteController(BanoCorteRepository banoCorteRepository, MascotaRepository mascotaRepository, ProductoRepository productoRepository) {
         this.banoCorteRepository = banoCorteRepository;
         this.mascotaRepository = mascotaRepository;
+        this.productoRepository = productoRepository;
     }
 
     @GetMapping
@@ -70,7 +74,25 @@ public class BanoCorteController {
                 return res;
             }
 
+            String productoId = registro.getProductoId();
+            if (productoId == null || productoId.isEmpty()) {
+                res.put("success", false);
+                res.put("message", "Debe seleccionar un servicio del catálogo.");
+                return res;
+            }
+
+            Producto producto = productoRepository.findById(productoId)
+                    .orElse(null);
+            if (producto == null) {
+                res.put("success", false);
+                res.put("message", "El servicio seleccionado no existe.");
+                return res;
+            }
+
             vincularDatosDesdeMascota(registro, mascota);
+            
+            registro.setProducto(producto);
+            registro.setTipoServicio(producto.getNombre());
 
             registro.setId(null);
             registro.setEstado("PENDIENTE");
@@ -105,14 +127,18 @@ public class BanoCorteController {
     public Map<String, Object> cambiarEstado(@PathVariable Long id, @RequestParam String nuevoEstado) {
         Map<String, Object> res = new HashMap<>();
 
-        if (!nuevoEstado.equals("TERMINADO") && !nuevoEstado.equals("PAGADO")) {
+        if (!nuevoEstado.equals("EN_PROCESO") && !nuevoEstado.equals("TERMINADO") && !nuevoEstado.equals("PAGO_PARCIAL") && !nuevoEstado.equals("PAGADO")) {
             res.put("success", false);
             res.put("message", "Estado no permitido por el sistema.");
             return res;
         }
 
         banoCorteRepository.findById(id).ifPresentOrElse(r -> {
-            r.setEstado(nuevoEstado);
+            String estadoFinal = nuevoEstado;
+            if ("TERMINADO".equals(nuevoEstado) && r.getTotalCobrado() != null && r.getTotalCobrado().compareTo(r.getPrecio()) >= 0) {
+                estadoFinal = "PAGADO";
+            }
+            r.setEstado(estadoFinal);
             banoCorteRepository.save(r);
             res.put("success", true);
         }, () -> {
@@ -127,5 +153,46 @@ public class BanoCorteController {
     @ResponseBody
     public List<String> listarTipos() {
         return banoCorteRepository.findTiposUnicos();
+    }
+
+    @GetMapping("/api/por-cobrar")
+    @ResponseBody
+    public List<Map<String, Object>> porCobrar() {
+        List<BanoCorte> terminados = banoCorteRepository.findAll().stream()
+                .filter(b -> "TERMINADO".equalsIgnoreCase(b.getEstado()) || 
+                             "PENDIENTE".equalsIgnoreCase(b.getEstado()) || 
+                             "PAGO_PARCIAL".equalsIgnoreCase(b.getEstado()))
+                .filter(b -> {
+                    BigDecimal totalCobrado = b.getTotalCobrado() != null ? b.getTotalCobrado() : BigDecimal.ZERO;
+                    BigDecimal precio = b.getPrecio() != null ? b.getPrecio() : BigDecimal.ZERO;
+                    return precio.subtract(totalCobrado).compareTo(BigDecimal.ZERO) > 0;
+                })
+                .toList();
+
+        return terminados.stream().map(b -> {
+            Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", b.getId());
+            map.put("mascota", b.getNombreMascota());
+            map.put("clienteDocumento", b.getDniDueno());
+            map.put("clienteNombre", b.getNombreDueno());
+            map.put("tipoServicio", b.getTipoServicio());
+            
+            // Retornamos el saldo pendiente como el precio a cobrar en POS
+            BigDecimal totalCobrado = b.getTotalCobrado() != null ? b.getTotalCobrado() : BigDecimal.ZERO;
+            BigDecimal precio = b.getPrecio() != null ? b.getPrecio() : BigDecimal.ZERO;
+            BigDecimal saldo = precio.subtract(totalCobrado);
+            map.put("precio", saldo);
+            map.put("precioTotalOriginal", precio);
+            map.put("totalCobrado", totalCobrado);
+            
+            if (b.getProducto() != null) {
+                map.put("productoId", b.getProducto().getId());
+                map.put("productoCodigo", b.getProducto().getCodigo());
+            } else {
+                map.put("productoId", null);
+                map.put("productoCodigo", "GR-001");
+            }
+            return map;
+        }).toList();
     }
 }

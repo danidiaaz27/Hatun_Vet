@@ -1,6 +1,7 @@
 package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -14,9 +15,11 @@ public class CajaSesion {
     private String id;
 
     @Column(name = "fecha_apertura", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaApertura;
 
     @Column(name = "fecha_cierre")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaCierre;
 
     @Column(name = "monto_apertura", nullable = false, precision = 10, scale = 2)

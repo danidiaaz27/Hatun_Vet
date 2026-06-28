@@ -1,6 +1,8 @@
 package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -14,9 +16,11 @@ public class CajaMovimiento {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_sesion", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private CajaSesion sesion; // Vinculado a la sesión activa obligatoriamente
 
     @Column(name = "fecha_movimiento", nullable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaMovimiento;
 
     @Column(nullable = false, length = 20)
@@ -33,10 +37,12 @@ public class CajaMovimiento {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_venta", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Venta venta;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_bano_corte", nullable = true)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private BanoCorte banoCorte;
 
     @PrePersist

@@ -16,6 +16,7 @@ public class ConsultaClinica {
     // Relación estricta 1 a 1: Una cita genera exactamente una consulta clínica
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cita_id", nullable = false, unique = true)
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Cita cita;
 
     // Anamnesis Obligatoria
@@ -39,6 +40,21 @@ public class ConsultaClinica {
 
     @Column(name = "fecha_atencion", updatable = false)
     private LocalDateTime fechaAtencion;
+
+    @Column(name = "fecha_proxima_cita")
+    private java.time.LocalDate fechaProximaCita;
+
+    @Column(name = "nombre_proxima_vacuna", length = 100)
+    private String nombreProximaVacuna;
+
+    @Column(name = "fecha_proxima_vacuna")
+    private java.time.LocalDate fechaProximaVacuna;
+
+    @Column(name = "nombre_proximo_desparasitante", length = 100)
+    private String nombreProximoDesparasitante;
+
+    @Column(name = "fecha_proxima_desparasitacion")
+    private java.time.LocalDate fechaProximaDesparasitacion;
 
     @PrePersist
     protected void onCreate() {
@@ -66,4 +82,16 @@ public class ConsultaClinica {
     public void setTratamientoIndicado(String tratamientoIndicado) { this.tratamientoIndicado = tratamientoIndicado; }
     public LocalDateTime getFechaAtencion() { return fechaAtencion; }
     public void setFechaAtencion(LocalDateTime fechaAtencion) { this.fechaAtencion = fechaAtencion; }
+
+    public java.time.LocalDate getFechaProximaCita() { return fechaProximaCita; }
+    public void setFechaProximaCita(java.time.LocalDate fechaProximaCita) { this.fechaProximaCita = fechaProximaCita; }
+    public String getNombreProximaVacuna() { return nombreProximaVacuna; }
+    public void setNombreProximaVacuna(String nombreProximaVacuna) { this.nombreProximaVacuna = nombreProximaVacuna; }
+    public java.time.LocalDate getFechaProximaVacuna() { return fechaProximaVacuna; }
+    public void setFechaProximaVacuna(java.time.LocalDate fechaProximaVacuna) { this.fechaProximaVacuna = fechaProximaVacuna; }
+
+    public String getNombreProximoDesparasitante() { return nombreProximoDesparasitante; }
+    public void setNombreProximoDesparasitante(String nombreProximoDesparasitante) { this.nombreProximoDesparasitante = nombreProximoDesparasitante; }
+    public java.time.LocalDate getFechaProximaDesparasitacion() { return fechaProximaDesparasitacion; }
+    public void setFechaProximaDesparasitacion(java.time.LocalDate fechaProximaDesparasitacion) { this.fechaProximaDesparasitacion = fechaProximaDesparasitacion; }
 }

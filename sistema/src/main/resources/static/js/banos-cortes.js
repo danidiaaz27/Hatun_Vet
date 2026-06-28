@@ -52,9 +52,11 @@ $(document).ready(function () {
 
     function badgeEstado(estado) {
         const mapa = {
-            'PENDIENTE': '<span class="badge-estado badge-pendiente">⏳ Pendiente</span>',
-            'TERMINADO': '<span class="badge-estado badge-terminado">✅ Terminado</span>',
-            'PAGADO':    '<span class="badge-estado badge-pagado">💰 PAGADO</span>',
+            'PENDIENTE':    '<span class="badge-estado badge-pendiente">⏳ Pendiente</span>',
+            'EN_PROCESO':   '<span class="badge-estado" style="background:#f3e5f5; color:#4a148c; border-radius:50px; padding:4px 13px; font-size:12px; font-weight:600; border:1px solid #e1bee7;">✂️ En Proceso</span>',
+            'TERMINADO':    '<span class="badge-estado badge-terminado">✅ Terminado</span>',
+            'PAGO_PARCIAL': '<span class="badge-estado" style="background:#e3f2fd; color:#0d47a1; border-radius:50px; padding:4px 13px; font-size:12px; font-weight:600; border:1px solid #90caf9;">💳 Pago Parcial</span>',
+            'PAGADO':       '<span class="badge-estado" style="background:#e2f0d9; color:#385723; border-radius:50px; padding:4px 13px; font-size:12px; font-weight:600; border:1.5px solid #385723;">💰 PAGADO</span>',
         };
         return mapa[estado] || `<span class="badge-estado badge-pendiente">${estado}</span>`;
     }
@@ -108,25 +110,38 @@ $(document).ready(function () {
             const icono = iconoEspecie(especie);
             const avatarBg = colorEspecie(especie);
             const esPagado = row.estado === 'PAGADO';
-
             let acciones = '';
-            if (esPagado) {
+            if (row.estado === 'PAGADO') {
                 acciones = `
                     <div class="grooming-card-actions">
                         <button class="btn btn-outline-secondary" disabled>
-                            <i class="bi bi-check2-all me-1"></i> Finalizado
+                            <i class="bi bi-check2-all me-1"></i> Cobrado
                         </button>
                     </div>`;
-            } else {
-                const btnIniciar = row.estado === 'PENDIENTE'
-                    ? `<button class="btn btn-outline-secondary btn-cambiar-estado" data-id="${row.id}" data-estado="TERMINADO">
-                           <i class="bi bi-play-fill me-1"></i> Iniciar
-                       </button>`
-                    : '';
+            } else if (row.estado === 'TERMINADO') {
+                acciones = `
+                    <div class="grooming-card-actions">
+                        <button class="btn btn-outline-primary w-100" style="border-color: var(--vet-blue); color: var(--vet-blue);" onclick="Swal.fire('En Caja', 'Este servicio ya está disponible en la lista de cobranza del Punto de Venta (POS).', 'info')">
+                            <i class="bi bi-cash-coin me-1"></i> Enviar a Caja
+                        </button>
+                    </div>`;
+            } else if (row.estado === 'EN_PROCESO') {
+                const btnFinalizar = `
+                    <button class="btn text-white btn-cambiar-estado w-100"
+                        style="background:#1a6e40;"
+                        data-id="${row.id}" data-estado="TERMINADO">
+                        <i class="bi bi-check-circle me-1"></i> Finalizar
+                    </button>`;
+                acciones = `<div class="grooming-card-actions">${btnFinalizar}</div>`;
+            } else { // PENDIENTE o PAGO_PARCIAL
+                const btnIniciar = `
+                    <button class="btn btn-outline-secondary btn-cambiar-estado" data-id="${row.id}" data-estado="EN_PROCESO">
+                        <i class="bi bi-play-fill me-1"></i> Iniciar
+                    </button>`;
                 const btnFinalizar = `
                     <button class="btn text-white btn-cambiar-estado"
                         style="background:#1a6e40;"
-                        data-id="${row.id}" data-estado="PAGADO">
+                        data-id="${row.id}" data-estado="TERMINADO">
                         <i class="bi bi-check-circle me-1"></i> Finalizar
                     </button>`;
                 acciones = `<div class="grooming-card-actions">${btnIniciar}${btnFinalizar}</div>`;
@@ -187,13 +202,19 @@ $(document).ready(function () {
     $('#btnNext').click(() => { paginaActual++; renderCards(); });
     $('#filtroEstado').on('change', () => { paginaActual = 1; renderCards(); });
 
-    // ──────────────────────────────────────────
-    // CAMBIAR ESTADO (delegado en grid)
-    // ──────────────────────────────────────────
     $('#groomingGrid').on('click', '.btn-cambiar-estado', function () {
         const id = $(this).data('id');
         const nuevoEstado = $(this).data('estado');
-        const label = nuevoEstado === 'PAGADO' ? 'Finalizar y marcar como Pagado' : 'Marcar como Terminado';
+        let label = '¿Cambiar estado?';
+        let confirmText = 'Sí, cambiar';
+
+        if (nuevoEstado === 'EN_PROCESO') {
+            label = '¿Iniciar el servicio de grooming?';
+            confirmText = 'Sí, iniciar';
+        } else if (nuevoEstado === 'TERMINADO') {
+            label = '¿Finalizar servicio de grooming?';
+            confirmText = 'Sí, finalizar';
+        }
 
         Swal.fire({
             title: label,
@@ -201,7 +222,7 @@ $(document).ready(function () {
             showCancelButton: true,
             confirmButtonColor: '#1a6e40',
             cancelButtonColor: '#6b7a99',
-            confirmButtonText: 'Sí, continuar',
+            confirmButtonText: confirmText,
             cancelButtonText: 'Cancelar'
         }).then(result => {
             if (result.isConfirmed) {
@@ -306,28 +327,26 @@ $(document).ready(function () {
     // ──────────────────────────────────────────
     // MODAL — TIPOS DE SERVICIO
     // ──────────────────────────────────────────
+    let serviciosCatalogo = [];
+
     function cargarTiposServicio() {
-        fetch(`${API_URL}/tipos-servicio`)
+        fetch('/productos/api/servicios-activos')
             .then(r => r.json())
-            .then(tiposDB => {
+            .then(res => {
                 const select = $('#tipoServicioSelect');
                 select.empty();
-                const tiposFinales = [...new Set([...serviciosBase, ...tiposDB])];
-                tiposFinales.forEach(t => select.append(`<option value="${t}">${t}</option>`));
+                select.append('<option value="">-- Seleccione un Servicio --</option>');
+                serviciosCatalogo = res.data || [];
+                serviciosCatalogo.forEach(s => {
+                    select.append(`<option value="${s.id}" data-precio="${s.precio}">${s.nombre} (S/ ${parseFloat(s.precio).toFixed(2)})</option>`);
+                });
             });
     }
 
-    $('#btnAlternarTipo').click(function () {
-        modoNuevoServicio = !modoNuevoServicio;
-        if (modoNuevoServicio) {
-            $('#tipoServicioSelect').addClass('d-none');
-            $('#tipoServicioInput').removeClass('d-none').focus();
-            $(this).html('<i class="bi bi-list"></i> Ver Lista').removeClass('btn-outline-secondary').addClass('btn-outline-primary');
-        } else {
-            $('#tipoServicioSelect').removeClass('d-none');
-            $('#tipoServicioInput').addClass('d-none').val('');
-            $(this).html('<i class="bi bi-plus-lg"></i> Nuevo').removeClass('btn-outline-primary').addClass('btn-outline-secondary');
-        }
+    $('#tipoServicioSelect').change(function () {
+        const option = $(this).find('option:selected');
+        const price = parseFloat(option.data('precio')) || 0;
+        $('#precio').val(price > 0 ? price.toFixed(2) : '');
     });
 
     // ──────────────────────────────────────────
@@ -337,7 +356,6 @@ $(document).ready(function () {
         $('#formServicio')[0].reset();
         limpiarSeleccionMascota();
         cargarTiposServicio();
-        if (modoNuevoServicio) $('#btnAlternarTipo').click();
         $('#btnGuardarServicio').prop('disabled', false).html('Guardar Registro');
         modalServicio.show();
     });
@@ -349,8 +367,8 @@ $(document).ready(function () {
         e.preventDefault();
         const mascotaId = normalizarTexto($('#mascotaId').val());
         if (!mascotaId) { Swal.fire('Atención', 'Debe seleccionar una mascota del padrón', 'warning'); return; }
-        const tipoElegido = modoNuevoServicio ? $('#tipoServicioInput').val().trim() : $('#tipoServicioSelect').val();
-        if (!tipoElegido) { Swal.fire('Atención', 'Debes ingresar un tipo de servicio', 'warning'); return; }
+        const productoId = $('#tipoServicioSelect').val();
+        if (!productoId) { Swal.fire('Atención', 'Debes seleccionar un tipo de servicio del catálogo', 'warning'); return; }
         const precio = parseFloat($('#precio').val());
         if (precio <= 0) { Swal.fire('Atención', 'El precio debe ser mayor a cero.', 'warning'); return; }
 
@@ -362,7 +380,7 @@ $(document).ready(function () {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 mascotaId: Number(mascotaId),
-                tipoServicio: tipoElegido,
+                productoId: productoId,
                 detallesExtra: $('#detallesExtra').val(),
                 precio: precio
             })
