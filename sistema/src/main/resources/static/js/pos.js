@@ -1,7 +1,18 @@
 $(document).ready(function() {
     let carrito = [];
+    let importCitaId = null;
+    let importBanoCorteId = null;
     const TASA_IGV = 0.18;
     let modalCitasCobro = new bootstrap.Modal(document.getElementById('modalCitasCobro'));
+    let modalGroomingCobro = new bootstrap.Modal(document.getElementById('modalGroomingCobro'));
+    let promocionesActivas = [];
+
+    // --- CARGAR PROMOCIONES ACTIVAS ---
+    fetch('/promociones/api/activas')
+        .then(r => r.json())
+        .then(data => {
+            promocionesActivas = data;
+        });
 
     // --- RELOJ ---
     setInterval(() => { $('#relojActual').text(new Date().toLocaleTimeString('es-PE')); }, 1000);
@@ -24,6 +35,8 @@ $(document).ready(function() {
         }).then(r => {
             if (r.isConfirmed) {
                 carrito = [];
+                importCitaId = null;
+                importBanoCorteId = null;
                 $('#numDoc, #nombreCliente').val('');
                 $('#tipoDoc').val('1');
                 $('#metodoPago').val('efectivo');
@@ -129,12 +142,19 @@ $(document).ready(function() {
 
     // --- LÓGICA DEL CARRITO ---
     window.agregarAlCarrito = function(producto) {
-        if (producto.stock <= 0) { Swal.fire('Sin Stock', 'Este producto no tiene unidades disponibles.', 'warning'); return; }
+        if (!producto.esServicio && producto.stock <= 0) { 
+            Swal.fire('Sin Stock', 'Este producto no tiene unidades disponibles.', 'warning'); 
+            return; 
+        }
 
         const existente = carrito.find(i => i.id === producto.id);
         if (existente) {
-            if (existente.cantidad < producto.stock) existente.cantidad++;
-            else { Swal.fire('Límite', 'Has alcanzado el máximo de stock disponible.', 'warning'); return; }
+            if (producto.esServicio || existente.cantidad < producto.stock) {
+                existente.cantidad++;
+            } else { 
+                Swal.fire('Límite', 'Has alcanzado el máximo de stock disponible.', 'warning'); 
+                return; 
+            }
         } else {
             carrito.push({ ...producto, cantidad: 1 });
         }
@@ -146,8 +166,19 @@ $(document).ready(function() {
         if (!item) return;
         const nueva = item.cantidad + delta;
         if (nueva <= 0) { eliminarDelCarrito(id); return; }
-        if (nueva > item.stock) { Swal.fire('Stock insuficiente', 'No hay más unidades.', 'warning'); return; }
+        if (!item.esServicio && nueva > item.stock) { 
+            Swal.fire('Stock insuficiente', 'No hay más unidades.', 'warning'); 
+            return; 
+        }
         item.cantidad = nueva;
+        renderizarCarrito();
+    };
+
+    window.cambiarPrecio = function(id, nuevoPrecio) {
+        const item = carrito.find(i => i.id === id);
+        if (!item) return;
+        item.precio = Math.max(0, parseFloat(nuevoPrecio) || 0);
+        item.precioOriginal = item.precio;
         renderizarCarrito();
     };
 
@@ -156,7 +187,187 @@ $(document).ready(function() {
         renderizarCarrito();
     };
 
+    function aplicarPromociones() {
+        // 1. Reset all prices to their original catalog prices and clean promo indicators
+        carrito.forEach(item => {
+            if (item.precioOriginal === undefined) {
+                item.precioOriginal = item.precio;
+            }
+            if (!item.isCitaImported && !item.isGroomingImported) {
+                item.precio = item.precioOriginal;
+            }
+            item.descuentoAplicado = 0;
+            item.promoNombre = "";
+        });
+
+        // 2. Remove previous automatic promotional items (like free gift items)
+        carrito = carrito.filter(item => !item.isPromoGift);
+
+        // 3. Keep track of total purchase amount before applying global discounts
+        let subtotalGeneral = 0;
+        carrito.forEach(item => {
+            subtotalGeneral += item.precio * item.cantidad;
+        });
+
+        // 4. Apply Product/Category specific promotions
+        promocionesActivas.forEach(promo => {
+            if (promo.estado !== 'ACTIVO') return;
+
+            // Type 1: CATEGORIA
+            if (promo.tipo === 'CATEGORIA' && promo.categoria) {
+                carrito.forEach(item => {
+                    if (item.categoria && item.categoria.id === promo.categoria.id) {
+                        const desc = item.precioOriginal * (parseFloat(promo.valor) / 100);
+                        item.precio = Math.max(0, item.precioOriginal - desc);
+                        item.descuentoAplicado = desc;
+                        item.promoNombre = promo.nombre;
+                    }
+                });
+            }
+
+            // Type 2: PORCENTUAL
+            if (promo.tipo === 'PORCENTUAL') {
+                if (promo.producto) {
+                    carrito.forEach(item => {
+                        if (item.id === promo.producto.id || item.codigo === promo.producto.codigo) {
+                            const desc = item.precioOriginal * (parseFloat(promo.valor) / 100);
+                            item.precio = Math.max(0, item.precioOriginal - desc);
+                            item.descuentoAplicado = desc;
+                            item.promoNombre = promo.nombre;
+                        }
+                    });
+                } else if (!promo.categoria) {
+                    carrito.forEach(item => {
+                        if (!item.isCitaImported && !item.isGroomingImported) {
+                            const desc = item.precioOriginal * (parseFloat(promo.valor) / 100);
+                            item.precio = Math.max(0, item.precioOriginal - desc);
+                            item.descuentoAplicado = desc;
+                            item.promoNombre = promo.nombre;
+                        }
+                    });
+                }
+            }
+
+            // Type 3: MONTO_FIJO
+            if (promo.tipo === 'MONTO_FIJO') {
+                if (promo.producto) {
+                    carrito.forEach(item => {
+                        if (item.id === promo.producto.id || item.codigo === promo.producto.codigo) {
+                            const desc = parseFloat(promo.valor);
+                            item.precio = Math.max(0, item.precioOriginal - desc);
+                            item.descuentoAplicado = desc;
+                            item.promoNombre = promo.nombre;
+                        }
+                    });
+                } else if (!promo.categoria) {
+                    carrito.forEach(item => {
+                        if (!item.isCitaImported && !item.isGroomingImported) {
+                            const desc = parseFloat(promo.valor);
+                            item.precio = Math.max(0, item.precioOriginal - desc);
+                            item.descuentoAplicado = desc;
+                            item.promoNombre = promo.nombre;
+                        }
+                    });
+                }
+            }
+
+            // Type 4: 2X1
+            if (promo.tipo === 'PROMO_2X1' && promo.producto) {
+                carrito.forEach(item => {
+                    if (item.id === promo.producto.id || item.codigo === promo.producto.codigo) {
+                        if (item.cantidad >= 2) {
+                            const cantRegalo = Math.floor(item.cantidad / 2);
+                            const precioEfectivo = ((item.cantidad - cantRegalo) * item.precioOriginal) / item.cantidad;
+                            item.precio = precioEfectivo;
+                            item.promoNombre = promo.nombre + ` (${cantRegalo} gratis)`;
+                        }
+                    }
+                });
+            }
+
+            // Type 5: 3X2
+            if (promo.tipo === 'PROMO_3X2' && promo.producto) {
+                carrito.forEach(item => {
+                    if (item.id === promo.producto.id || item.codigo === promo.producto.codigo) {
+                        if (item.cantidad >= 3) {
+                            const cantRegalo = Math.floor(item.cantidad / 3);
+                            const precioEfectivo = ((item.cantidad - cantRegalo) * item.precioOriginal) / item.cantidad;
+                            item.precio = precioEfectivo;
+                            item.promoNombre = promo.nombre + ` (${cantRegalo} gratis)`;
+                        }
+                    }
+                });
+            }
+
+            // Type 6: REGALO
+            if (promo.tipo === 'REGALO' && promo.producto && promo.productoRegalo) {
+                const itemA = carrito.find(i => i.id === promo.producto.id || i.codigo === promo.producto.codigo);
+                if (itemA) {
+                    const regalo = {
+                        id: 'REGALO-' + promo.id + '-' + promo.productoRegalo.id,
+                        codigo: promo.productoRegalo.codigo,
+                        nombre: `🎁 REGALO: ${promo.productoRegalo.nombre} (${promo.nombre})`,
+                        precio: 0.00,
+                        precioOriginal: parseFloat(promo.productoRegalo.precio),
+                        cantidad: itemA.cantidad,
+                        stock: 9999,
+                        imagen: promo.productoRegalo.imagen,
+                        esServicio: promo.productoRegalo.esServicio,
+                        isPromoGift: true
+                    };
+                    carrito.push(regalo);
+                }
+            }
+        });
+
+        // 5. Apply COMPRA_MINIMA (Global Promotions)
+        let subtotalActual = 0;
+        carrito.forEach(item => {
+            subtotalActual += item.precio * item.cantidad;
+        });
+
+        promocionesActivas.forEach(promo => {
+            if (promo.estado !== 'ACTIVO') return;
+
+            if (promo.tipo === 'COMPRA_MINIMA') {
+                if (subtotalActual >= parseFloat(promo.compraMinima)) {
+                    if (promo.valor > 0) {
+                        const descItem = {
+                            id: 'DESCUENTO-' + promo.id,
+                            codigo: 'DSC-001',
+                            nombre: `🏷️ Dscto: ${promo.nombre}`,
+                            precio: -parseFloat(promo.valor),
+                            precioOriginal: -parseFloat(promo.valor),
+                            cantidad: 1,
+                            stock: 9999,
+                            imagen: null,
+                            esServicio: true,
+                            isPromoGift: true
+                        };
+                        carrito.push(descItem);
+                    }
+                    if (promo.productoRegalo) {
+                        const regalo = {
+                            id: 'REGALO-COMPRA-' + promo.id + '-' + promo.productoRegalo.id,
+                            codigo: promo.productoRegalo.codigo,
+                            nombre: `🎁 Regalo Compra: ${promo.productoRegalo.nombre} (${promo.nombre})`,
+                            precio: 0.00,
+                            precioOriginal: parseFloat(promo.productoRegalo.precio),
+                            cantidad: 1,
+                            stock: 9999,
+                            imagen: promo.productoRegalo.imagen,
+                            esServicio: promo.productoRegalo.esServicio,
+                            isPromoGift: true
+                        };
+                        carrito.push(regalo);
+                    }
+                }
+            }
+        });
+    }
+
     function renderizarCarrito() {
+        aplicarPromociones();
         const lista = $('#listaCarrito');
         lista.empty();
 
@@ -171,12 +382,23 @@ $(document).ready(function() {
                     ? `<img src="/uploads/${item.imagen}" alt="">`
                     : `<i class="bi bi-box-seam"></i>`;
 
+                const precioHtml = item.esServicio
+                    ? `<div class="item-precio-unit d-flex align-items-center gap-1">
+                         S/ <input type="number" class="form-control form-control-sm px-1 py-0" style="width: 70px; height: 24px; text-align: right;" value="${item.precio}" onchange="cambiarPrecio('${item.id}', this.value)" min="0" step="0.5"> c/u
+                       </div>`
+                    : `<div class="item-precio-unit">S/ ${item.precio.toFixed(2)} c/u</div>`;
+
+                const promoBadge = item.promoNombre 
+                    ? `<div class="small text-success fw-bold" style="font-size: 11px;"><i class="bi bi-tag-fill me-1"></i>${item.promoNombre}</div>` 
+                    : '';
+
                 lista.append(`
                     <div class="carrito-item">
                         <div class="item-thumb">${imgHtml}</div>
                         <div class="item-info">
                             <div class="item-nombre">${item.nombre}</div>
-                            <div class="item-precio-unit">S/ ${item.precio.toFixed(2)} c/u</div>
+                            ${promoBadge}
+                            ${precioHtml}
                         </div>
                         <div class="item-qty">
                             <button class="qty-btn" onclick="cambiarCantidad('${item.id}', -1)">−</button>
@@ -220,11 +442,17 @@ $(document).ready(function() {
                     return;
                 }
                 citas.forEach(c => {
+                    const abonoInfo = c.totalCobrado && parseFloat(c.totalCobrado) > 0 
+                        ? `<span class="badge ms-1" style="background:#e3f2fd; color:#0d47a1; border-radius:50px; padding:3px 10px; font-size:11px;">Saldo (Abonado: S/ ${parseFloat(c.totalCobrado).toFixed(2)})</span>`
+                        : '';
                     const btn = $(`
                         <div class="card-custom mb-2 p-3" style="cursor:pointer; background:#fff; border-radius:12px; border:1.5px solid rgba(10,61,145,0.10);">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <div class="fw-bold">🐾 ${c.mascota} <span class="badge" style="background:#fce8e8; color:#b71c1c; border-radius:50px; padding:3px 10px; font-size:11px;">S/ ${c.total.toFixed(2)}</span></div>
+                                    <div class="fw-bold">🐾 ${c.mascota} 
+                                        <span class="badge" style="background:#fce8e8; color:#b71c1c; border-radius:50px; padding:3px 10px; font-size:11px;">S/ ${c.total.toFixed(2)}</span>
+                                        ${abonoInfo}
+                                    </div>
                                     <small class="text-muted"><i class="bi bi-person me-1"></i>${c.clienteNombre} · ${c.clienteDocumento}</small>
                                     <small class="d-block" style="color: var(--vet-blue)"><i class="bi bi-list-check me-1"></i>${c.detalles.length} ítems en la cuenta médica</small>
                                 </div>
@@ -240,6 +468,7 @@ $(document).ready(function() {
     };
 
     function importarCitaDirecta(citaData) {
+        importCitaId = citaData.citaId;
         const isRuc = citaData.clienteDocumento.length === 11;
         $('#tipoDoc').val(isRuc ? '6' : '1').trigger('change');
         $('#numDoc').val(citaData.clienteDocumento);
@@ -253,15 +482,89 @@ $(document).ready(function() {
                 precio: parseFloat(item.precio),
                 cantidad: parseInt(item.cantidad),
                 stock: 9999,
-                imagen: null
+                imagen: null,
+                esServicio: true,
+                isCitaImported: true,
+                citaId: citaData.citaId
             };
             const existente = carrito.find(i => i.id === servicio.id);
-            if (existente) existente.cantidad += servicio.cantidad;
+            if (existente) {
+                existente.cantidad += servicio.cantidad;
+                existente.isCitaImported = true;
+                existente.citaId = citaData.citaId;
+            }
             else carrito.push(servicio);
         });
 
         renderizarCarrito();
         Swal.fire({ icon: 'success', title: 'Cuenta Médica Importada', text: `Gastos de ${citaData.mascota} transferidos al carrito.`, timer: 2000, showConfirmButton: false });
+    }
+
+    window.abrirModalGroomingCobro = function() {
+        fetch('/banos-cortes/api/por-cobrar')
+            .then(r => r.json())
+            .then(servicios => {
+                const lista = $('#listaGroomingPorCobrar');
+                lista.empty();
+                if (servicios.length === 0) {
+                    lista.html('<div class="text-center text-muted p-4">No hay servicios de grooming finalizados pendientes de cobro.</div>');
+                    modalGroomingCobro.show();
+                    return;
+                }
+                servicios.forEach(s => {
+                    const abonoInfo = s.totalCobrado && parseFloat(s.totalCobrado) > 0 
+                        ? `<span class="badge ms-1" style="background:#e3f2fd; color:#0d47a1; border-radius:50px; padding:3px 10px; font-size:11px;">Saldo (Abonado: S/ ${parseFloat(s.totalCobrado).toFixed(2)})</span>`
+                        : '';
+                    const btn = $(`
+                        <div class="card-custom mb-2 p-3" style="cursor:pointer; background:#fff; border-radius:12px; border:1.5px solid rgba(10,61,145,0.10);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                     <div class="fw-bold">✂️ ${s.tipoServicio} (${s.mascota}) 
+                                         <span class="badge" style="background:#e8f5ee; color:#1a6e40; border-radius:50px; padding:3px 10px; font-size:11px;">S/ ${parseFloat(s.precio).toFixed(2)}</span>
+                                         ${abonoInfo}
+                                     </div>
+                                     <small class="text-muted"><i class="bi bi-person me-1"></i>${s.clienteNombre} · ${s.clienteDocumento}</small>
+                                </div>
+                                <i class="bi bi-box-arrow-in-right fs-4 text-muted"></i>
+                            </div>
+                        </div>
+                    `);
+                    btn.click(() => { importarGroomingDirecto(s); modalGroomingCobro.hide(); });
+                    lista.append(btn);
+                });
+                modalGroomingCobro.show();
+            });
+    };
+
+    function importarGroomingDirecto(groomingData) {
+        importBanoCorteId = groomingData.id;
+        const isRuc = groomingData.clienteDocumento.length === 11;
+        $('#tipoDoc').val(isRuc ? '6' : '1').trigger('change');
+        $('#numDoc').val(groomingData.clienteDocumento);
+        $('#nombreCliente').val(groomingData.clienteNombre);
+
+        const servicio = {
+            id: groomingData.productoId || ('GROOMING-' + groomingData.id),
+            codigo: groomingData.productoCodigo || 'GR-001',
+            nombre: groomingData.tipoServicio,
+            precio: parseFloat(groomingData.precio),
+            cantidad: 1,
+            stock: 9999,
+            imagen: null,
+            esServicio: true,
+            isGroomingImported: true,
+            banoCorteId: groomingData.id
+        };
+        const existente = carrito.find(i => i.id === servicio.id);
+        if (existente) {
+            existente.cantidad += 1;
+            existente.isGroomingImported = true;
+            existente.banoCorteId = groomingData.id;
+        }
+        else carrito.push(servicio);
+
+        renderizarCarrito();
+        Swal.fire({ icon: 'success', title: 'Servicio de Grooming Importado', text: `Cargo de ${groomingData.mascota} transferido al carrito.`, timer: 2000, showConfirmButton: false });
     }
 
     // --- PROCESAR VENTA ---
@@ -295,7 +598,22 @@ $(document).ready(function() {
             };
         });
 
+        let abonoGrooming = 0.0;
+        let abonoCita = 0.0;
+        carrito.forEach(item => {
+            if (item.isGroomingImported && item.banoCorteId === importBanoCorteId) {
+                abonoGrooming += item.precio * item.cantidad;
+            }
+            if (item.isCitaImported && item.citaId === importCitaId) {
+                abonoCita += item.precio * item.cantidad;
+            }
+        });
+
         const payload = {
+            citaId: importCitaId,
+            banoCorteId: importBanoCorteId,
+            abonoGrooming: parseFloat(abonoGrooming.toFixed(2)),
+            abonoCita: parseFloat(abonoCita.toFixed(2)),
             cliente: { codigoPais: 'PE', tipoDoc, numDoc, rznSocial: nombre, direccion: '-' },
             comprobante: {
                 tipoOperacion: '0101',
@@ -319,20 +637,26 @@ $(document).ready(function() {
         .then(data => {
             if (data.success && data.miapicloud?.respuesta?.success) {
                 const res = data.miapicloud.respuesta;
+                const esOffline = res['pdf-ticket'] === '#';
+
                 Swal.fire({
-                    title: '¡Venta Realizada!',
-                    text: 'Comprobante emitido correctamente.',
-                    icon: 'success',
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="bi bi-printer"></i> Ticket',
+                    title: esOffline ? '¡Guardado Local Exitoso!' : '¡Venta Realizada!',
+                    text: esOffline ? 'La venta se guardó de forma local. El comprobante electrónico se enviará automáticamente al restablecerse la conexión.' : 'Comprobante emitido correctamente.',
+                    icon: esOffline ? 'info' : 'success',
+                    showCancelButton: !esOffline,
+                    confirmButtonText: esOffline ? 'Entendido' : '<i class="bi bi-printer"></i> Ticket',
                     cancelButtonText: '<i class="bi bi-file-earmark-pdf"></i> A4',
                     confirmButtonColor: '#0A3D91',
                     cancelButtonColor: '#D32F2F',
                     allowOutsideClick: false
                 }).then(choice => {
-                    if (choice.isConfirmed) window.open(res['pdf-ticket'], '_blank');
-                    else if (choice.dismiss === Swal.DismissReason.cancel) window.open(res['pdf-a4'], '_blank');
+                    if (!esOffline) {
+                        if (choice.isConfirmed) window.open(res['pdf-ticket'], '_blank');
+                        else if (choice.dismiss === Swal.DismissReason.cancel) window.open(res['pdf-a4'], '_blank');
+                    }
                     carrito = [];
+                    importCitaId = null;
+                    importBanoCorteId = null;
                     $('#numDoc, #nombreCliente').val('');
                     $('#metodoPago').val('efectivo');
                     renderizarCarrito();

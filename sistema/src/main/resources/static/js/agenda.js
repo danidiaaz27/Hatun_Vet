@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (cita.estado === 'EN_ESPERA')   colorClass = 'bg-espera';
                         if (cita.estado === 'EN_ATENCION') colorClass = 'bg-atencion';
                         if (cita.estado === 'FINALIZADA')  colorClass = 'bg-secondary';
+                        if (cita.estado === 'COBRADA')     colorClass = 'bg-cobrada';
+                        if (cita.estado === 'PAGO_PARCIAL') colorClass = 'bg-pago-parcial';
 
                         let mascotaNombre = cita.mascota ? cita.mascota.nombre : 'Sin Mascota';
                         let duenoNombre = (cita.mascota && cita.mascota.cliente)

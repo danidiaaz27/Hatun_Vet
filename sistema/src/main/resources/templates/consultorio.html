@@ -342,10 +342,39 @@
                             <textarea id="tratamiento" rows="3" placeholder="Describa el tratamiento indicado..." required></textarea>
                         </div>
 
+                        <!-- Programación Próxima Cita/Vacuna (Opcional) -->
+                        <div class="seccion-clinica">
+                            <label><i class="bi bi-calendar-plus" style="color:#0A3D91;"></i> Próxima Cita / Vacuna / Desparasitación (Opcional)</label>
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Próxima Cita:</label>
+                                    <input type="date" id="fechaProximaCita" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Nombre Vacuna:</label>
+                                    <input type="text" id="nombreProximaVacuna" class="form-control form-control-sm" placeholder="Ej. Antirrábica">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Vacuna:</label>
+                                    <input type="date" id="fechaProximaVacuna" class="form-control form-control-sm">
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Nombre Próximo Desparasitante:</label>
+                                    <input type="text" id="nombreProximoDesparasitante" class="form-control form-control-sm" placeholder="Ej. NexGard / Drontal">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Próxima Desparasitación:</label>
+                                    <input type="date" id="fechaProximaDesparasitacion" class="form-control form-control-sm">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Acciones -->
                         <div class="acciones-footer">
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn-accion-sec" disabled>
+                                <button type="button" id="btnJalarInsumo" class="btn-accion-sec">
                                     <i class="bi bi-box-seam"></i> Jalar Insumo
                                 </button>
                                 <button type="button" class="btn-accion-sec" disabled>
@@ -378,6 +407,71 @@
             </div>
             <div class="modal-body bg-light">
                 <div id="timelineHistorial" class="py-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Jalar Insumo -->
+<div class="modal fade" id="modalJalarInsumo" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background: var(--vet-blue);">
+                <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2"></i> Jalar Insumo de Farmacia</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formRegistrarInsumo" class="row g-3 mb-4 border-bottom pb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-muted small">Seleccionar Insumo/Producto *:</label>
+                        <select id="insumoProducto" class="form-select" required>
+                            <option value="">Cargando insumos...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold text-muted small">Cantidad a Consumir *:</label>
+                        <div class="input-group">
+                            <input type="number" id="insumoCantidad" class="form-control" step="0.01" min="0.01" required placeholder="0.00">
+                            <span class="input-group-text small" id="lblUnidadInsumo">cant</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn text-white w-100 fw-bold" style="background-color: var(--vet-blue);">
+                            <i class="bi bi-plus-circle me-1"></i> Agregar
+                        </button>
+                    </div>
+                    <div class="col-12 mt-2" id="infoStockInsumo" style="display: none;">
+                        <div class="alert alert-light border small py-2 px-3 m-0 d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-info-circle text-primary"></i> <strong id="lblNombreInsumoInfo">Medicamento</strong></span>
+                            <span>Stock General: <strong id="lblStockGeneralInfo">0</strong> envases</span>
+                            <span id="lblEnvaseAbiertoContainer">Abierto/Uso: <strong class="text-danger" id="lblStockFraccionadoInfo">0 ml</strong></span>
+                            <span>Precio: <strong id="lblPrecioInsumoInfo">S/ 0.00</strong></span>
+                        </div>
+                    </div>
+                </form>
+
+                <h6 class="fw-bold mb-3 text-secondary"><i class="bi bi-list-task me-1"></i> Insumos agregados a la consulta actual</h6>
+                <div class="table-responsive border rounded bg-white">
+                    <table class="table table-hover align-middle mb-0" id="tablaInsumosAgregados">
+                        <thead class="table-light small text-secondary">
+                            <tr>
+                                <th class="ps-3">Concepto/Medicamento</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Costo unitario/Precio</th>
+                                <th class="text-end pe-3">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            <!-- Inyectado por JS -->
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">No hay insumos registrados para esta consulta.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Listo / Cerrar</button>
             </div>
         </div>
     </div>

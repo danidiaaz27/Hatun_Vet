@@ -78,9 +78,49 @@
                             <label class="form-label text-muted fw-bold">Precio Unit. (S/) *:</label>
                             <input type="number" id="precio" class="form-control" step="0.01" min="0.01" required>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3" id="grupoStock">
                             <label class="form-label text-muted fw-bold">Stock Inicial *:</label>
                             <input type="number" id="stock" class="form-control" min="0" required>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="esServicio" name="esServicio">
+                                <label class="form-check-label fw-bold text-muted" for="esServicio">
+                                    ¿Es un Servicio?
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-center" id="grupoFraccionable">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="fraccionable" name="fraccionable">
+                                <label class="form-check-label fw-bold text-muted" for="fraccionable">
+                                    ¿Es Fraccionable?
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Sección de campos de fraccionamiento -->
+                        <div class="col-12" id="seccionFraccionamiento" style="display: none;">
+                            <div class="card p-3 border-secondary-subtle bg-light bg-opacity-50">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted fw-bold small">Unidad de Medida *:</label>
+                                        <input type="text" id="unidadMedida" class="form-control form-control-sm" placeholder="Ej: ml, mg, tableta">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted fw-bold small">Capacidad Envase Abierto *:</label>
+                                        <input type="number" id="capacidadTotal" class="form-control form-control-sm" step="0.01" min="0.01" placeholder="Ej: 100.00">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted fw-bold small">Precio por Unidad (S/) *:</label>
+                                        <input type="number" id="precioFraccionado" class="form-control form-control-sm" step="0.01" min="0.01" placeholder="Ej: 0.50">
+                                    </div>
+                                    <div class="col-12 text-secondary small">
+                                        <i class="bi bi-info-circle-fill text-primary"></i> 
+                                        <strong>Insumo clínico:</strong> Permite jalar fracciones de este producto desde la anamnesis del consultorio clínico.
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="col-12">

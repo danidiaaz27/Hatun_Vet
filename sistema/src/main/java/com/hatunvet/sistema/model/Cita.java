@@ -2,6 +2,7 @@ package com.hatunvet.sistema.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -43,6 +44,9 @@ public class Cita {
     @Column(name = "costo_base_informado")
     private boolean costoBaseInformado = false; // El check de que el Counter avisó el precio
 
+    @Column(name = "total_cobrado", nullable = false, precision = 10, scale = 2)
+    private BigDecimal totalCobrado = BigDecimal.ZERO;
+
     @Column(name = "creado_en", updatable = false)
     private LocalDateTime creadoEn;
 
@@ -72,4 +76,7 @@ public class Cita {
     public void setCostoBaseInformado(boolean costoBaseInformado) { this.costoBaseInformado = costoBaseInformado; }
     public LocalDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
+
+    public BigDecimal getTotalCobrado() { return totalCobrado; }
+    public void setTotalCobrado(BigDecimal totalCobrado) { this.totalCobrado = totalCobrado; }
 }

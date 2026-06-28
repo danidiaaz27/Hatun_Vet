@@ -58,6 +58,7 @@ public class DataInitializer implements CommandLineRunner {
         initCategorias();
         initProveedores();
         initClientes();
+        initServiciosFijos();
         
         System.out.println("✅ Carga de datos maestros completada con éxito.");
     }
@@ -205,6 +206,16 @@ public class DataInitializer implements CommandLineRunner {
             categoriaRepository.save(cat3);
             System.out.println(" -> Categorías de productos registradas.");
         }
+
+        // Asegurar la categoría de Servicios
+        if (categoriaRepository.findAll().stream().noneMatch(c -> "Servicios".equalsIgnoreCase(c.getNombre()))) {
+            CategoriaProducto catServ = new CategoriaProducto();
+            catServ.setNombre("Servicios");
+            catServ.setDescripcion("Servicios generales de la veterinaria (consulta, grooming, etc.)");
+            catServ.setEstado(true);
+            categoriaRepository.save(catServ);
+            System.out.println(" -> Categoría 'Servicios' registrada.");
+        }
     }
 
     private void initProveedores() {
@@ -252,6 +263,58 @@ public class DataInitializer implements CommandLineRunner {
             clienteRepository.save(cli1);
             clienteRepository.save(cli2);
             System.out.println(" -> Clientes registrados.");
+        }
+    }
+
+    private void initServiciosFijos() {
+        CategoriaProducto catServ = categoriaRepository.findAll().stream()
+                .filter(c -> "Servicios".equalsIgnoreCase(c.getNombre()))
+                .findFirst()
+                .orElseGet(() -> {
+                    CategoriaProducto newCat = new CategoriaProducto();
+                    newCat.setNombre("Servicios");
+                    newCat.setDescripcion("Servicios generales de la veterinaria (consulta, grooming, etc.)");
+                    newCat.setEstado(true);
+                    return categoriaRepository.save(newCat);
+                });
+
+        if (productoRepository.findByCodigoIgnoreCase("CM-001").isEmpty()) {
+            Producto cm = new Producto();
+            cm.setCodigo("CM-001");
+            cm.setNombre("Consulta Médica");
+            cm.setDescripcion("Consulta Médica General");
+            cm.setPrecio(new BigDecimal("35.00"));
+            cm.setStock(0);
+            cm.setEsServicio(true);
+            cm.setCategoria(catServ);
+            productoRepository.save(cm);
+            System.out.println(" -> Servicio CM-001 (Consulta Médica) inicializado.");
+        }
+
+        if (productoRepository.findByCodigoIgnoreCase("INS-001").isEmpty()) {
+            Producto ins = new Producto();
+            ins.setCodigo("INS-001");
+            ins.setNombre("Insumos Clínicos");
+            ins.setDescripcion("Consumo consolidado de insumos médicos de la consulta");
+            ins.setPrecio(BigDecimal.ZERO);
+            ins.setStock(0);
+            ins.setEsServicio(true);
+            ins.setCategoria(catServ);
+            productoRepository.save(ins);
+            System.out.println(" -> Servicio INS-001 (Insumos Clínicos) inicializado.");
+        }
+
+        if (productoRepository.findByCodigoIgnoreCase("GR-001").isEmpty()) {
+            Producto gr = new Producto();
+            gr.setCodigo("GR-001");
+            gr.setNombre("Servicio de Grooming");
+            gr.setDescripcion("Servicio estético de baño y corte");
+            gr.setPrecio(BigDecimal.ZERO);
+            gr.setStock(0);
+            gr.setEsServicio(true);
+            gr.setCategoria(catServ);
+            productoRepository.save(gr);
+            System.out.println(" -> Servicio GR-001 (Grooming) inicializado.");
         }
     }
 }

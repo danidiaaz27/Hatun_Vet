@@ -35,6 +35,14 @@ public class ProductoController {
         return response;
     }
 
+    @GetMapping("/api/servicios-activos")
+    @ResponseBody
+    public Map<String, Object> apiListarServiciosActivos() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("data", productoService.listarServiciosActivos());
+        return response;
+    }
+
     @GetMapping("/api/categorias")
     @ResponseBody
     public Map<String, Object> apiListarCategorias() {

@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Service
 public class CitaService {
@@ -21,16 +23,19 @@ public class CitaService {
     private final ServicioTerceroRepository terceroRepository;
     private final HorarioVeterinarioRepository horarioRepository;
     private final PermisoVeterinarioRepository permisoRepository;
+    private final ProductoRepository productoRepository;
 
     public CitaService(CitaRepository citaRepository, ConsultaClinicaRepository consultaRepository, 
                        ConsultaInsumoRepository insumoRepository, ServicioTerceroRepository terceroRepository,
-                       HorarioVeterinarioRepository horarioRepository, PermisoVeterinarioRepository permisoRepository) {
+                       HorarioVeterinarioRepository horarioRepository, PermisoVeterinarioRepository permisoRepository,
+                       ProductoRepository productoRepository) {
         this.citaRepository = citaRepository;
         this.consultaRepository = consultaRepository;
         this.insumoRepository = insumoRepository;
         this.terceroRepository = terceroRepository;
         this.horarioRepository = horarioRepository;
         this.permisoRepository = permisoRepository;
+        this.productoRepository = productoRepository;
     }
 
     public List<Cita> obtenerTodasLasCitas() {
@@ -98,8 +103,8 @@ public class CitaService {
         Cita cita = citaRepository.findById(citaId)
                 .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
         
-        if (!cita.getEstado().equals("AGENDADA")) {
-            throw new IllegalStateException("La cita no está en estado AGENDADA.");
+        if (!cita.getEstado().equals("AGENDADA") && !cita.getEstado().equals("PAGO_PARCIAL")) {
+            throw new IllegalStateException("La cita no está en estado AGENDADA ni PAGO_PARCIAL.");
         }
         cita.setEstado("EN_ESPERA");
         cita.setFechaHoraLlegada(LocalDateTime.now());
@@ -122,15 +127,143 @@ public class CitaService {
             throw new IllegalArgumentException("El peso, temperatura, síntomas y diagnóstico son obligatorios.");
         }
         Cita cita = citaRepository.findById(citaId).orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
-        datosClinicos.setCita(cita);
-        return consultaRepository.save(datosClinicos);
+        
+        Optional<ConsultaClinica> consultaOpt = consultaRepository.findByCitaId(citaId);
+        ConsultaClinica consulta;
+        if (consultaOpt.isPresent()) {
+            consulta = consultaOpt.get();
+        } else {
+            consulta = new ConsultaClinica();
+            consulta.setCita(cita);
+        }
+        
+        consulta.setPesoKg(datosClinicos.getPesoKg());
+        consulta.setTemperaturaC(datosClinicos.getTemperaturaC());
+        consulta.setFrecuenciaCardiaca(datosClinicos.getFrecuenciaCardiaca());
+        consulta.setSintomas(datosClinicos.getSintomas());
+        consulta.setDiagnosticoPresuntivo(datosClinicos.getDiagnosticoPresuntivo());
+        consulta.setTratamientoIndicado(datosClinicos.getTratamientoIndicado());
+        consulta.setFechaProximaCita(datosClinicos.getFechaProximaCita());
+        consulta.setNombreProximaVacuna(datosClinicos.getNombreProximaVacuna());
+        consulta.setFechaProximaVacuna(datosClinicos.getFechaProximaVacuna());
+        consulta.setNombreProximoDesparasitante(datosClinicos.getNombreProximoDesparasitante());
+        consulta.setFechaProximaDesparasitacion(datosClinicos.getFechaProximaDesparasitacion());
+        
+        return consultaRepository.save(consulta);
+    }
+
+    public Optional<ConsultaClinica> obtenerConsultaPorCita(String citaId) {
+        return consultaRepository.findByCitaId(citaId);
     }
 
     @Transactional
-    public ConsultaInsumo registrarInsumo(String consultaId, ConsultaInsumo insumo) {
-        ConsultaClinica consulta = consultaRepository.findById(consultaId).orElseThrow(() -> new IllegalArgumentException("Consulta no encontrada"));
+    public ConsultaInsumo registrarInsumo(String consultaId, String productoId, BigDecimal cantidadUsada) {
+        ConsultaClinica consulta = consultaRepository.findById(consultaId)
+                .orElseThrow(() -> new IllegalArgumentException("Consulta no encontrada"));
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
+
+        if (!producto.isEstado()) {
+            throw new IllegalArgumentException("El producto seleccionado está inactivo.");
+        }
+
+        if (cantidadUsada == null || cantidadUsada.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("La cantidad usada debe ser mayor a 0.");
+        }
+
+        ConsultaInsumo insumo = new ConsultaInsumo();
         insumo.setConsultaClinica(consulta);
+        insumo.setProducto(producto);
+        insumo.setCantidadUsada(cantidadUsada);
+
+        if (producto.isFraccionable()) {
+            // Lógica de fraccionamiento
+            BigDecimal stockFracc = producto.getStockFraccionado();
+            if (stockFracc == null) {
+                stockFracc = BigDecimal.ZERO;
+            }
+
+            if (stockFracc.compareTo(cantidadUsada) >= 0) {
+                // Hay suficiente en el envase ya abierto
+                producto.setStockFraccionado(stockFracc.subtract(cantidadUsada));
+            } else {
+                // Se debe abrir un nuevo envase
+                if (producto.getStock() <= 0) {
+                    throw new IllegalArgumentException("Stock insuficiente en farmacia para abrir un nuevo envase de " + producto.getNombre());
+                }
+                // Decrementar 1 del stock general
+                producto.setStock(producto.getStock() - 1);
+                // Sumar la capacidad total del nuevo envase al stock fraccionado
+                BigDecimal capacidad = producto.getCapacidadTotal();
+                if (capacidad == null || capacidad.compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new IllegalStateException("El producto fraccionable no tiene configurada una capacidad total válida.");
+                }
+                BigDecimal nuevoStockFracc = stockFracc.add(capacidad);
+                if (nuevoStockFracc.compareTo(cantidadUsada) < 0) {
+                    throw new IllegalArgumentException("La cantidad solicitada supera la capacidad de una unidad completa del producto.");
+                }
+                producto.setStockFraccionado(nuevoStockFracc.subtract(cantidadUsada));
+            }
+
+            insumo.setUnidadMedida(producto.getUnidadMedida());
+            insumo.setPrecioCobrado(producto.getPrecioFraccionado().multiply(cantidadUsada).setScale(2, RoundingMode.HALF_UP));
+
+            // Calcular costo proporcional
+            BigDecimal costoBase = producto.getPrecio().multiply(new BigDecimal("0.40"));
+            BigDecimal capacidad = producto.getCapacidadTotal();
+            BigDecimal costoProporcional = costoBase.multiply(cantidadUsada).divide(capacidad, 4, RoundingMode.HALF_UP);
+            insumo.setCostoUnitario(costoProporcional.setScale(2, RoundingMode.HALF_UP));
+        } else {
+            // Producto no fraccionable (unidad completa)
+            int cantEntera = cantidadUsada.intValue();
+            if (producto.getStock() < cantEntera) {
+                throw new IllegalArgumentException("Stock insuficiente para el producto: " + producto.getNombre());
+            }
+            producto.setStock(producto.getStock() - cantEntera);
+
+            insumo.setUnidadMedida("unidad");
+            insumo.setPrecioCobrado(producto.getPrecio().multiply(cantidadUsada).setScale(2, RoundingMode.HALF_UP));
+            insumo.setCostoUnitario(producto.getPrecio().multiply(new BigDecimal("0.40")).setScale(2, RoundingMode.HALF_UP));
+        }
+
+        productoRepository.save(producto);
         return insumoRepository.save(insumo);
+    }
+
+    @Transactional
+    public void revertirInsumo(Long insumoId) {
+        ConsultaInsumo insumo = insumoRepository.findById(insumoId)
+                .orElseThrow(() -> new IllegalArgumentException("Registro de insumo no encontrado"));
+        Producto producto = insumo.getProducto();
+        BigDecimal cantUsada = insumo.getCantidadUsada();
+
+        if (producto.isFraccionable()) {
+            BigDecimal stockFracc = producto.getStockFraccionado();
+            if (stockFracc == null) {
+                stockFracc = BigDecimal.ZERO;
+            }
+            BigDecimal nuevoStockFracc = stockFracc.add(cantUsada);
+            BigDecimal capacidad = producto.getCapacidadTotal();
+
+            if (capacidad != null && capacidad.compareTo(BigDecimal.ZERO) > 0) {
+                // Si el stock fraccionado excede la capacidad de un envase, podemos "cerrar" el envase excedente
+                if (nuevoStockFracc.compareTo(capacidad) >= 0) {
+                    int envasesCerrados = nuevoStockFracc.divide(capacidad, 0, RoundingMode.DOWN).intValue();
+                    producto.setStock(producto.getStock() + envasesCerrados);
+                    nuevoStockFracc = nuevoStockFracc.subtract(capacidad.multiply(new BigDecimal(envasesCerrados)));
+                }
+            }
+            producto.setStockFraccionado(nuevoStockFracc);
+        } else {
+            producto.setStock(producto.getStock() + cantUsada.intValue());
+        }
+
+        productoRepository.save(producto);
+        insumoRepository.delete(insumo);
+    }
+
+    public List<ConsultaInsumo> obtenerInsumosConsulta(String consultaId) {
+        return insumoRepository.findByConsultaClinicaId(consultaId);
     }
 
     @Transactional
@@ -142,6 +275,7 @@ public class CitaService {
     }
 
     // --- HISTORIAL PERPETUO ---
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> obtenerHistorialMascota(String mascotaId) {
         List<ConsultaClinica> consultas = consultaRepository.findHistorialByMascotaId(mascotaId);
         return consultas.stream().map(c -> {
@@ -158,8 +292,9 @@ public class CitaService {
     }
 
     // --- PUENTE CON EL PUNTO DE VENTA (POS) ---
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> obtenerCitasParaFacturacion() {
-        List<Cita> citasFinalizadas = citaRepository.findByEstado("FINALIZADA");
+        List<Cita> citasFinalizadas = citaRepository.findByEstadoIn(List.of("FINALIZADA", "PAGO_PARCIAL"));
         
         return citasFinalizadas.stream().map(cita -> {
             Map<String, Object> map = new HashMap<>();
@@ -201,11 +336,53 @@ public class CitaService {
                 }
             }
             
+            // Restar abonos anteriores de los precios de los ítems secuencialmente
+            BigDecimal abonoRestante = cita.getTotalCobrado() != null ? cita.getTotalCobrado() : BigDecimal.ZERO;
+            for (Map<String, Object> item : detallesCesta) {
+                if (abonoRestante.compareTo(BigDecimal.ZERO) <= 0) {
+                    break;
+                }
+                BigDecimal precioItem = new BigDecimal(item.get("precio").toString());
+                if (abonoRestante.compareTo(precioItem) >= 0) {
+                    abonoRestante = abonoRestante.subtract(precioItem);
+                    item.put("precio", 0.00);
+                } else {
+                    precioItem = precioItem.subtract(abonoRestante);
+                    abonoRestante = BigDecimal.ZERO;
+                    item.put("precio", precioItem.doubleValue());
+                }
+            }
+
             map.put("detalles", detallesCesta);
             double total = detallesCesta.stream().mapToDouble(d -> Double.parseDouble(d.get("precio").toString())).sum();
             map.put("total", total);
+            map.put("totalCobrado", cita.getTotalCobrado() != null ? cita.getTotalCobrado() : BigDecimal.ZERO);
+            map.put("costoTotalOriginal", calcularCostoTotalCita(cita.getId()));
             
             return map;
-        }).toList();
+        })
+        .filter(m -> Double.parseDouble(m.get("total").toString()) > 0.01) // Solo mostrar si queda saldo pendiente
+        .toList();
+    }
+
+    public List<ConsultaClinica> obtenerAlertasVigentes() {
+        return consultaRepository.findAlertasVigentes(java.time.LocalDate.now());
+    }
+
+    @Transactional(readOnly = true)
+    public BigDecimal calcularCostoTotalCita(String citaId) {
+        BigDecimal totalEsperado = new BigDecimal("35.00");
+        Optional<ConsultaClinica> clinicaOpt = consultaRepository.findByCitaId(citaId);
+        if (clinicaOpt.isPresent()) {
+            List<ConsultaInsumo> insumos = insumoRepository.findByConsultaClinicaId(clinicaOpt.get().getId());
+            for (ConsultaInsumo ins : insumos) {
+                totalEsperado = totalEsperado.add(ins.getPrecioCobrado());
+            }
+            List<ServicioTercero> terceros = terceroRepository.findByConsultaClinicaId(clinicaOpt.get().getId());
+            for (ServicioTercero ter : terceros) {
+                totalEsperado = totalEsperado.add(ter.getPrecioCliente());
+            }
+        }
+        return totalEsperado;
     }
 }

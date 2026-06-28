@@ -41,7 +41,20 @@ $(document).ready(function() {
                 }
             },
             { data: 'codigo', className: 'fw-bold text-secondary' },
-            { data: 'nombre', className: 'fw-bold text-primary' },
+            { 
+                data: 'nombre', 
+                className: 'fw-bold text-primary',
+                render: (data, type, row) => {
+                    let badge = '';
+                    if (row.esServicio) {
+                        badge = ` <span class="badge bg-primary bg-opacity-10 text-primary fw-bold small border" style="font-size:10px;"><i class="bi bi-scissors me-1"></i>Servicio</span>`;
+                    } else if (row.fraccionable) {
+                        const stockFracc = row.stockFraccionado || 0;
+                        badge = ` <span class="badge bg-info bg-opacity-10 text-info fw-bold small border" style="font-size:10px;" title="Envase en uso"><i class="bi bi-flask"></i> Abierto: ${parseFloat(stockFracc).toFixed(2)} / ${parseFloat(row.capacidadTotal).toFixed(2)} ${row.unidadMedida}</span>`;
+                    }
+                    return data + badge;
+                }
+            },
             {
                 data: 'categoria',
                 render: data => data ? data.nombre : '<span class="text-danger">Sin Categoría</span>'
@@ -54,7 +67,7 @@ $(document).ready(function() {
             {
                 data: 'stock',
                 className: 'text-center',
-                render: data => data <= 5 ? `<span class="badge bg-danger rounded-pill">${data}</span>` : `<span class="badge bg-success rounded-pill">${data}</span>`
+                render: (data, type, row) => row.esServicio ? `<span class="badge bg-secondary rounded-pill">N/A</span>` : (data <= 5 ? `<span class="badge bg-danger rounded-pill">${data}</span>` : `<span class="badge bg-success rounded-pill">${data}</span>`)
             },
             {
                 data: 'estado',
@@ -82,9 +95,38 @@ $(document).ready(function() {
     cargarCategorias();
     cargarProveedores();
 
+    $('#fraccionable').change(function() {
+        if (this.checked) {
+            $('#seccionFraccionamiento').slideDown(200);
+            $('#unidadMedida').prop('required', true);
+            $('#capacidadTotal').prop('required', true);
+            $('#precioFraccionado').prop('required', true);
+        } else {
+            $('#seccionFraccionamiento').slideUp(200);
+            $('#unidadMedida').prop('required', false).val('');
+            $('#capacidadTotal').prop('required', false).val('');
+            $('#precioFraccionado').prop('required', false).val('');
+        }
+    });
+
+    $('#esServicio').change(function() {
+        if (this.checked) {
+            $('#grupoStock').hide();
+            $('#stock').prop('required', false).val(0);
+            $('#grupoFraccionable').hide();
+            $('#fraccionable').prop('checked', false).trigger('change');
+        } else {
+            $('#grupoStock').show();
+            $('#stock').prop('required', true);
+            $('#grupoFraccionable').show();
+        }
+    });
+
     $('#btnNuevoRegistro').click(() => {
         $('#formProducto')[0].reset();
         $('#id').val('');
+        $('#esServicio').prop('checked', false).trigger('change');
+        $('#fraccionable').prop('checked', false).trigger('change');
         $('#modalTitle').text('Nuevo Producto');
         productoModal.show();
     });
@@ -115,6 +157,14 @@ $(document).ready(function() {
         formData.append("precio", $('#precio').val());
         formData.append("stock", $('#stock').val());
         formData.append("categoria.id", $('#id_categoria').val());
+        formData.append("esServicio", $('#esServicio').is(':checked'));
+        formData.append("fraccionable", $('#fraccionable').is(':checked'));
+
+        if ($('#fraccionable').is(':checked') && !$('#esServicio').is(':checked')) {
+            formData.append("unidadMedida", $('#unidadMedida').val().trim());
+            formData.append("capacidadTotal", $('#capacidadTotal').val());
+            formData.append("precioFraccionado", $('#precioFraccionado').val());
+        }
 
         const proveedorId = $('#proveedor_id').val();
         if (proveedorId) formData.append("proveedor.id", proveedorId);
@@ -148,10 +198,30 @@ $(document).ready(function() {
                     $('#nombre').val(p.nombre);
                     $('#descripcion').val(p.descripcion);
                     $('#precio').val(p.precio);
-                    $('#stock').val(p.stock);
                     $('#id_categoria').val(p.categoria ? p.categoria.id : '');
                     $('#proveedor_id').val(p.proveedor ? p.proveedor.id : '');
                     $('#imagenFile').val('');
+
+                    if (p.esServicio) {
+                        $('#esServicio').prop('checked', true).trigger('change');
+                    } else {
+                        $('#esServicio').prop('checked', false).trigger('change');
+                        $('#stock').val(p.stock);
+                        if (p.fraccionable) {
+                            $('#fraccionable').prop('checked', true);
+                            $('#seccionFraccionamiento').show();
+                            $('#unidadMedida').val(p.unidadMedida).prop('required', true);
+                            $('#capacidadTotal').val(p.capacidadTotal).prop('required', true);
+                            $('#precioFraccionado').val(p.precioFraccionado).prop('required', true);
+                        } else {
+                            $('#fraccionable').prop('checked', false);
+                            $('#seccionFraccionamiento').hide();
+                            $('#unidadMedida').val('').prop('required', false);
+                            $('#capacidadTotal').val('').prop('required', false);
+                            $('#precioFraccionado').val('').prop('required', false);
+                        }
+                    }
+
                     $('#modalTitle').text('Editar Producto');
                     productoModal.show();
                 }

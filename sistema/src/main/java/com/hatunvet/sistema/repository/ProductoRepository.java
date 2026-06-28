@@ -19,5 +19,7 @@ public interface ProductoRepository extends JpaRepository<Producto, String> {
 
     List<Producto> findByEstadoTrue();
 
+    List<Producto> findByEsServicioTrueAndEstadoTrue();
+
     List<Producto> findByStockLessThanEqualAndEstadoTrueOrderByStockAsc(int stockCritico);
 }

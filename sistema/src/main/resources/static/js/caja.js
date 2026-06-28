@@ -4,6 +4,14 @@ $(document).ready(function() {
     const modalCierre = new bootstrap.Modal(document.getElementById('modalCierre'));
     let usuarioActivo = "Administrador"; // Asume el rol de tu sesión
     let montoAperturaSesion = 0.00;
+
+    function parsearFecha(fechaInput) {
+        if (!fechaInput) return new Date();
+        if (Array.isArray(fechaInput)) {
+            return new Date(fechaInput[0], fechaInput[1] - 1, fechaInput[2], fechaInput[3] || 0, fechaInput[4] || 0, fechaInput[5] || 0);
+        }
+        return new Date(fechaInput);
+    }
     
     // Inicializar DataTable con botones de Exportación
     let tablaCaja = $('#tablaCaja').DataTable({
@@ -68,7 +76,7 @@ $(document).ready(function() {
 
             // Diseño visual de la fila
             const badgeTipo = esIngreso ? '<span class="text-success fw-bold"><i class="bi bi-caret-up-fill"></i> INGRESO</span>' : '<span class="text-danger fw-bold"><i class="bi bi-caret-down-fill"></i> EGRESO</span>';
-            const f = new Date(m.fechaMovimiento).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+            const f = parsearFecha(m.fechaMovimiento).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
             const badgeCanal = `<span class="badge ${m.medioPago === 'EFECTIVO' ? 'bg-primary-subtle text-primary' : 'bg-info-subtle text-info'}"><i class="bi bi-cash"></i> ${m.medioPago}</span>`;
 
             tablaCaja.row.add([
