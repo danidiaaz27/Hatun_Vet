@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Promociones - HatunVet</title>
@@ -7,149 +8,181 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link th:href="@{/css/main.css}" rel="stylesheet">
+    <link th:href="@{/css/promociones.css}" rel="stylesheet">
 </head>
+
 <body>
 
-<div class="d-flex">
-    <div th:replace="~{sidebar :: sidebar(activeUri='/promociones')}"></div>
+    <div class="d-flex">
+        <div th:replace="~{sidebar :: sidebar(activeUri='/promociones')}"></div>
 
-    <main class="main-content w-100 p-4">
-        <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-            <div>
-                <h2 class="h4 mb-0 fw-bold" style="color: var(--vet-blue)">Motor de Promociones</h2>
-                <p class="text-muted small mb-0">Configura y administra los beneficios, campañas y descuentos del POS</p>
+        <main class="main-content w-100 p-4">
+            <header class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+                <div>
+                    <h2 class="h4 mb-0 fw-bold" style="color: var(--vet-blue)">Motor de Promociones</h2>
+                    <p class="text-muted small mb-0">Configura y administra los beneficios, campañas y descuentos del
+                        POS</p>
+                </div>
+                <button id="btnNuevoRegistro" class="btn fw-bold"
+                    style="background-color: var(--vet-red); color: white;">
+                    <i class="bi bi-plus-circle-fill me-1"></i> Nueva Promoción
+                </button>
+            </header>
+
+            <div class="promo-toolbar">
+                <div>
+                    Mostrar
+                    <select id="promoPorPagina" class="form-select form-select-sm d-inline-block" style="width:80px;">
+                        <option value="6">6</option>
+                        <option value="9">9</option>
+                        <option value="12">12</option>
+                    </select>
+                    registros
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <label>Buscar:</label>
+                    <input type="text" id="promoBuscar" class="form-control" placeholder="Buscar promoción...">
+                </div>
             </div>
-            <button id="btnNuevoRegistro" class="btn fw-bold" style="background-color: var(--vet-red); color: white;">
-                <i class="bi bi-plus-circle-fill me-1"></i> Nueva Promoción
-            </button>
-        </header>
 
-        <div class="card card-custom p-4 bg-white shadow-sm border-0" style="border-radius:12px;">
-            <table id="tablaPromociones" class="table table-hover w-100 align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>Nombre</th>
-                    <th>Tipo</th>
-                    <th>Valor/Detalle</th>
-                    <th>Ámbito</th>
-                    <th>Vigencia</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </main>
-</div>
+            <div id="promocionesGrid" class="promo-grid"></div>
 
-<!-- Modal para Crear/Editar Promoción -->
-<div class="modal fade" id="promocionModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow-lg" style="border-radius:12px;">
-            <div class="modal-header text-white" style="background-color: var(--vet-blue); border-top-left-radius: 12px; border-top-right-radius: 12px;">
-                <h5 class="modal-title" id="modalTitle">Agregar Promoción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="promo-pagination">
+                <span id="promoConteo">Cargando registros...</span>
+
+                <div class="btn-group">
+                    <button id="promoPrev" class="btn btn-light border">Anterior</button>
+                    <button id="promoPaginaActual" class="btn btn-primary" disabled>1</button>
+                    <button id="promoNext" class="btn btn-light border">Siguiente</button>
+                </div>
             </div>
-            <div class="modal-body bg-light p-4">
-                <form id="formPromocion">
-                    <input type="hidden" id="id" name="id">
-                    
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Nombre de la Promoción *</label>
-                            <input type="text" id="nombre" class="form-control form-control-sm" maxlength="150" placeholder="Ej. Campaña Navideña 10%" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted">Tipo de Promoción *</label>
-                            <select id="tipo" class="form-select form-select-sm" required>
-                                <option value="">-- Seleccionar --</option>
-                                <option value="PORCENTUAL">Descuento Porcentual (%)</option>
-                                <option value="MONTO_FIJO">Descuento por Monto Fijo (S/)</option>
-                                <option value="PROMO_2X1">Paga 1 Lleva 2 (2x1)</option>
-                                <option value="PROMO_3X2">Paga 2 Lleva 3 (3x2)</option>
-                                <option value="COMPRA_MINIMA">Beneficio por Compra Mínima</option>
-                                <option value="REGALO">Producto o Servicio Gratis (Regalo)</option>
-                                <option value="CATEGORIA">Promoción por Categoría</option>
-                            </select>
-                        </div>
+        </main>
+    </div>
 
-                        <div class="col-12">
-                            <label class="form-label small fw-bold text-muted">Descripción</label>
-                            <textarea id="descripcion" class="form-control form-control-sm" rows="2" maxlength="255" placeholder="Indique los términos de la promoción..."></textarea>
-                        </div>
+    <!-- Modal para Crear/Editar Promoción -->
+    <div class="modal fade" id="promocionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg" style="border-radius:12px;">
+                <div class="modal-header text-white"
+                    style="background-color: var(--vet-blue); border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                    <h5 class="modal-title" id="modalTitle">Agregar Promoción</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light p-4">
+                    <form id="formPromocion">
+                        <input type="hidden" id="id" name="id">
 
-                        <!-- Campos dinámicos según el tipo seleccionado -->
-                        
-                        <!-- 1. Valor (Para descuento porcentual o monto fijo) -->
-                        <div class="col-md-6 d-none" id="divValor">
-                            <label class="form-label small fw-bold text-muted" id="lblValor">Valor del Descuento *</label>
-                            <input type="number" id="valor" class="form-control form-control-sm" step="0.01" min="0" placeholder="0.00">
-                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Nombre de la Promoción *</label>
+                                <input type="text" id="nombre" class="form-control form-control-sm" maxlength="150"
+                                    placeholder="Ej. Campaña Navideña 10%" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Tipo de Promoción *</label>
+                                <select id="tipo" class="form-select form-select-sm" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="PORCENTUAL">Descuento Porcentual (%)</option>
+                                    <option value="MONTO_FIJO">Descuento por Monto Fijo (S/)</option>
+                                    <option value="PROMO_2X1">Paga 1 Lleva 2 (2x1)</option>
+                                    <option value="PROMO_3X2">Paga 2 Lleva 3 (3x2)</option>
+                                    <option value="COMPRA_MINIMA">Beneficio por Compra Mínima</option>
+                                    <option value="REGALO">Producto o Servicio Gratis (Regalo)</option>
+                                    <option value="CATEGORIA">Promoción por Categoría</option>
+                                </select>
+                            </div>
 
-                        <!-- 2. Compra Mínima -->
-                        <div class="col-md-6 d-none" id="divCompraMinima">
-                            <label class="form-label small fw-bold text-muted">Monto Compra Mínima (S/) *</label>
-                            <input type="number" id="compraMinima" class="form-control form-control-sm" step="0.01" min="0" placeholder="0.00">
-                        </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-muted">Descripción</label>
+                                <textarea id="descripcion" class="form-control form-control-sm" rows="2" maxlength="255"
+                                    placeholder="Indique los términos de la promoción..."></textarea>
+                            </div>
 
-                        <!-- 3. Producto Afectado -->
-                        <div class="col-md-6 d-none" id="divProducto">
-                            <label class="form-label small fw-bold text-muted">Producto o Servicio Requerido *</label>
-                            <select id="productoId" class="form-select form-select-sm">
-                                <option value="">-- Seleccionar Producto --</option>
-                            </select>
-                        </div>
+                            <!-- Campos dinámicos según el tipo seleccionado -->
 
-                        <!-- 4. Categoría Afectada -->
-                        <div class="col-md-6 d-none" id="divCategoria">
-                            <label class="form-label small fw-bold text-muted">Categoría Afectada *</label>
-                            <select id="categoriaId" class="form-select form-select-sm">
-                                <option value="">-- Seleccionar Categoría --</option>
-                            </select>
-                        </div>
+                            <!-- 1. Valor (Para descuento porcentual o monto fijo) -->
+                            <div class="col-md-6 d-none" id="divValor">
+                                <label class="form-label small fw-bold text-muted" id="lblValor">Valor del Descuento
+                                    *</label>
+                                <input type="number" id="valor" class="form-control form-control-sm" step="0.01" min="0"
+                                    placeholder="0.00">
+                            </div>
 
-                        <!-- 5. Producto de Regalo -->
-                        <div class="col-md-6 d-none" id="divProductoRegalo">
-                            <label class="form-label small fw-bold text-muted">Producto o Servicio de Regalo *</label>
-                            <select id="productoRegaloId" class="form-select form-select-sm">
-                                <option value="">-- Seleccionar Regalo --</option>
-                            </select>
-                        </div>
+                            <!-- 2. Compra Mínima -->
+                            <div class="col-md-6 d-none" id="divCompraMinima">
+                                <label class="form-label small fw-bold text-muted">Monto Compra Mínima (S/) *</label>
+                                <input type="number" id="compraMinima" class="form-control form-control-sm" step="0.01"
+                                    min="0" placeholder="0.00">
+                            </div>
 
-                        <!-- Fechas y Estado -->
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Fecha de Inicio *</label>
-                            <input type="date" id="fechaInicio" class="form-control form-control-sm" required>
+                            <!-- 3. Producto Afectado -->
+                            <div class="col-md-6 d-none" id="divProducto">
+                                <label class="form-label small fw-bold text-muted">Producto o Servicio Requerido
+                                    *</label>
+                                <select id="productoId" class="form-select form-select-sm">
+                                    <option value="">-- Seleccionar Producto --</option>
+                                </select>
+                            </div>
+
+                            <!-- 4. Categoría Afectada -->
+                            <div class="col-md-6 d-none" id="divCategoria">
+                                <label class="form-label small fw-bold text-muted">Categoría Afectada *</label>
+                                <select id="categoriaId" class="form-select form-select-sm">
+                                    <option value="">-- Seleccionar Categoría --</option>
+                                </select>
+                            </div>
+
+                            <!-- 5. Producto de Regalo -->
+                            <div class="col-md-6 d-none" id="divProductoRegalo">
+                                <label class="form-label small fw-bold text-muted">Producto o Servicio de Regalo
+                                    *</label>
+                                <select id="productoRegaloId" class="form-select form-select-sm">
+                                    <option value="">-- Seleccionar Regalo --</option>
+                                </select>
+                            </div>
+
+                            <!-- Fechas y Estado -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Fecha de Inicio *</label>
+                                <input type="date" id="fechaInicio" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Fecha de Fin *</label>
+                                <input type="date" id="fechaFin" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Estado *</label>
+                                <select id="estado" class="form-select form-select-sm" required>
+                                    <option value="ACTIVO">Activo</option>
+                                    <option value="INACTIVO">Inactivo</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Fecha de Fin *</label>
-                            <input type="date" id="fechaFin" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Estado *</label>
-                            <select id="estado" class="form-select form-select-sm" required>
-                                <option value="ACTIVO">Activo</option>
-                                <option value="INACTIVO">Inactivo</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer bg-white border-top-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" form="formPromocion" class="btn px-4" style="background-color: var(--vet-blue); color: white;" id="btnSubmitPromocion">Guardar</button>
+                    </form>
+                </div>
+                <div class="modal-footer bg-white border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="formPromocion" class="btn px-4"
+                        style="background-color: var(--vet-blue); color: white;"
+                        id="btnSubmitPromocion">Guardar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/promociones.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/promociones/promociones-utils.js}"></script>
+    <script th:src="@{/js/promociones/promociones-combos.js}"></script>
+    <script th:src="@{/js/promociones/promociones-cards.js}"></script>
+    <script th:src="@{/js/promociones/promociones-form.js}"></script>
+    <script th:src="@{/js/promociones/promociones-acciones.js}"></script>
+    <script th:src="@{/js/promociones/promociones-main.js}"></script>
 
 </body>
+
 </html>
