@@ -1,11 +1,9 @@
 function iniciarFormularioAnamnesis() {
     document.getElementById('formAnamnesis')
         .addEventListener('submit', guardarAnamnesis);
-
     document.getElementById('btnFinalizarConsulta')
         .addEventListener('click', confirmarFinalizarConsulta);
 }
-
 function cargarConsultaActiva(citaId) {
     fetch(`${API_URL}/${citaId}/consulta`)
         .then(r => r.json())
@@ -14,14 +12,12 @@ function cargarConsultaActiva(citaId) {
                 cargarDatosConsulta(res.data);
                 return;
             }
-
             limpiarFormularioConsulta(citaId);
         })
         .catch(err =>
             console.error('Error al cargar la consulta activa:', err)
         );
 }
-
 function cargarDatosConsulta(data) {
     document.getElementById('pesoKg').value = data.pesoKg || '';
     document.getElementById('tempC').value = data.temperaturaC || '';
@@ -42,21 +38,16 @@ function cargarDatosConsulta(data) {
     document.getElementById('fechaProximaDesparasitacion').value =
         data.fechaProximaDesparasitacion || '';
 }
-
 function limpiarFormularioConsulta(citaId) {
     document.getElementById('formAnamnesis').reset();
     document.getElementById('citaActivaId').value = citaId;
     document.getElementById('mascotaActivaId').value = mascotaActualId;
 }
-
 function guardarAnamnesis(e) {
     e.preventDefault();
-
     const btn = document.getElementById('btnGuardarAnamnesis');
-
     btn.disabled = true;
     btn.innerText = 'Guardando...';
-
     fetch(`${API_URL}/${pacienteEnAtencionId}/guardar-anamnesis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,7 +56,6 @@ function guardarAnamnesis(e) {
         .then(r => r.json())
         .then(res => manejarRespuestaAnamnesis(res, btn));
 }
-
 function crearPayloadAnamnesis() {
     return {
         pesoKg: parseFloat(document.getElementById('pesoKg').value),
@@ -87,7 +77,6 @@ function crearPayloadAnamnesis() {
             document.getElementById('fechaProximaDesparasitacion').value || null
     };
 }
-
 function manejarRespuestaAnamnesis(res, btn) {
     btn.disabled = false;
     btn.innerText = 'Guardar Registro';
@@ -96,10 +85,8 @@ function manejarRespuestaAnamnesis(res, btn) {
         Swal.fire('Actualizado', 'Anamnesis guardada correctamente.', 'success');
         return;
     }
-
     Swal.fire('Error', res.message, 'error');
 }
-
 function confirmarFinalizarConsulta() {
     Swal.fire({
         title: '¿Finalizar Consulta?',
@@ -111,7 +98,6 @@ function confirmarFinalizarConsulta() {
         if (result.isConfirmed) finalizarConsulta();
     });
 }
-
 function finalizarConsulta() {
     fetch(`${API_URL}/${pacienteEnAtencionId}/finalizar`, {
         method: 'POST'
@@ -123,7 +109,6 @@ function finalizarConsulta() {
                 cargarTorreControl();
                 return;
             }
-
             Swal.fire('Falta Registro Clínico', res.message, 'error');
         });
 }
