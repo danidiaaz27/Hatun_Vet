@@ -1,7 +1,6 @@
 function iniciarModuloInsumos() {
     document.getElementById('btnJalarInsumo')
         .addEventListener('click', abrirModalInsumos);
-
     document.getElementById('insumoProducto')
         .addEventListener('change', manejarCambioInsumo);
 
@@ -18,7 +17,6 @@ function abrirModalInsumos() {
         );
         return;
     }
-
     fetch(`${API_URL}/${pacienteEnAtencionId}/consulta`)
         .then(r => r.json())
         .then(res => {
