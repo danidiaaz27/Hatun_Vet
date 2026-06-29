@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Torre de Control Médica - HatunVet</title>
@@ -11,13 +12,17 @@
         .espera-card {
             background: #fff;
             border-radius: 14px;
-            border: 1.5px solid rgba(10,61,145,0.10);
-            box-shadow: 0 2px 10px rgba(10,61,145,0.06);
+            border: 1.5px solid rgba(10, 61, 145, 0.10);
+            box-shadow: 0 2px 10px rgba(10, 61, 145, 0.06);
             padding: 16px 18px;
             transition: transform .2s, box-shadow .2s;
             cursor: pointer;
         }
-        .espera-card:hover { transform: translateX(4px); box-shadow: 0 4px 18px rgba(10,61,145,0.12); }
+
+        .espera-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 18px rgba(10, 61, 145, 0.12);
+        }
 
         /* ── Panel activo (azul oscuro) ── */
         .panel-activo-wrapper {
@@ -25,11 +30,11 @@
             border-radius: 18px;
             padding: 28px 30px;
             color: #fff;
-            box-shadow: 0 8px 32px rgba(10,61,145,0.20);
+            box-shadow: 0 8px 32px rgba(10, 61, 145, 0.20);
         }
 
         .panel-activo-wrapper .badge-encurso {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255, 255, 255, 0.15);
             color: #6ef0a0;
             border: 1.5px solid #6ef0a0;
             border-radius: 50px;
@@ -40,7 +45,7 @@
         }
 
         .panel-activo-wrapper .vitals-row {
-            background: rgba(255,255,255,0.10);
+            background: rgba(255, 255, 255, 0.10);
             border-radius: 12px;
             padding: 18px 20px;
             margin-bottom: 20px;
@@ -55,26 +60,28 @@
         .panel-activo-wrapper .vital-label {
             font-size: 12px;
             font-weight: 700;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255, 255, 255, 0.7);
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .panel-activo-wrapper .vital-label.required { color: #ff8a8a; }
+        .panel-activo-wrapper .vital-label.required {
+            color: #ff8a8a;
+        }
 
         .panel-activo-wrapper .vital-input-inner {
             display: flex;
             align-items: center;
-            background: rgba(255,255,255,0.12);
-            border: 1.5px solid rgba(255,255,255,0.20);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1.5px solid rgba(255, 255, 255, 0.20);
             border-radius: 8px;
             overflow: hidden;
         }
 
         .panel-activo-wrapper .vital-input-inner:focus-within {
-            border-color: rgba(255,255,255,0.6);
-            background: rgba(255,255,255,0.18);
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.18);
         }
 
         .panel-activo-wrapper .vital-input-inner input {
@@ -88,11 +95,13 @@
             outline: none;
         }
 
-        .panel-activo-wrapper .vital-input-inner input::placeholder { color: rgba(255,255,255,0.4); }
+        .panel-activo-wrapper .vital-input-inner input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
 
         .panel-activo-wrapper .vital-unit {
             padding: 0 10px;
-            color: rgba(255,255,255,0.5);
+            color: rgba(255, 255, 255, 0.5);
             font-size: 13px;
             font-weight: 600;
             white-space: nowrap;
@@ -133,15 +142,15 @@
             justify-content: space-between;
             align-items: center;
             padding-top: 16px;
-            border-top: 1px solid rgba(255,255,255,0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
             flex-wrap: wrap;
             gap: 10px;
         }
 
         .btn-accion-sec {
-            background: rgba(255,255,255,0.10);
-            border: 1.5px solid rgba(255,255,255,0.25);
-            color: rgba(255,255,255,0.8);
+            background: rgba(255, 255, 255, 0.10);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 0.8);
             border-radius: 8px;
             padding: 8px 18px;
             font-size: 13px;
@@ -152,12 +161,19 @@
             gap: 6px;
             transition: background .18s;
         }
-        .btn-accion-sec:hover { background: rgba(255,255,255,0.18); }
-        .btn-accion-sec:disabled { opacity: .4; cursor: not-allowed; }
+
+        .btn-accion-sec:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .btn-accion-sec:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
 
         .btn-guardar-anamnesis {
             background: var(--vet-blue, #0A3D91);
-            border: 2px solid rgba(255,255,255,0.4);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             color: #fff;
             border-radius: 8px;
             padding: 9px 22px;
@@ -169,7 +185,10 @@
             gap: 7px;
             transition: background .18s;
         }
-        .btn-guardar-anamnesis:hover { background: #072d6b; }
+
+        .btn-guardar-anamnesis:hover {
+            background: #072d6b;
+        }
 
         .btn-finalizar-cobrar {
             background: #1a2035;
@@ -185,13 +204,16 @@
             gap: 7px;
             transition: background .18s;
         }
-        .btn-finalizar-cobrar:hover { background: #0d1220; }
+
+        .btn-finalizar-cobrar:hover {
+            background: #0d1220;
+        }
 
         /* Panel vacío */
         .panel-vacio {
             background: #fff;
             border-radius: 18px;
-            border: 2px dashed rgba(10,61,145,0.15);
+            border: 2px dashed rgba(10, 61, 145, 0.15);
             padding: 60px 20px;
             text-align: center;
         }
@@ -204,282 +226,325 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1.5px solid rgba(10,61,145,0.10);
+            border: 1.5px solid rgba(10, 61, 145, 0.10);
             margin-bottom: 14px;
-            box-shadow: 0 2px 8px rgba(10,61,145,0.05);
+            box-shadow: 0 2px 8px rgba(10, 61, 145, 0.05);
         }
     </style>
 </head>
+
 <body>
-<div class="d-flex">
-    <div th:replace="~{sidebar :: sidebar(activeUri='/consultorio')}"></div>
+    <div class="d-flex">
+        <div th:replace="~{sidebar :: sidebar(activeUri='/consultorio')}"></div>
 
-    <main class="main-content w-100 p-4">
+        <main class="main-content w-100 p-4">
 
-        <!-- Header -->
-        <header class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="page-title"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Torre de Control Clínica</h2>
-                <p class="page-subtitle">Gestión de triaje, anamnesis y derivaciones</p>
-            </div>
-        </header>
-
-        <div class="row g-4">
-
-            <!-- Cola de espera -->
-            <div class="col-md-4">
-                <div class="espera-header">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-people-fill text-muted"></i>
-                        <span class="fw-bold" style="color:#1a2035;">En Espera</span>
-                    </div>
-                    <span class="badge rounded-pill text-dark fw-bold px-3 py-2"
-                          style="background:#fff8e1; border:1.5px solid #f6c84b; font-size:13px;"
-                          id="contadorEspera">0</span>
+            <!-- Header -->
+            <header class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="page-title"><i class="bi bi-heart-pulse-fill text-danger me-2"></i>Torre de Control
+                        Clínica</h2>
+                    <p class="page-subtitle">Gestión de triaje, anamnesis y derivaciones</p>
                 </div>
-                <div id="listaEspera" class="d-flex flex-column gap-2">
-                    <!-- Cards de espera inyectadas por JS -->
-                </div>
-            </div>
+            </header>
 
-            <!-- Panel consultorio -->
-            <div class="col-md-8">
+            <div class="row g-4">
 
-                <!-- Vacío -->
-                <div id="panelVacio" class="panel-vacio">
-                    <i class="bi bi-clipboard2-pulse display-1 text-muted opacity-25 d-block mb-3"></i>
-                    <h4 class="fw-bold text-secondary">Consultorio Libre</h4>
-                    <p class="text-muted">Seleccione un paciente de la cola de espera para iniciar la evaluación médica.</p>
-                </div>
-
-                <!-- Activo -->
-                <div id="panelActivo" class="panel-activo-wrapper" style="display:none;">
-
-                    <!-- Título + estado -->
-                    <div class="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <i class="bi bi-file-medical" style="font-size:20px; color:rgba(255,255,255,0.8);"></i>
-                                <h5 class="fw-bold mb-0 text-white" id="lblMotivoActivo">Motivo de Cita</h5>
-                            </div>
-                            <small style="color:rgba(255,255,255,0.6);">
-                                <i class="bi bi-clock-history me-1"></i> Iniciado: <span id="lblHoraInicio">--:--</span>
-                            </small>
-                        </div>
+                <!-- Cola de espera -->
+                <div class="col-md-4">
+                    <div class="espera-header">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge-encurso">● EN CURSO</span>
-                            <button type="button" id="btnVerHistorial"
-                                    class="btn btn-sm btn-outline-light fw-bold">
-                                <i class="bi bi-clock-history me-1"></i> Ver Historial Previo
+                            <i class="bi bi-people-fill text-muted"></i>
+                            <span class="fw-bold" style="color:#1a2035;">En Espera</span>
+                        </div>
+                        <span class="badge rounded-pill text-dark fw-bold px-3 py-2"
+                            style="background:#fff8e1; border:1.5px solid #f6c84b; font-size:13px;"
+                            id="contadorEspera">0</span>
+                    </div>
+                    <div id="listaEspera" class="d-flex flex-column gap-2">
+                        <!-- Cards de espera inyectadas por JS -->
+                    </div>
+                </div>
+
+                <!-- Panel consultorio -->
+                <div class="col-md-8">
+
+                    <!-- Vacío -->
+                    <div id="panelVacio" class="panel-vacio">
+                        <i class="bi bi-clipboard2-pulse display-1 text-muted opacity-25 d-block mb-3"></i>
+                        <h4 class="fw-bold text-secondary">Consultorio Libre</h4>
+                        <p class="text-muted">Seleccione un paciente de la cola de espera para iniciar la evaluación
+                            médica.</p>
+                    </div>
+
+                    <!-- Activo -->
+                    <div id="panelActivo" class="panel-activo-wrapper" style="display:none;">
+
+                        <!-- Título + estado -->
+                        <div class="d-flex justify-content-between align-items-start mb-1 flex-wrap gap-2">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 mb-1">
+                                    <i class="bi bi-file-medical"
+                                        style="font-size:20px; color:rgba(255,255,255,0.8);"></i>
+                                    <h5 class="fw-bold mb-0 text-white" id="lblMotivoActivo">Motivo de Cita</h5>
+                                </div>
+                                <small style="color:rgba(255,255,255,0.6);">
+                                    <i class="bi bi-clock-history me-1"></i> Iniciado: <span
+                                        id="lblHoraInicio">--:--</span>
+                                </small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge-encurso">● EN CURSO</span>
+                                <button type="button" id="btnVerHistorial" class="btn btn-sm btn-outline-light fw-bold">
+                                    <i class="bi bi-clock-history me-1"></i> Ver Historial Previo
+                                </button>
+                            </div>
+                        </div>
+
+                        <hr style="border-color:rgba(255,255,255,0.15); margin: 16px 0;">
+
+                        <form id="formAnamnesis">
+                            <input type="hidden" id="citaActivaId">
+                            <input type="hidden" id="mascotaActivaId">
+
+                            <!-- Alerta vitales -->
+                            <div class="alert mb-4 py-2 px-3"
+                                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:rgba(255,255,255,0.9);">
+                                <small class="fw-bold"><i class="bi bi-info-circle-fill me-1"></i> Constantes
+                                    Vitales:</small>
+                                <small> Complete los datos obligatorios para poder guardar el registro.</small>
+                            </div>
+
+                            <!-- Vitales -->
+                            <div class="vitals-row">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="vital-input-group">
+                                            <span class="vital-label required"><i class="bi bi-box-seam"></i> Peso (Kg)
+                                                *</span>
+                                            <div class="vital-input-inner">
+                                                <span
+                                                    style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
+                                                <input type="number" id="pesoKg" placeholder="Ingrese el peso"
+                                                    step="0.01" min="0.1" required>
+                                                <span class="vital-unit">kg</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="vital-input-group">
+                                            <span class="vital-label required"><i class="bi bi-thermometer-half"></i>
+                                                Temperatura (°C) *</span>
+                                            <div class="vital-input-inner">
+                                                <span
+                                                    style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
+                                                <input type="number" id="tempC" placeholder="Ingrese la temperatura"
+                                                    step="0.1" min="10" max="45" required>
+                                                <span class="vital-unit">°C</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="vital-input-group">
+                                            <span class="vital-label"><i class="bi bi-heart-pulse"></i> Frec.
+                                                Cardíaca</span>
+                                            <div class="vital-input-inner">
+                                                <span
+                                                    style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
+                                                <input type="number" id="frecCard" placeholder="Ingrese la frecuencia"
+                                                    min="0">
+                                                <span class="vital-unit">bpm</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Síntomas -->
+                            <div class="seccion-clinica">
+                                <label><i class="bi bi-chat-left-text" style="color:#0A3D91;"></i> Síntomas Reportados
+                                    *</label>
+                                <textarea id="sintomas" rows="2"
+                                    placeholder="Describa los síntomas reportados por el tutor..." required></textarea>
+                            </div>
+
+                            <!-- Diagnóstico -->
+                            <div class="seccion-clinica">
+                                <label><i class="bi bi-bandaid" style="color:#0A3D91;"></i> Diagnóstico Presuntivo
+                                    *</label>
+                                <textarea id="diagnostico" rows="2" placeholder="Ingrese el diagnóstico presuntivo..."
+                                    required></textarea>
+                            </div>
+
+                            <!-- Tratamiento -->
+                            <div class="seccion-clinica">
+                                <label><i class="bi bi-pencil" style="color:#0A3D91;"></i> Tratamiento Indicado
+                                    (Interno/Externo) *</label>
+                                <textarea id="tratamiento" rows="3" placeholder="Describa el tratamiento indicado..."
+                                    required></textarea>
+                            </div>
+
+                            <!-- Programación Próxima Cita/Vacuna (Opcional) -->
+                            <div class="seccion-clinica">
+                                <label><i class="bi bi-calendar-plus" style="color:#0A3D91;"></i> Próxima Cita / Vacuna
+                                    / Desparasitación (Opcional)</label>
+                                <div class="row g-3 mt-1">
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Próxima
+                                            Cita:</label>
+                                        <input type="date" id="fechaProximaCita" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted fw-bold m-0 mb-1">Nombre
+                                            Vacuna:</label>
+                                        <input type="text" id="nombreProximaVacuna" class="form-control form-control-sm"
+                                            placeholder="Ej. Antirrábica">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha
+                                            Vacuna:</label>
+                                        <input type="date" id="fechaProximaVacuna" class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                                <div class="row g-3 mt-1">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted fw-bold m-0 mb-1">Nombre Próximo
+                                            Desparasitante:</label>
+                                        <input type="text" id="nombreProximoDesparasitante"
+                                            class="form-control form-control-sm" placeholder="Ej. NexGard / Drontal">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Próxima
+                                            Desparasitación:</label>
+                                        <input type="date" id="fechaProximaDesparasitacion"
+                                            class="form-control form-control-sm">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Acciones -->
+                            <div class="acciones-footer">
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="btnJalarInsumo" class="btn-accion-sec">
+                                        <i class="bi bi-box-seam"></i> Jalar Insumo
+                                    </button>
+                                    <button type="button" class="btn-accion-sec" disabled>
+                                        <i class="bi bi-flask"></i> Orden Lab.
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" id="btnGuardarAnamnesis" class="btn-guardar-anamnesis">
+                                        <i class="bi bi-floppy"></i> Guardar Registro
+                                    </button>
+                                    <button type="button" id="btnFinalizarConsulta" class="btn-finalizar-cobrar">
+                                        <i class="bi bi-check2-circle"></i> Finalizar y Cobrar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Historial -->
+    <div class="modal fade" id="modalHistorial" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background: var(--vet-blue);">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-journal-medical me-2"></i> Historial Clínico de la
+                        Mascota</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div id="timelineHistorial" class="py-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Jalar Insumo -->
+    <div class="modal fade" id="modalJalarInsumo" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header text-white" style="background: var(--vet-blue);">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2"></i> Jalar Insumo de Farmacia</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRegistrarInsumo" class="row g-3 mb-4 border-bottom pb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted small">Seleccionar Insumo/Producto *:</label>
+                            <select id="insumoProducto" class="form-select" required>
+                                <option value="">Cargando insumos...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-muted small">Cantidad a Consumir *:</label>
+                            <div class="input-group">
+                                <input type="number" id="insumoCantidad" class="form-control" step="0.01" min="0.01"
+                                    required placeholder="0.00">
+                                <span class="input-group-text small" id="lblUnidadInsumo">cant</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn text-white w-100 fw-bold"
+                                style="background-color: var(--vet-blue);">
+                                <i class="bi bi-plus-circle me-1"></i> Agregar
                             </button>
                         </div>
-                    </div>
-
-                    <hr style="border-color:rgba(255,255,255,0.15); margin: 16px 0;">
-
-                    <form id="formAnamnesis">
-                        <input type="hidden" id="citaActivaId">
-                        <input type="hidden" id="mascotaActivaId">
-
-                        <!-- Alerta vitales -->
-                        <div class="alert mb-4 py-2 px-3"
-                             style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:rgba(255,255,255,0.9);">
-                            <small class="fw-bold"><i class="bi bi-info-circle-fill me-1"></i> Constantes Vitales:</small>
-                            <small> Complete los datos obligatorios para poder guardar el registro.</small>
-                        </div>
-
-                        <!-- Vitales -->
-                        <div class="vitals-row">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="vital-input-group">
-                                        <span class="vital-label required"><i class="bi bi-box-seam"></i> Peso (Kg) *</span>
-                                        <div class="vital-input-inner">
-                                            <span style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
-                                            <input type="number" id="pesoKg" placeholder="Ingrese el peso" step="0.01" min="0.1" required>
-                                            <span class="vital-unit">kg</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="vital-input-group">
-                                        <span class="vital-label required"><i class="bi bi-thermometer-half"></i> Temperatura (°C) *</span>
-                                        <div class="vital-input-inner">
-                                            <span style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
-                                            <input type="number" id="tempC" placeholder="Ingrese la temperatura" step="0.1" min="10" max="45" required>
-                                            <span class="vital-unit">°C</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="vital-input-group">
-                                        <span class="vital-label"><i class="bi bi-heart-pulse"></i> Frec. Cardíaca</span>
-                                        <div class="vital-input-inner">
-                                            <span style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
-                                            <input type="number" id="frecCard" placeholder="Ingrese la frecuencia" min="0">
-                                            <span class="vital-unit">bpm</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Síntomas -->
-                        <div class="seccion-clinica">
-                            <label><i class="bi bi-chat-left-text" style="color:#0A3D91;"></i> Síntomas Reportados *</label>
-                            <textarea id="sintomas" rows="2" placeholder="Describa los síntomas reportados por el tutor..." required></textarea>
-                        </div>
-
-                        <!-- Diagnóstico -->
-                        <div class="seccion-clinica">
-                            <label><i class="bi bi-bandaid" style="color:#0A3D91;"></i> Diagnóstico Presuntivo *</label>
-                            <textarea id="diagnostico" rows="2" placeholder="Ingrese el diagnóstico presuntivo..." required></textarea>
-                        </div>
-
-                        <!-- Tratamiento -->
-                        <div class="seccion-clinica">
-                            <label><i class="bi bi-pencil" style="color:#0A3D91;"></i> Tratamiento Indicado (Interno/Externo) *</label>
-                            <textarea id="tratamiento" rows="3" placeholder="Describa el tratamiento indicado..." required></textarea>
-                        </div>
-
-                        <!-- Programación Próxima Cita/Vacuna (Opcional) -->
-                        <div class="seccion-clinica">
-                            <label><i class="bi bi-calendar-plus" style="color:#0A3D91;"></i> Próxima Cita / Vacuna / Desparasitación (Opcional)</label>
-                            <div class="row g-3 mt-1">
-                                <div class="col-md-4">
-                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Próxima Cita:</label>
-                                    <input type="date" id="fechaProximaCita" class="form-control form-control-sm">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Nombre Vacuna:</label>
-                                    <input type="text" id="nombreProximaVacuna" class="form-control form-control-sm" placeholder="Ej. Antirrábica">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Vacuna:</label>
-                                    <input type="date" id="fechaProximaVacuna" class="form-control form-control-sm">
-                                </div>
-                            </div>
-                            <div class="row g-3 mt-1">
-                                <div class="col-md-6">
-                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Nombre Próximo Desparasitante:</label>
-                                    <input type="text" id="nombreProximoDesparasitante" class="form-control form-control-sm" placeholder="Ej. NexGard / Drontal">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small text-muted fw-bold m-0 mb-1">Fecha Próxima Desparasitación:</label>
-                                    <input type="date" id="fechaProximaDesparasitacion" class="form-control form-control-sm">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Acciones -->
-                        <div class="acciones-footer">
-                            <div class="d-flex gap-2">
-                                <button type="button" id="btnJalarInsumo" class="btn-accion-sec">
-                                    <i class="bi bi-box-seam"></i> Jalar Insumo
-                                </button>
-                                <button type="button" class="btn-accion-sec" disabled>
-                                    <i class="bi bi-flask"></i> Orden Lab.
-                                </button>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button type="submit" id="btnGuardarAnamnesis" class="btn-guardar-anamnesis">
-                                    <i class="bi bi-floppy"></i> Guardar Registro
-                                </button>
-                                <button type="button" id="btnFinalizarConsulta" class="btn-finalizar-cobrar">
-                                    <i class="bi bi-check2-circle"></i> Finalizar y Cobrar
-                                </button>
+                        <div class="col-12 mt-2" id="infoStockInsumo" style="display: none;">
+                            <div
+                                class="alert alert-light border small py-2 px-3 m-0 d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-info-circle text-primary"></i> <strong
+                                        id="lblNombreInsumoInfo">Medicamento</strong></span>
+                                <span>Stock General: <strong id="lblStockGeneralInfo">0</strong> envases</span>
+                                <span id="lblEnvaseAbiertoContainer">Abierto/Uso: <strong class="text-danger"
+                                        id="lblStockFraccionadoInfo">0 ml</strong></span>
+                                <span>Precio: <strong id="lblPrecioInsumoInfo">S/ 0.00</strong></span>
                             </div>
                         </div>
                     </form>
+
+                    <h6 class="fw-bold mb-3 text-secondary"><i class="bi bi-list-task me-1"></i> Insumos agregados a la
+                        consulta actual</h6>
+                    <div class="table-responsive border rounded bg-white">
+                        <table class="table table-hover align-middle mb-0" id="tablaInsumosAgregados">
+                            <thead class="table-light small text-secondary">
+                                <tr>
+                                    <th class="ps-3">Concepto/Medicamento</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Costo unitario/Precio</th>
+                                    <th class="text-end pe-3">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <!-- Inyectado por JS -->
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">No hay insumos registrados para
+                                        esta consulta.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Listo / Cerrar</button>
                 </div>
             </div>
         </div>
-    </main>
-</div>
-
-<!-- Modal Historial -->
-<div class="modal fade" id="modalHistorial" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header text-white" style="background: var(--vet-blue);">
-                <h5 class="modal-title fw-bold"><i class="bi bi-journal-medical me-2"></i> Historial Clínico de la Mascota</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body bg-light">
-                <div id="timelineHistorial" class="py-2"></div>
-            </div>
-        </div>
     </div>
-</div>
 
-<!-- Modal Jalar Insumo -->
-<div class="modal fade" id="modalJalarInsumo" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header text-white" style="background: var(--vet-blue);">
-                <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2"></i> Jalar Insumo de Farmacia</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="formRegistrarInsumo" class="row g-3 mb-4 border-bottom pb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold text-muted small">Seleccionar Insumo/Producto *:</label>
-                        <select id="insumoProducto" class="form-select" required>
-                            <option value="">Cargando insumos...</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold text-muted small">Cantidad a Consumir *:</label>
-                        <div class="input-group">
-                            <input type="number" id="insumoCantidad" class="form-control" step="0.01" min="0.01" required placeholder="0.00">
-                            <span class="input-group-text small" id="lblUnidadInsumo">cant</span>
-                        </div>
-                    </div>
-                    <div class="col-md-3 d-flex align-items-end">
-                        <button type="submit" class="btn text-white w-100 fw-bold" style="background-color: var(--vet-blue);">
-                            <i class="bi bi-plus-circle me-1"></i> Agregar
-                        </button>
-                    </div>
-                    <div class="col-12 mt-2" id="infoStockInsumo" style="display: none;">
-                        <div class="alert alert-light border small py-2 px-3 m-0 d-flex justify-content-between align-items-center">
-                            <span><i class="bi bi-info-circle text-primary"></i> <strong id="lblNombreInsumoInfo">Medicamento</strong></span>
-                            <span>Stock General: <strong id="lblStockGeneralInfo">0</strong> envases</span>
-                            <span id="lblEnvaseAbiertoContainer">Abierto/Uso: <strong class="text-danger" id="lblStockFraccionadoInfo">0 ml</strong></span>
-                            <span>Precio: <strong id="lblPrecioInsumoInfo">S/ 0.00</strong></span>
-                        </div>
-                    </div>
-                </form>
-
-                <h6 class="fw-bold mb-3 text-secondary"><i class="bi bi-list-task me-1"></i> Insumos agregados a la consulta actual</h6>
-                <div class="table-responsive border rounded bg-white">
-                    <table class="table table-hover align-middle mb-0" id="tablaInsumosAgregados">
-                        <thead class="table-light small text-secondary">
-                            <tr>
-                                <th class="ps-3">Concepto/Medicamento</th>
-                                <th class="text-center">Cantidad</th>
-                                <th class="text-end">Costo unitario/Precio</th>
-                                <th class="text-end pe-3">Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody class="small">
-                            <!-- Inyectado por JS -->
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-3">No hay insumos registrados para esta consulta.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Listo / Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script th:src="@{/js/consultorio.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/consultorio/consulta-torre.js}"></script>
+    <script th:src="@{/js/consultorio/consulta-anamnesis.js}"></script>
+    <script th:src="@{/js/consultorio/consulta-historial.js}"></script>
+    <script th:src="@{/js/consultorio/consulta-insumos-render.js}"></script>
+    <script th:src="@{/js/consultorio/consulta-insumos.js}"></script>
+    <script th:src="@{/js/consultorio/consulta-main.js}"></script>
 </body>
+
 </html>
