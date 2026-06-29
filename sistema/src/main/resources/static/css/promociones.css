@@ -1,0 +1,200 @@
+/* ===== Barra superior ===== */
+
+.promo-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#fff;
+    padding:18px 22px;
+    border-radius:14px;
+    margin-bottom:24px;
+    box-shadow:0 8px 25px rgba(0,0,0,.05);
+}
+
+.promo-toolbar input{
+    width:280px;
+}
+
+/* ===== Grid ===== */
+
+.promo-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
+    gap:24px;
+}
+
+/* ===== Card ===== */
+
+.promo-card{
+    background:#fff;
+    border-radius:18px;
+    padding:24px;
+    box-shadow:0 10px 25px rgba(0,0,0,.06);
+    transition:.25s;
+    border:1px solid #eef2f7;
+}
+
+.promo-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 16px 35px rgba(0,0,0,.10);
+}
+
+/* ===== Encabezado ===== */
+
+.promo-card-top{
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+}
+
+.promo-title-wrap{
+    flex:1;
+}
+
+.promo-title-wrap h5{
+    font-weight:700;
+    color:#17326b;
+    margin-bottom:8px;
+}
+
+/* ===== Icono ===== */
+
+.promo-icon{
+    width:78px;
+    height:78px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:36px;
+}
+
+.icon-blue{
+    background:#e9f1ff;
+    color:#1967ff;
+}
+
+.icon-green{
+    background:#e7f8ec;
+    color:#16a34a;
+}
+
+.icon-orange{
+    background:#fff3df;
+    color:#f59e0b;
+}
+
+.icon-purple{
+    background:#f2eaff;
+    color:#8b5cf6;
+}
+
+.icon-red{
+    background:#fdecec;
+    color:#dc2626;
+}
+
+/* ===== Badge ===== */
+
+.promo-badge{
+    display:inline-block;
+    background:#53d7ff;
+    color:#083344;
+    padding:5px 12px;
+    border-radius:40px;
+    font-size:12px;
+    font-weight:700;
+}
+
+/* ===== Valor ===== */
+
+.promo-highlight{
+    margin:28px 0;
+    text-align:center;
+}
+
+.promo-highlight strong{
+    display:block;
+    font-size:52px;
+    font-weight:800;
+    line-height:1;
+    color:#1769ff;
+}
+
+.promo-highlight span{
+    color:#5c6678;
+    font-size:18px;
+}
+
+/* ===== Detalles ===== */
+
+.promo-detail{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.promo-detail span{
+    color:#6b7280;
+}
+
+.promo-detail strong{
+    color:#18306d;
+}
+
+/* ===== Footer ===== */
+
+.promo-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:18px;
+}
+
+.promo-status{
+    padding:4px 14px;
+    border-radius:30px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.promo-status.activo{
+    background:#1fa64a;
+    color:#fff;
+}
+
+.promo-status.inactivo{
+    background:#e74c3c;
+    color:#fff;
+}
+
+/* ===== Paginación ===== */
+
+.promo-pagination{
+    margin-top:28px;
+    background:#fff;
+    border-radius:14px;
+    padding:18px 22px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 8px 25px rgba(0,0,0,.05);
+}
+
+/* ===== Sin registros ===== */
+
+.promo-empty{
+    background:#fff;
+    border-radius:18px;
+    padding:60px;
+    text-align:center;
+    color:#9ca3af;
+    grid-column:1/-1;
+    box-shadow:0 10px 25px rgba(0,0,0,.05);
+}
+
+.promo-empty i{
+    display:block;
+    font-size:60px;
+    margin-bottom:15px;
+}
