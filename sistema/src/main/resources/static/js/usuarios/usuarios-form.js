@@ -18,7 +18,7 @@ function guardarUsuario(e) {
 
     const login = $('#usuario').val().trim();
     const nombre = $('#nombre').val().trim();
-    const clave = $('#clave').val();
+    const clave = '';
     const id = $('#id').val() || null;
 
     if (!validarFormularioUsuario(login, nombre, clave, id)) return;
