@@ -14,4 +14,5 @@ $(document).ready(function() {
     iniciarValidacionesUsuario();
     iniciarFormularioUsuarios();
     iniciarAccionesUsuarios();
+    iniciarCambioClaveUsuario();
 });

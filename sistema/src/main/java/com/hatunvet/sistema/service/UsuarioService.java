@@ -111,11 +111,31 @@ public class UsuarioService {
 
     @Transactional(readOnly = true)
     public boolean existeUsuario(String usuario) {
-        if (usuario == null || usuario.trim().isEmpty()) return false;
+        if (usuario == null || usuario.trim().isEmpty())
+            return false;
         return usuarioRepository.existsByUsuario(usuario.trim().toLowerCase());
     }
 
     public boolean verificarContrasena(String contrasenaTextoPlano, String contrasenaEncriptada) {
         return passwordEncoder.matches(contrasenaTextoPlano, contrasenaEncriptada);
+    }
+
+    @Transactional
+    public boolean cambiarPassword(String id, String nuevaPassword) {
+
+        Optional<Usuario> optional = usuarioRepository.findById(id);
+
+        if (optional.isEmpty()) {
+            return false;
+        }
+
+        Usuario usuario = optional.get();
+
+        usuario.setPasswordHash(
+                passwordEncoder.encode(nuevaPassword.trim()));
+
+        usuarioRepository.save(usuario);
+
+        return true;
     }
 }
