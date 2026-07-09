@@ -3,43 +3,135 @@
 <body>
 <div th:fragment="sidebar(activeUri)">
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
     <nav id="sidebar" class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white">
+
         <div class="d-flex align-items-center justify-content-between mb-3">
             <a th:href="@{/dashboard}" class="fs-4 text-white text-decoration-none fw-bold">
-                <span class="text-white">Hatun</span><span style="color: #D32F2F;">Vet</span>
+                <span>Hatun</span><span style="color:#D32F2F;">Vet</span>
             </a>
             <button id="close-sidebar" class="btn btn-link text-white d-md-none p-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16"><path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/></svg>
+                <i class="bi bi-x-lg fs-4"></i>
             </button>
         </div>
+
         <hr style="background-color: rgba(255,255,255,0.3)">
+
         <div class="mb-auto">
-            <div th:if="${session.menuSecciones != null}" th:each="seccion : ${session.menuSecciones}" class="mb-2">
-                <p class="text-uppercase fw-bold mb-2 mt-3" style="font-size: 0.78rem; letter-spacing: .05em; color: rgba(255,255,255,0.5);"
-                   th:text="${seccion.titulo}"></p>
-                <ul class="nav nav-pills flex-column">
-                    <li th:each="opcion : ${seccion.opciones}" class="nav-item">
-                        <a th:href="@{${opcion.ruta}}"
-                           class="nav-link text-white mb-1"
-                           th:classappend="${opcion.ruta == activeUri} ? 'active-link' : ''">
-                            <i th:class="${opcion.icono} + ' me-2'"></i>
-                            <span th:text="${opcion.nombre}"></span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <ul class="nav nav-pills flex-column" th:if="${session.menuSecciones == null}">
-                <li th:each="opcion : ${session.menuOpciones}" class="nav-item">
-                    <a th:href="@{${opcion.ruta}}"
-                       class="nav-link text-white mb-1"
-                       th:classappend="${opcion.ruta == activeUri} ? 'active-link' : ''">
-                        <i th:class="${opcion.icono} + ' me-2'"></i>
-                        <span th:text="${opcion.nombre}"></span>
+
+            <a th:href="@{/dashboard}" class="nav-link text-white mb-2"
+               th:classappend="${activeUri == '/dashboard'} ? 'active-link' : ''">
+                <i class="bi bi-grid-1x2-fill me-2"></i> Dashboard
+            </a>
+
+            <div class="menu-group">
+                <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuVentas">
+                    <span><i class="bi bi-cart-check-fill me-2"></i> Ventas</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+
+                <div class="collapse show" id="menuVentas">
+                    <a th:href="@{/ventas/pos}" class="nav-link text-white" th:classappend="${activeUri == '/ventas/pos'} ? 'active-link' : ''">
+                        Punto de Venta
                     </a>
-                </li>
-            </ul>
+                    <a th:href="@{/ventas/historial}" class="nav-link text-white" th:classappend="${activeUri == '/ventas/historial'} ? 'active-link' : ''">
+                        Historial de Ventas
+                    </a>
+                    <a th:href="@{/caja}" class="nav-link text-white" th:classappend="${activeUri == '/caja'} ? 'active-link' : ''">
+                        Control de Caja
+                    </a>
+                    <a th:href="@{/promociones}" class="nav-link text-white" th:classappend="${activeUri == '/promociones'} ? 'active-link' : ''">
+                        Promociones
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuAtencion">
+                    <span><i class="bi bi-heart-pulse me-2"></i> Atención Veterinaria</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+
+                <div class="collapse show" id="menuAtencion">
+                    <a th:href="@{/agenda}" class="nav-link text-white" th:classappend="${activeUri == '/agenda'} ? 'active-link' : ''">
+                        Agenda de Citas
+                    </a>
+                    <a th:href="@{/consultorio}" class="nav-link text-white" th:classappend="${activeUri == '/consultorio'} ? 'active-link' : ''">
+                        Torre de Control
+                    </a>
+                    <a th:href="@{/banos-cortes}" class="nav-link text-white" th:classappend="${activeUri == '/banos-cortes'} ? 'active-link' : ''">
+                        Baños y Cortes
+                    </a>
+                    <a th:href="@{/mascotas}" class="nav-link text-white" th:classappend="${activeUri == '/mascotas'} ? 'active-link' : ''">
+                        Mascotas
+                    </a>
+                    <a th:href="@{/clientes}" class="nav-link text-white" th:classappend="${activeUri == '/clientes'} ? 'active-link' : ''">
+                        Clientes
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuInventario">
+                    <span><i class="bi bi-boxes me-2"></i> Inventario</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+
+                <div class="collapse" id="menuInventario">
+                    <a th:href="@{/inventario}" class="nav-link text-white" th:classappend="${activeUri == '/inventario'} ? 'active-link' : ''">
+                        Inventario
+                    </a>
+                    <a th:href="@{/productos/listar}" class="nav-link text-white" th:classappend="${activeUri == '/productos/listar'} ? 'active-link' : ''">
+                        Productos
+                    </a>
+                    <a th:href="@{/categorias}" class="nav-link text-white" th:classappend="${activeUri == '/categorias'} ? 'active-link' : ''">
+                        Categorías
+                    </a>
+                    <a th:href="@{/proveedores/listar}" class="nav-link text-white" th:classappend="${activeUri == '/proveedores/listar'} ? 'active-link' : ''">
+                        Proveedores
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuReportes">
+                    <span><i class="bi bi-graph-up-arrow me-2"></i> Reportes</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+
+                <div class="collapse" id="menuReportes">
+                    <a th:href="@{/reportes}" class="nav-link text-white" th:classappend="${activeUri == '/reportes'} ? 'active-link' : ''">
+                        Reportes y Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuConfig">
+                    <span><i class="bi bi-gear-fill me-2"></i> Configuración</span>
+                    <i class="bi bi-chevron-down"></i>
+                </button>
+
+                <div class="collapse" id="menuConfig">
+                    <a th:href="@{/configuracion}" class="nav-link text-white" th:classappend="${activeUri == '/configuracion'} ? 'active-link' : ''">
+                        Configuración
+                    </a>
+                    <a th:href="@{/usuarios/listar}" class="nav-link text-white" th:classappend="${activeUri == '/usuarios/listar'} ? 'active-link' : ''">
+                        Usuarios
+                    </a>
+                    <a th:href="@{/perfiles/listar}" class="nav-link text-white" th:classappend="${activeUri == '/perfiles/listar'} ? 'active-link' : ''">
+                        Perfiles
+                    </a>
+                    <a th:href="@{/medicos/horarios}" class="nav-link text-white" th:classappend="${activeUri == '/medicos/horarios'} ? 'active-link' : ''">
+                        Horarios y Permisos
+                    </a>
+                </div>
+            </div>
+
         </div>
+
         <hr style="background-color: rgba(255,255,255,0.3)">
+
         <div class="dropdown">
             <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
                 <strong th:text="${session.usuarioLogueado.nombre}">Usuario</strong>
@@ -48,6 +140,7 @@
                 <li><a class="dropdown-item" th:href="@{/logout}">Cerrar Sesión</a></li>
             </ul>
         </div>
+
     </nav>
 </div>
 </body>

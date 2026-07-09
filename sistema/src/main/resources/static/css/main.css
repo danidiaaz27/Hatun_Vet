@@ -445,3 +445,75 @@ body:has(.pos-wrapper) .main-content {
 .product-card-img img {
     height: 140px !important;
 }
+
+.menu-group {
+    margin-bottom: 8px;
+}
+
+.menu-toggle {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: rgba(255,255,255,.75);
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 12px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-group .nav-link {
+    padding: 10px 18px 10px 38px;
+    font-size: .92rem;
+    border-radius: 8px;
+}
+
+.menu-group .nav-link:hover {
+    background: rgba(255,255,255,.10);
+}
+
+.active-link {
+    background: rgba(255,255,255,.18) !important;
+    font-weight: 700;
+}
+.menu-group {
+    margin-bottom: 8px;
+}
+
+.menu-toggle {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: rgba(255,255,255,.65);
+    font-size: .78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 12px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-toggle:hover {
+    color: white;
+}
+
+.menu-group .nav-link {
+    padding: 10px 18px 10px 38px;
+    font-size: .92rem;
+    border-radius: 8px;
+    color: rgba(255,255,255,.85) !important;
+}
+
+.menu-group .nav-link:hover {
+    background: rgba(255,255,255,.10);
+    color: white !important;
+}
+
+.active-link {
+    background: rgba(255,255,255,.18) !important;
+    color: white !important;
+    font-weight: 700;
+}
