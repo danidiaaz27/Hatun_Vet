@@ -28,6 +28,18 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(sessionInterceptor)
                 .addPathPatterns("/**") // Protege todo
-                .excludePathPatterns("/", "/pagina_principal", "/login", "/logout", "/test-clave", "/css/**", "/js/**", "/img/**", "/uploads/**", "/error", "/favicon.ico"); // Excluye lo público
+                .excludePathPatterns(
+                        "/",
+                        "/pagina_principal",
+                        "/login",
+                        "/logout",
+                        "/test-clave",
+                        "/recuperar/**",
+                        "/css/**",
+                        "/js/**",
+                        "/img/**",
+                        "/uploads/**",
+                        "/error",
+                        "/favicon.ico");
     }
 }
