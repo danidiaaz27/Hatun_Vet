@@ -9,33 +9,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link th:href="@{/css/main.css}" rel="stylesheet">
-
-    <style>
-        .password-security-card {
-            border: 1px solid #dbe5f5;
-            border-radius: 14px;
-            padding: 18px 20px;
-            text-align: center;
-            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
-            min-height: 170px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .password-icon {
-            width: 52px;
-            height: 52px;
-            background: #e8f1ff;
-            color: var(--vet-blue);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 12px;
-            font-size: 24px;
-        }
-    </style>
+    <link th:href="@{/css/usuarios.css}" rel="stylesheet">
 </head>
 
 <body>
@@ -100,7 +74,53 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-6" id="bloqueClaveInicial">
+
+                                <label class="form-label text-muted">
+                                    Contraseña inicial:
+                                </label>
+
+                                <div class="input-group">
+                                    <input type="password" id="clave" class="form-control"
+                                        placeholder="Ingrese contraseña inicial">
+
+                                    <button type="button" class="btn btn-outline-secondary btn-toggle-pass"
+                                        data-target="#clave">
+
+                                        <i class="bi bi-eye-fill"></i>
+
+                                    </button>
+                                </div>
+
+                                <label class="form-label text-muted mt-3">
+                                    Confirmar contraseña:
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input type="password" id="confirmarClaveInicial" class="form-control"
+                                        placeholder="Repita la contraseña">
+
+                                    <button type="button" class="btn btn-outline-secondary btn-toggle-pass"
+                                        data-target="#confirmarClaveInicial">
+
+                                        <i class="bi bi-eye-fill"></i>
+
+                                    </button>
+
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    Debe contener al menos:
+                                    <strong>1 mayúscula</strong>,
+                                    <strong>1 minúscula</strong>,
+                                    <strong>1 número</strong> y
+                                    <strong>1 carácter especial</strong>.
+                                </small>
+
+                            </div>
+
+                            <div class="col-md-6" id="bloqueCambioClave">
                                 <label class="form-label text-muted">Seguridad:</label>
 
                                 <div class="password-security-card">
@@ -109,7 +129,7 @@
                                     </div>
 
                                     <p class="mb-3 text-muted small">
-                                         La contraseña está protegida y solo puede cambiarse con verificación.
+                                        La contraseña está protegida y solo puede cambiarse con verificación.
                                     </p>
 
                                     <button type="button" class="btn btn-outline-primary w-100 fw-bold"
@@ -282,6 +302,7 @@
             </div>
         </div>
     </div>
+
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

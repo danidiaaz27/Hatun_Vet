@@ -55,22 +55,42 @@ function validarNombreUsuario(nombre) {
 }
 
 function validarClaveUsuario(clave, id) {
-    if (!id && !clave) {
+    if (id) return true;
+
+    const confirmarClave = $('#confirmarClaveInicial').val().trim();
+
+    if (!clave) {
         Swal.fire(
             'Error',
-            'La contraseña es obligatoria para nuevos usuarios',
+            'La contraseña inicial es obligatoria para nuevos usuarios.',
             'error'
         );
         return false;
     }
 
-    if (clave.length > 0) {
-        const errorPwd = validarPassword(clave);
+    if (!confirmarClave) {
+        Swal.fire(
+            'Error',
+            'Debe confirmar la contraseña inicial.',
+            'error'
+        );
+        return false;
+    }
 
-        if (errorPwd) {
-            Swal.fire('Contraseña insegura', errorPwd, 'warning');
-            return false;
-        }
+    if (clave !== confirmarClave) {
+        Swal.fire(
+            'Error',
+            'Las contraseñas no coinciden.',
+            'error'
+        );
+        return false;
+    }
+
+    const errorPwd = validarPassword(clave);
+
+    if (errorPwd) {
+        Swal.fire('Contraseña insegura', errorPwd, 'warning');
+        return false;
     }
 
     return true;

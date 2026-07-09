@@ -6,9 +6,10 @@ function iniciarFormularioUsuarios() {
 function abrirModalNuevoUsuario() {
     $('#formUsuario')[0].reset();
     $('#id').val('');
-    $('#clave').prop('required', true).attr('type', 'password');
-    resetearIconoClave();
-    $('#claveHelp').hide();
+
+    mostrarClaveInicial();
+    ocultarCambioClave();
+
     $('#modalTitle').text('Nuevo Usuario');
     usuarioModal.show();
 }
@@ -18,8 +19,8 @@ function guardarUsuario(e) {
 
     const login = $('#usuario').val().trim();
     const nombre = $('#nombre').val().trim();
-    const clave = '';
     const id = $('#id').val() || null;
+    const clave = obtenerClaveSegunModo(id);
 
     if (!validarFormularioUsuario(login, nombre, clave, id)) return;
 
@@ -41,6 +42,11 @@ function guardarUsuario(e) {
         });
 }
 
+function obtenerClaveSegunModo(id) {
+    if (id) return '';
+    return $('#clave').val().trim();
+}
+
 function crearPayloadUsuario(id, nombre, login, clave) {
     return {
         id: id,
@@ -50,3 +56,45 @@ function crearPayloadUsuario(id, nombre, login, clave) {
         perfil: { id: $('#id_perfil').val() }
     };
 }
+
+function mostrarClaveInicial() {
+    $('#bloqueClaveInicial').show();
+    $('#clave').prop('required', true);
+    $('#confirmarClaveInicial').prop('required', true);
+}
+
+function ocultarClaveInicial() {
+    $('#bloqueClaveInicial').hide();
+    $('#clave').prop('required', false).val('');
+    $('#confirmarClaveInicial').prop('required', false).val('');
+}
+
+function ocultarCambioClave() {
+    $('#bloqueCambioClave').hide();
+}
+
+function mostrarCambioClave() {
+    $('#bloqueCambioClave').show();
+    ocultarClaveInicial();
+}
+$('.btn-toggle-pass').click(function () {
+
+    const input = $($(this).data('target'));
+    const icon = $(this).find('i');
+
+    if (input.attr('type') === 'password') {
+
+        input.attr('type', 'text');
+
+        icon.removeClass('bi-eye-fill')
+            .addClass('bi-eye-slash-fill');
+
+    } else {
+
+        input.attr('type', 'password');
+
+        icon.removeClass('bi-eye-slash-fill')
+            .addClass('bi-eye-fill');
+    }
+
+});
