@@ -11,11 +11,13 @@ function editarUsuario() {
         });
 }
 function cargarUsuarioEnModal(usuario) {
+    
     $('#id').val(usuario.id);
     $('#nombre').val(usuario.nombre);
     $('#usuario').val(usuario.usuario);
     $('#id_perfil').val(usuario.perfil ? usuario.perfil.id : '');
-        $('#modalTitle').text('Editar Usuario');
+    mostrarCambioClave();
+    $('#modalTitle').text('Editar Usuario');
     usuarioModal.show();
 }
 
