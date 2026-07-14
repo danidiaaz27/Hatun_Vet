@@ -1,0 +1,282 @@
+/* ===============================
+   PERFILES - HATUNVET
+   =============================== */
+
+:root {
+    --perfiles-blue: var(--vet-blue, #0A3D91);
+    --perfiles-red: var(--vet-red, #d92d2d);
+    --perfiles-green: #159957;
+    --perfiles-text: #10213f;
+    --perfiles-muted: #6b7a99;
+    --perfiles-border: rgba(10, 61, 145, 0.14);
+    --perfiles-soft: #f5f8fc;
+}
+
+/* Modal crear/editar perfil */
+.perfil-form-modal {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(7, 22, 49, 0.25);
+}
+
+.perfil-form-header {
+    background: var(--perfiles-blue);
+    color: #fff;
+    border-bottom: none;
+}
+
+.perfil-btn-guardar {
+    background: var(--perfiles-blue);
+    color: #fff;
+    font-weight: 700;
+}
+
+.perfil-btn-guardar:hover {
+    background: #073173;
+    color: #fff;
+}
+
+/* Modal permisos */
+#permisosModal .modal-dialog {
+    max-width: 900px;
+}
+
+.permisos-modal-content {
+    border: none;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 22px 65px rgba(7, 22, 49, 0.32);
+}
+
+.permisos-modal-header {
+    background: linear-gradient(135deg, #061b3f 0%, var(--perfiles-blue) 100%);
+    color: #fff;
+    border-bottom: none;
+    padding: 16px 22px;
+}
+
+.permisos-modal-header .modal-title {
+    font-size: 19px;
+    font-weight: 800;
+}
+
+.permisos-title-role {
+    color: #ffc400;
+}
+
+.permisos-modal-body {
+    padding: 18px 22px 20px;
+    background: #fff;
+}
+
+.permisos-modal-footer {
+    background: #f3f6fb;
+    border-top: 1px solid rgba(10, 61, 145, 0.10);
+    padding: 15px 22px;
+}
+
+/* Resumen superior */
+.permisos-resumen {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1.5px solid rgba(10, 61, 145, 0.16);
+    background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+}
+
+.permisos-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(10, 61, 145, 0.10);
+    color: var(--perfiles-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+}
+
+.permisos-resumen-titulo {
+    color: var(--perfiles-blue);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.permisos-resumen-texto {
+    color: var(--perfiles-muted);
+    font-size: 14px;
+}
+
+.permisos-contador-box {
+    border-left: 1px solid rgba(10, 61, 145, 0.16);
+    padding-left: 28px;
+    min-width: 140px;
+    text-align: center;
+}
+
+.permisos-contador-box span {
+    display: block;
+    color: var(--perfiles-muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.permisos-contador-box strong {
+    display: block;
+    color: var(--perfiles-blue);
+    font-size: 24px;
+    font-weight: 900;
+}
+
+/* Acciones */
+.permisos-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.permisos-btn-marcar {
+    border: 1.5px solid #0d6efd;
+    color: #0d6efd;
+    background: #fff;
+    font-weight: 800;
+    border-radius: 10px;
+}
+
+.permisos-btn-marcar:hover {
+    background: #0d6efd;
+    color: #fff;
+}
+
+.permisos-btn-limpiar {
+    border: 1.5px solid var(--perfiles-red);
+    color: var(--perfiles-red);
+    background: #fff;
+    font-weight: 800;
+    border-radius: 10px;
+}
+
+.permisos-btn-limpiar:hover {
+    background: var(--perfiles-red);
+    color: #fff;
+}
+
+/* Grid de permisos */
+.permisos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.permiso-grupo {
+    border: 1.5px solid rgba(10, 61, 145, 0.14);
+    border-radius: 14px;
+    background: #fff;
+    overflow: hidden;
+    min-height: 150px;
+}
+
+.permiso-grupo-titulo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--perfiles-blue);
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    background: #f8fbff;
+    border-bottom: 1px solid rgba(10, 61, 145, 0.10);
+    padding: 12px 14px;
+}
+
+.permiso-grupo-body {
+    padding: 10px 14px 14px;
+}
+
+.permiso-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--perfiles-text);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 7px 0;
+    cursor: pointer;
+}
+
+.permiso-item:hover .permiso-nombre {
+    color: var(--perfiles-blue);
+}
+
+.permiso-check {
+    cursor: pointer;
+}
+
+.permiso-icono {
+    color: var(--perfiles-blue);
+    width: 18px;
+    text-align: center;
+    opacity: .85;
+}
+
+.permiso-nombre {
+    flex: 1;
+}
+
+/* Footer botones */
+.permisos-btn-cerrar {
+    background: #fff;
+    border: 1.5px solid rgba(10, 61, 145, 0.15);
+    color: var(--perfiles-text);
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 10px 18px;
+}
+
+.permisos-btn-cerrar:hover {
+    background: #eef3fa;
+}
+
+.permisos-btn-actualizar {
+    background: var(--perfiles-green);
+    color: #fff;
+    font-weight: 900;
+    border-radius: 10px;
+    padding: 10px 20px;
+    box-shadow: 0 8px 18px rgba(21, 153, 87, 0.24);
+}
+
+.permisos-btn-actualizar:hover {
+    background: #0f7d47;
+    color: #fff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #permisosModal .modal-dialog {
+        margin: 12px;
+    }
+
+    .permisos-resumen {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .permisos-contador-box {
+        border-left: none;
+        border-top: 1px solid rgba(10, 61, 145, 0.16);
+        padding-left: 0;
+        padding-top: 12px;
+        width: 100%;
+    }
+
+    .permisos-grid {
+        grid-template-columns: 1fr;
+    }
+}

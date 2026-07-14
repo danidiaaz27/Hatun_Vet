@@ -1,11 +1,25 @@
 spring:
   application:
     name: sistema-veterinaria
+
   datasource:
     url: ${DATABASE_URL:jdbc:mariadb://localhost:3306/veterinaria_db}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: personalcorreoparaprueba@gmail.com
+    password: xntp tnfg yhpc kttm
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   jpa:
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
@@ -14,3 +28,6 @@ spring:
 
 file:
   upload-dir: ${UPLOAD_DIR:uploads}
+
+admin:
+  email: personalcorreoparaprueba@gmail.com  

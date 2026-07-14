@@ -1,0 +1,426 @@
+/* ===============================
+   AGENDA - HATUNVET
+   =============================== */
+
+:root {
+    --agenda-blue: var(--vet-blue, #0A3D91);
+    --agenda-red: var(--vet-red, #d92d2d);
+    --agenda-text: #10213f;
+    --agenda-muted: #66758f;
+    --agenda-border: rgba(10, 61, 145, 0.14);
+    --agenda-soft: #f4f7fb;
+    --agenda-soft-blue: #f7faff;
+    --agenda-white: #ffffff;
+}
+
+/* ===============================
+   FULLCALENDAR
+   =============================== */
+
+.fc-event {
+    cursor: pointer;
+    border-radius: 8px !important;
+    border: none !important;
+    padding: 4px 7px !important;
+    font-size: 12px !important;
+    font-weight: 700;
+}
+
+.bg-agendada {
+    background-color: #0A3D91 !important;
+    color: #fff !important;
+}
+
+.bg-espera {
+    background-color: #f59e0b !important;
+    color: #fff !important;
+}
+
+.bg-atencion {
+    background-color: #1a6e40 !important;
+    color: #fff !important;
+}
+
+.fc-event.bg-secondary {
+    background-color: #6b7a99 !important;
+    color: #fff !important;
+}
+
+.bg-cobrada {
+    background-color: #10b981 !important;
+    color: #fff !important;
+}
+
+.bg-pago-parcial {
+    background-color: #0ea5e9 !important;
+    color: #fff !important;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 17px !important;
+    font-weight: 800 !important;
+    color: var(--agenda-text);
+}
+
+.fc .fc-button {
+    background: #fff !important;
+    border: 1.5px solid rgba(10, 61, 145, 0.18) !important;
+    color: var(--agenda-text) !important;
+    border-radius: 9px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 7px 14px !important;
+    box-shadow: none !important;
+    transition: all .15s ease;
+}
+
+.fc .fc-button:hover {
+    background: var(--agenda-blue) !important;
+    color: #fff !important;
+    border-color: var(--agenda-blue) !important;
+}
+
+.fc .fc-button-active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: var(--agenda-blue) !important;
+    color: #fff !important;
+    border-color: var(--agenda-blue) !important;
+}
+
+.fc .fc-today-button {
+    text-transform: capitalize;
+}
+
+.fc-theme-standard td,
+.fc-theme-standard th {
+    border-color: rgba(10, 61, 145, 0.08) !important;
+}
+
+.fc .fc-timegrid-slot {
+    height: 42px !important;
+}
+
+.fc .fc-col-header-cell-cushion {
+    font-weight: 800;
+    color: var(--agenda-text);
+    font-size: 13px;
+    padding: 9px 4px;
+}
+
+.fc .fc-timegrid-axis {
+    font-size: 11px;
+    color: #8a9bc0;
+}
+
+.fc-day-today {
+    background: rgba(10, 61, 145, 0.045) !important;
+}
+
+/* ===============================
+   MODAL NUEVA CITA
+   =============================== */
+
+#modalNuevaCita .modal-dialog {
+    max-width: 760px;
+}
+
+.agenda-modal-content {
+    border-radius: 18px !important;
+    overflow: hidden;
+    border: none !important;
+    box-shadow: 0 22px 65px rgba(7, 22, 49, 0.30);
+}
+
+.agenda-modal-header {
+    background: var(--agenda-blue) !important;
+    color: #fff;
+    padding: 16px 22px;
+    border-bottom: none;
+}
+
+.agenda-modal-header .modal-title {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.agenda-modal-subtitle {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.agenda-modal-body {
+    background: #fff;
+    padding: 18px 20px !important;
+}
+
+.agenda-modal-footer {
+    background: #f3f6fb !important;
+    border-top: 1px solid rgba(10, 61, 145, 0.10);
+    padding: 14px 18px;
+}
+
+/* Tip */
+.agenda-tip {
+    background: rgba(10, 61, 145, 0.05);
+    border: 1px solid rgba(10, 61, 145, 0.10);
+    border-radius: 10px;
+    padding: 9px 12px;
+    color: var(--agenda-blue);
+    font-size: 12px;
+    font-weight: 800;
+    text-align: center;
+}
+
+/* Secciones */
+.agenda-section {
+    border: 1.5px solid rgba(10, 61, 145, 0.12);
+    border-radius: 13px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.agenda-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(180deg, #f8fbff 0%, #f2f6fc 100%);
+    border-bottom: 1px solid rgba(10, 61, 145, 0.10);
+    color: var(--agenda-blue);
+    font-size: 14px;
+    font-weight: 800;
+    padding: 10px 13px;
+}
+
+.agenda-section-title i {
+    font-size: 15px;
+}
+
+.agenda-section-body {
+    padding: 13px 14px 14px;
+}
+
+/* Labels e inputs */
+#modalNuevaCita .label-vet {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: 6px;
+}
+
+#modalNuevaCita .input-vet,
+#modalNuevaCita .form-select,
+#modalNuevaCita .form-control {
+    width: 100%;
+    border-radius: 10px !important;
+    border: 1.5px solid rgba(10, 61, 145, 0.15) !important;
+    min-height: 42px;
+    color: var(--agenda-text);
+    font-size: 14px;
+    box-shadow: none !important;
+    background-color: #fff;
+}
+
+#modalNuevaCita .input-vet {
+    padding: 8px 12px;
+}
+
+#modalNuevaCita .form-control-sm,
+#modalNuevaCita .form-select-sm {
+    min-height: 36px;
+    font-size: 13px;
+}
+
+#modalNuevaCita .input-vet:focus,
+#modalNuevaCita .form-select:focus,
+#modalNuevaCita .form-control:focus {
+    border-color: var(--agenda-blue) !important;
+    box-shadow: 0 0 0 3px rgba(10, 61, 145, 0.10) !important;
+}
+
+#btnLimpiarDueno {
+    width: 46px;
+    border-radius: 10px !important;
+    border: 1.5px solid rgba(10, 61, 145, 0.15) !important;
+    background: #fff;
+}
+
+/* Autocomplete */
+.autocomplete-suggestions {
+    position: absolute;
+    background: white;
+    border: 1.5px solid rgba(10, 61, 145, 0.15);
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 12px 30px rgba(10, 61, 145, 0.14);
+    max-height: 210px;
+    overflow-y: auto;
+    width: calc(100% - 24px);
+    z-index: 1050;
+    margin-top: 2px;
+    padding-left: 0;
+    list-style: none;
+}
+
+.autocomplete-suggestion-item {
+    cursor: pointer;
+    padding: 11px 14px;
+    border-bottom: 1px solid #f0f4fa;
+    font-size: 13.5px;
+}
+
+.autocomplete-suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-suggestion-item:hover {
+    background: rgba(10, 61, 145, 0.06);
+    color: var(--agenda-blue);
+    font-weight: 700;
+}
+
+/* Registro rápido */
+.agenda-new-client-btn {
+    border-radius: 10px !important;
+    border: 1.6px dashed rgba(10, 61, 145, 0.45) !important;
+    background: #fff !important;
+    color: var(--agenda-blue) !important;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 9px 12px;
+    transition: all .15s ease;
+}
+
+.agenda-new-client-btn:hover {
+    background: rgba(10, 61, 145, 0.06) !important;
+    border-color: var(--agenda-blue) !important;
+}
+
+.agenda-registro-box {
+    background: #f7faff;
+    border: 1.5px solid rgba(10, 61, 145, 0.12);
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.agenda-registro-title {
+    color: var(--agenda-blue);
+    font-weight: 800;
+    font-size: 14px;
+}
+
+.agenda-badge {
+    display: inline-block;
+    background: var(--agenda-blue);
+    color: #fff;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-weight: 800;
+    font-size: 12px;
+}
+
+.agenda-registro-box hr {
+    border-color: rgba(10, 61, 145, 0.12);
+    opacity: 1;
+}
+
+/* Slots */
+.agenda-slots,
+#contenedorSlots {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(74px, 1fr));
+    gap: 8px !important;
+    margin-top: 4px;
+}
+
+.slot-btn {
+    background: #fff;
+    border: 1.5px solid rgba(10, 61, 145, 0.18);
+    border-radius: 10px;
+    padding: 9px 10px;
+    min-height: 40px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--agenda-text);
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.slot-btn:hover {
+    border-color: var(--agenda-blue);
+    color: var(--agenda-blue);
+    background: rgba(10, 61, 145, 0.04);
+    transform: translateY(-1px);
+}
+
+.slot-btn.active {
+    background: var(--agenda-blue);
+    color: #fff;
+    border-color: var(--agenda-blue);
+    box-shadow: 0 8px 18px rgba(10, 61, 145, 0.25);
+}
+
+.agenda-help-text {
+    display: block;
+    margin-top: 10px;
+    color: var(--agenda-blue);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+/* Botones del footer */
+#modalNuevaCita .btn-primary-vet,
+#modalNuevaCita .btn-secondary-vet {
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+/* ===============================
+   MODAL CHECK-IN
+   =============================== */
+
+#modalCheckIn .modal-content {
+    border-radius: 18px !important;
+    overflow: hidden;
+    border: none !important;
+    box-shadow: 0 20px 55px rgba(7, 22, 49, 0.25);
+}
+
+#modalCheckIn .modal-header {
+    background: var(--agenda-blue) !important;
+}
+
+/* Utilidad */
+.x-small {
+    font-size: 0.75rem;
+}
+
+/* ===============================
+   RESPONSIVE
+   =============================== */
+
+@media (max-width: 992px) {
+    .agenda-slots,
+    #contenedorSlots {
+        grid-template-columns: repeat(4, minmax(70px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    #modalNuevaCita .modal-dialog {
+        margin: 12px;
+    }
+
+    .agenda-modal-body {
+        padding: 15px !important;
+    }
+
+    .agenda-slots,
+    #contenedorSlots {
+        grid-template-columns: repeat(3, minmax(70px, 1fr));
+    }
+}

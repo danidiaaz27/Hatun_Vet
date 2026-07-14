@@ -6,6 +6,8 @@ function iniciarPermisosPerfiles() {
     );
 
     $('#btnGuardarPermisos').click(guardarPermisosPerfil);
+    $('#btnMarcarTodosPermisos').click(marcarTodosPermisos);
+    $('#btnLimpiarPermisos').click(limpiarPermisos);
 }
 
 async function abrirModalPermisos() {
@@ -19,12 +21,15 @@ async function abrirModalPermisos() {
     ]);
 
     $('#permisoPerfilNombre').text(perfilRes.data.nombre);
+    $('#permisoPerfilNombreResumen').text(perfilRes.data.nombre);
+    $('#permisoPerfilDescripcion').text(perfilRes.data.descripcion || 'Perfil del sistema');
 
     renderOpcionesPermisos(
         opcionesRes.data || [],
         perfilRes.data.opciones || []
     );
 
+    actualizarContadorPermisos();
     permisosModal.show();
 }
 
@@ -32,21 +37,105 @@ function renderOpcionesPermisos(opciones, opcionesPerfil) {
     const lista = $('#listaOpciones');
     lista.empty();
 
-    opciones.forEach(op => {
+    const grupos = agruparOpciones(opciones);
+
+    Object.keys(grupos).forEach(nombreGrupo => {
+        lista.append(crearGrupoPermisos(nombreGrupo, grupos[nombreGrupo], opcionesPerfil));
+    });
+
+    $('#listaOpciones input[type="checkbox"]').on('change', actualizarContadorPermisos);
+}
+
+function agruparOpciones(opciones) {
+    return {
+        'General': opciones.filter(op =>
+            contiene(op.nombre, ['Dashboard'])
+        ),
+        'Ventas': opciones.filter(op =>
+            contiene(op.nombre, ['Punto de Venta', 'Historial de Ventas', 'Control de Caja', 'Promociones'])
+        ),
+        'Atención Veterinaria': opciones.filter(op =>
+            contiene(op.nombre, ['Agenda', 'Torre de Control', 'Baños y Cortes', 'Mascotas', 'Clientes'])
+        ),
+        'Inventario': opciones.filter(op =>
+            contiene(op.nombre, ['Categorías', 'Productos', 'Proveedores', 'Inventario'])
+        ),
+        'Reportes y Configuración': opciones.filter(op =>
+            contiene(op.nombre, ['Reportes', 'Horarios', 'Configuración'])
+        )
+    };
+}
+
+function contiene(nombre, palabras) {
+    return palabras.some(palabra =>
+        nombre.toLowerCase().includes(palabra.toLowerCase())
+    );
+}
+
+function crearGrupoPermisos(nombreGrupo, opciones, opcionesPerfil) {
+    if (!opciones || opciones.length === 0) return '';
+
+    const iconoGrupo = obtenerIconoGrupo(nombreGrupo);
+
+    const items = opciones.map(op => {
         const checked = opcionesPerfil.includes(op.id) ? 'checked' : '';
 
-        lista.append(`
-            <label class="list-group-item d-flex align-items-center">
-                <input class="form-check-input me-3"
+        return `
+            <label class="permiso-item">
+                <input class="form-check-input permiso-check"
                     type="checkbox"
                     value="${op.id}"
                     ${checked}>
 
-                <i class="${op.icono} me-2 text-muted"></i>
-                ${op.nombre}
+                <span class="permiso-icono">
+                    <i class="${op.icono || 'bi bi-circle'}"></i>
+                </span>
+
+                <span class="permiso-nombre">${op.nombre}</span>
             </label>
-        `);
-    });
+        `;
+    }).join('');
+
+    return `
+        <div class="permiso-grupo">
+            <div class="permiso-grupo-titulo">
+                <i class="${iconoGrupo}"></i>
+                <span>${nombreGrupo}</span>
+            </div>
+            <div class="permiso-grupo-body">
+                ${items}
+            </div>
+        </div>
+    `;
+}
+
+function obtenerIconoGrupo(nombreGrupo) {
+    const iconos = {
+        'General': 'bi bi-grid-1x2-fill',
+        'Ventas': 'bi bi-cart-fill',
+        'Atención Veterinaria': 'bi bi-heart-pulse-fill',
+        'Inventario': 'bi bi-box-seam-fill',
+        'Reportes y Configuración': 'bi bi-graph-up-arrow'
+    };
+
+    return iconos[nombreGrupo] || 'bi bi-folder-fill';
+}
+
+function actualizarContadorPermisos() {
+    const total = $('#listaOpciones input[type="checkbox"]').length;
+    const seleccionados = $('#listaOpciones input[type="checkbox"]:checked').length;
+
+    $('#contadorPermisos').text(`${seleccionados} / ${total}`);
+}
+
+function marcarTodosPermisos() {
+    $('#listaOpciones input[type="checkbox"]').prop('checked', true);
+    actualizarContadorPermisos();
+}
+
+function limpiarPermisos() {
+    $('#listaOpciones input[type="checkbox"]').prop('checked', false);
+    actualizarContadorPermisos();
 }
 
 async function guardarPermisosPerfil() {

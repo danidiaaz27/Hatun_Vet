@@ -1,0 +1,252 @@
+/* ===============================
+   USUARIOS - HATUNVET
+   =============================== */
+
+:root {
+    --usuarios-blue: var(--vet-blue, #0A3D91);
+    --usuarios-red: var(--vet-red, #d92d2d);
+    --usuarios-green: #159957;
+    --usuarios-orange: #f59e0b;
+    --usuarios-text: #10213f;
+    --usuarios-muted: #6b7a99;
+    --usuarios-border: rgba(10, 61, 145, 0.14);
+    --usuarios-soft: #f5f8fc;
+}
+
+/* Header */
+.main-content header h2 {
+    color: var(--usuarios-blue) !important;
+    font-weight: 800;
+}
+
+#btnNuevoRegistro {
+    border-radius: 9px;
+    padding: 10px 18px;
+    box-shadow: 0 8px 18px rgba(217, 45, 45, 0.18);
+}
+
+/* Card tabla */
+.card-custom {
+    border: none;
+    border-radius: 18px !important;
+    box-shadow: 0 10px 28px rgba(7, 22, 49, 0.06);
+}
+
+/* DataTable */
+#tablaUsuarios {
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+#tablaUsuarios thead th {
+    background: #f8fafc;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 800;
+    border-bottom: 1px solid #d6dde8 !important;
+    padding: 13px 12px;
+}
+
+#tablaUsuarios tbody td {
+    padding: 13px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(10, 61, 145, 0.10);
+    font-size: 14px;
+}
+
+#tablaUsuarios tbody tr {
+    transition: all .15s ease;
+}
+
+#tablaUsuarios tbody tr:hover {
+    background: rgba(10, 61, 145, 0.035);
+}
+
+#tablaUsuarios tbody td:first-child {
+    color: #0f172a;
+    font-weight: 800;
+}
+
+#tablaUsuarios tbody td:nth-child(2) {
+    color: var(--usuarios-muted) !important;
+}
+
+/* Badges generales */
+#tablaUsuarios .badge {
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* Perfil asignado */
+#tablaUsuarios .badge.bg-secondary {
+    background: #64748b !important;
+}
+
+/* Estado */
+#tablaUsuarios .badge.bg-success {
+    background: var(--usuarios-green) !important;
+}
+
+#tablaUsuarios .badge.bg-danger {
+    background: var(--usuarios-red) !important;
+}
+
+/* Acciones */
+#tablaUsuarios .btn-group .btn {
+    min-width: 32px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-color: rgba(10, 61, 145, 0.14) !important;
+    background: #fff;
+    transition: all .15s ease;
+}
+
+#tablaUsuarios .btn-group .btn:hover:not(:disabled) {
+    background: #f3f7fc;
+    transform: translateY(-1px);
+}
+
+#tablaUsuarios .btn-group .btn:disabled {
+    background: #f1f5f9;
+    color: #94a3b8 !important;
+    cursor: not-allowed;
+    opacity: 1;
+}
+
+#tablaUsuarios .action-edit:hover {
+    color: var(--usuarios-blue) !important;
+}
+
+#tablaUsuarios .action-status:hover {
+    color: var(--usuarios-orange) !important;
+}
+
+#tablaUsuarios .action-delete:hover {
+    color: var(--usuarios-red) !important;
+}
+
+/* DataTables controles */
+.dataTables_wrapper .dataTables_length select,
+.dataTables_wrapper .dataTables_filter input {
+    border-radius: 8px;
+    border: 1.5px solid rgba(10, 61, 145, 0.14);
+    padding: 6px 10px;
+    box-shadow: none;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus {
+    border-color: var(--usuarios-blue);
+    box-shadow: 0 0 0 3px rgba(10, 61, 145, 0.10);
+    outline: none;
+}
+
+.page-item.active .page-link {
+    background-color: var(--usuarios-blue);
+    border-color: var(--usuarios-blue);
+}
+
+.page-link {
+    color: var(--usuarios-blue);
+}
+
+/* Modal usuario */
+#usuarioModal .modal-content {
+    border: none;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 55px rgba(7, 22, 49, 0.25);
+}
+
+#usuarioModal .modal-header {
+    background: var(--usuarios-blue) !important;
+    color: #fff;
+    border-bottom: none;
+}
+
+#usuarioModal .modal-title {
+    font-weight: 800;
+}
+
+#usuarioModal .form-control,
+#usuarioModal .form-select {
+    border-radius: 10px;
+    border: 1.5px solid rgba(10, 61, 145, 0.15);
+    box-shadow: none;
+}
+
+#usuarioModal .form-control:focus,
+#usuarioModal .form-select:focus {
+    border-color: var(--usuarios-blue);
+    box-shadow: 0 0 0 3px rgba(10, 61, 145, 0.10);
+}
+
+#usuarioModal .modal-footer {
+    background: #f3f6fb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 16px !important;
+    }
+
+    #tablaUsuarios {
+        font-size: 13px;
+    }
+
+    #tablaUsuarios tbody td,
+    #tablaUsuarios thead th {
+        padding: 10px 8px;
+    }
+}
+/* Seguridad de contraseña */
+.password-security-card {
+    border: 1px solid #dbe5f5;
+    border-radius: 14px;
+    padding: 18px 20px;
+    text-align: center;
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    min-height: 170px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.password-icon {
+    width: 52px;
+    height: 52px;
+    background: #e8f1ff;
+    color: var(--usuarios-blue);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+    font-size: 24px;
+}
+.btn-toggle-pass{
+    border-left:0;
+    min-width:48px;
+}
+
+.btn-toggle-pass i{
+    font-size:16px;
+}
+
+.input-group .form-control{
+    border-right:0;
+}
+
+.input-group .btn-outline-secondary{
+    border-color:#d7deea;
+    background:#fff;
+}
+
+.input-group .btn-outline-secondary:hover{
+    background:#f5f8fc;
+    color:var(--vet-blue);
+}
