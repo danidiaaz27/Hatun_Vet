@@ -41,12 +41,13 @@ function iniciarCambioEstado() {
     $('#groomingGrid').on('click', '.btn-cambiar-estado', function () {
         const id = $(this).data('id');
         const nuevoEstado = $(this).data('estado');
+        const btn = $(this);
 
-        confirmarCambioEstado(id, nuevoEstado);
+        confirmarCambioEstado(id, nuevoEstado, btn);
     });
 }
 
-function confirmarCambioEstado(id, nuevoEstado) {
+function confirmarCambioEstado(id, nuevoEstado, btn) {
     let label = '¿Cambiar estado?';
     let confirmText = 'Sí, cambiar';
 
@@ -67,17 +68,71 @@ function confirmarCambioEstado(id, nuevoEstado) {
         confirmButtonText: confirmText,
         cancelButtonText: 'Cancelar'
     }).then(result => {
-        if (result.isConfirmed) cambiarEstadoServicio(id, nuevoEstado);
+        if (result.isConfirmed) cambiarEstadoServicio(id, nuevoEstado, btn);
     });
 }
 
-function cambiarEstadoServicio(id, nuevoEstado) {
+function cambiarEstadoServicio(id, nuevoEstado, btn) {
+    if (btn) btn.prop('disabled', true);
+
     fetch(`${API_URL}/cambiar-estado/${id}?nuevoEstado=${nuevoEstado}`, {
         method: 'POST'
     })
         .then(r => r.json())
         .then(res => {
-            if (res.success) cargarServicios();
-            else Swal.fire('Error', res.message, 'error');
+            if (res.success) {
+                cargarServicios();
+                return;
+            }
+            Swal.fire('Error', res.message, 'error');
+            if (btn) btn.prop('disabled', false);
+        })
+        .catch(() => {
+            Swal.fire('Error', 'No se pudo cambiar el estado del servicio.', 'error');
+            if (btn) btn.prop('disabled', false);
+        });
+}
+
+// --- NUEVO: CANCELAR SERVICIO ---
+function iniciarCancelarServicio() {
+    $('#groomingGrid').on('click', '.btn-cancelar-servicio', function () {
+        const id = $(this).data('id');
+        const btn = $(this);
+        confirmarCancelacionServicio(id, btn);
+    });
+}
+
+function confirmarCancelacionServicio(id, btn) {
+    Swal.fire({
+        title: '¿Cancelar este servicio?',
+        text: 'El registro quedará marcado como cancelado y no aparecerá para cobro en Caja.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#b91c1c',
+        cancelButtonColor: '#6b7a99',
+        confirmButtonText: 'Sí, cancelar',
+        cancelButtonText: 'Volver'
+    }).then(result => {
+        if (result.isConfirmed) cancelarServicio(id, btn);
+    });
+}
+
+function cancelarServicio(id, btn) {
+    if (btn) btn.prop('disabled', true);
+
+    fetch(`${API_URL}/cancelar/${id}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                cargarServicios();
+                Swal.fire('Cancelado', res.message, 'success');
+                return;
+            }
+            Swal.fire('Error', res.message, 'error');
+            if (btn) btn.prop('disabled', false);
+        })
+        .catch(() => {
+            Swal.fire('Error', 'No se pudo cancelar el servicio.', 'error');
+            if (btn) btn.prop('disabled', false);
         });
 }

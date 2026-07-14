@@ -129,6 +129,40 @@ public class CitaRestController {
         }
     }
 
+    // --- NUEVO: CANCELAR CITA ---
+    @PostMapping("/{id}/cancelar")
+    public ResponseEntity<Map<String, Object>> cancelarCita(@PathVariable String id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Cita cita = citaService.cancelarCita(id);
+            response.put("success", true);
+            response.put("message", "Cita cancelada correctamente. El horario ha quedado disponible.");
+            response.put("data", cita);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // --- NUEVO: MARCAR NO ASISTIÓ ---
+    @PostMapping("/{id}/no-show")
+    public ResponseEntity<Map<String, Object>> marcarNoShow(@PathVariable String id) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Cita cita = citaService.marcarNoShow(id);
+            response.put("success", true);
+            response.put("message", "Cita marcada como 'No Asistió'.");
+            response.put("data", cita);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     @GetMapping("/{id}/insumos")
     public ResponseEntity<List<Map<String, Object>>> listarInsumos(@PathVariable String id) {
         try {

@@ -48,6 +48,17 @@
             color: #fff !important;
         }
 
+        .bg-cancelada {
+            background-color: #adb5bd !important;
+            color: #fff !important;
+            text-decoration: line-through;
+        }
+
+        .bg-no-show {
+            background-color: #b91c1c !important;
+            color: #fff !important;
+        }
+
         /* ── Toolbar del calendario ── */
         .fc .fc-toolbar-title {
             font-size: 17px !important;
@@ -319,10 +330,7 @@
                                         <select id="regEspecie" class="form-select form-select-sm"
                                             style="border-radius:6px;">
                                             <option value="Perro">Perro</option>
-                                            <option value="Gato">Gato</option>
-                                            <option value="Conejo">Conejo</option>
-                                            <option value="Ave">Ave</option>
-                                            <option value="Otro">Otro</option>
+                                            <option value="Gato">Gato</option>                                        
                                         </select>
                                     </div>
                                     <div class="col-md-6">
@@ -391,12 +399,12 @@
         </div>
     </div>
 
-    <!-- ═══ MODAL CHECK-IN ═══ -->
+    <!-- ═══ MODAL GESTIONAR CITA (Check-in / Cancelar / No Asistió) ═══ -->
     <div class="modal fade" id="modalCheckIn" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
                 <div class="modal-header text-white" style="background: var(--vet-blue);">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-person-check-fill me-2"></i> Recepción de Paciente
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-check-fill me-2"></i> Gestionar Cita
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -415,10 +423,19 @@
                             aceptó el costo base</label>
                     </div>
                 </div>
-                <div class="modal-footer justify-content-center" style="background:#f0f4fa;">
-                    <button type="button" id="btnProcesarCheckIn" class="btn-primary-vet px-5">
-                        <i class="bi bi-box-arrow-in-right me-1"></i> Marcar Llegada (Pasar a Espera)
+                <div class="modal-footer justify-content-between" style="background:#f0f4fa;">
+                    <button type="button" id="btnCancelarCita" class="btn btn-outline-danger fw-bold">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar Cita
                     </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="btnNoAsistio" class="btn btn-outline-secondary fw-bold"
+                            style="display:none;">
+                            <i class="bi bi-person-x me-1"></i> No Asistió
+                        </button>
+                        <button type="button" id="btnProcesarCheckIn" class="btn-primary-vet px-4">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Marcar Llegada
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -427,7 +444,14 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script th:src="@{/js/agenda.js}"></script>
-</body>
 
+    <script th:src="@{/js/agenda/agenda-calendar.js}"></script>
+    <script th:src="@{/js/agenda/agenda-medicos-clientes.js}"></script>
+    <script th:src="@{/js/agenda/agenda-autocomplete.js}"></script>
+    <script th:src="@{/js/agenda/agenda-utils.js}"></script>
+    <script th:src="@{/js/agenda/agenda-registro-rapido.js}"></script>
+    <script th:src="@{/js/agenda/agenda-slots.js}"></script>
+    <script th:src="@{/js/agenda/agenda-citas-checkin.js}"></script>
+    <script th:src="@{/js/agenda/agenda-main.js}"></script>
+</body>
 </html>

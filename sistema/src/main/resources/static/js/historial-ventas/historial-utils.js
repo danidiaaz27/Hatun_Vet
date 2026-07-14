@@ -11,14 +11,9 @@ function formatearFechaVenta(data) {
 }
 
 function renderEstadoVenta(data) {
-    if (data === 'FACTURADO') {
-        return '<span class="badge bg-success">Facturado</span>';
-    }
-
-    if (data === 'ANULADO') {
-        return '<span class="badge bg-danger">Anulado</span>';
-    }
-
+    if (data === 'FACTURADO') return '<span class="badge bg-success">Facturado</span>';
+    if (data === 'ANULADO') return '<span class="badge bg-danger">Anulado</span>';
+    if (data === 'NOTA_VENTA') return '<span class="badge bg-info">Nota de Venta</span>';
     return `<span class="badge bg-secondary">${data}</span>`;
 }
 

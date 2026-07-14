@@ -18,9 +18,10 @@ public class CategoriaProductoController {
         this.categoriaService = categoriaService;
     }
 
+    // ── CAMBIO CRUCIAL AQUÍ ──
     @GetMapping
     public String vistaCategorias() {
-        return "categorias";
+        return "categorias/categorias"; 
     }
 
     @GetMapping("/api/listar")
@@ -51,7 +52,6 @@ public class CategoriaProductoController {
             response.put("success", true);
             response.put("message", "Categoría guardada con éxito");
         } catch (IllegalArgumentException e) {
-            // Captura los errores de validación (Ej. Duplicados)
             response.put("success", false);
             response.put("message", e.getMessage());
         } catch (Exception e) {
@@ -80,7 +80,6 @@ public class CategoriaProductoController {
             response.put("success", ok);
             response.put("message", ok ? "Categoría eliminada" : "Categoría no encontrada.");
         } catch (RuntimeException e) {
-            // Captura el error de productos vinculados
             response.put("success", false);
             response.put("message", e.getMessage());
         }

@@ -5,7 +5,8 @@ spring:
     url: ${DATABASE_URL:jdbc:mariadb://localhost:3306/veterinaria_db}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:123456}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.mariadb.jdbc.Driver
+    
   jpa:
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
