@@ -38,6 +38,9 @@ public class CitaService {
         this.productoRepository = productoRepository;
     }
 
+    // Estados que se consideran "activos" (bloquean horario / cuentan en agenda)
+    private static final List<String> ESTADOS_ACTIVOS = List.of("AGENDADA", "EN_ESPERA", "EN_ATENCION");
+
     public List<Cita> obtenerTodasLasCitas() {
         return citaRepository.findAll();
     }
@@ -88,7 +91,7 @@ public class CitaService {
                 .filter(c -> c.getVeterinario() != null && c.getVeterinario().getId().equals(vetId))
                 .filter(c -> cita.getId() == null || !c.getId().equals(cita.getId())) // Ignorar si es la misma al editar
                 .filter(c -> c.getFechaHoraProgramada().equals(fechaHora))
-                .filter(c -> List.of("AGENDADA", "EN_ESPERA", "EN_ATENCION").contains(c.getEstado()))
+                .filter(c -> ESTADOS_ACTIVOS.contains(c.getEstado()))
                 .toList();
 
         if (!citasCoincidentes.isEmpty()) {
@@ -104,7 +107,7 @@ public class CitaService {
                 .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
         
         if (!cita.getEstado().equals("AGENDADA") && !cita.getEstado().equals("PAGO_PARCIAL")) {
-            throw new IllegalStateException("La cita no está en estado AGENDADA ni PAGO_PARCIAL.");
+            throw new IllegalStateException("Solo se puede hacer check-in a citas en estado AGENDADA o PAGO_PARCIAL. Estado actual: " + cita.getEstado());
         }
         cita.setEstado("EN_ESPERA");
         cita.setFechaHoraLlegada(LocalDateTime.now());
@@ -116,6 +119,11 @@ public class CitaService {
     public Cita iniciarAtencionMedica(String citaId) {
         Cita cita = citaRepository.findById(citaId)
                 .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
+
+        if (!cita.getEstado().equals("EN_ESPERA")) {
+            throw new IllegalStateException("Solo se puede iniciar atención a pacientes en estado EN_ESPERA. Estado actual: " + cita.getEstado());
+        }
+
         cita.setEstado("EN_ATENCION");
         return citaRepository.save(cita);
     }
@@ -127,6 +135,10 @@ public class CitaService {
             throw new IllegalArgumentException("El peso, temperatura, síntomas y diagnóstico son obligatorios.");
         }
         Cita cita = citaRepository.findById(citaId).orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
+
+        if (!cita.getEstado().equals("EN_ATENCION")) {
+            throw new IllegalStateException("Solo se puede registrar la anamnesis mientras la cita está EN_ATENCION. Estado actual: " + cita.getEstado());
+        }
         
         Optional<ConsultaClinica> consultaOpt = consultaRepository.findByCitaId(citaId);
         ConsultaClinica consulta;
@@ -160,6 +172,11 @@ public class CitaService {
     public ConsultaInsumo registrarInsumo(String consultaId, String productoId, BigDecimal cantidadUsada) {
         ConsultaClinica consulta = consultaRepository.findById(consultaId)
                 .orElseThrow(() -> new IllegalArgumentException("Consulta no encontrada"));
+
+        if (!consulta.getCita().getEstado().equals("EN_ATENCION")) {
+            throw new IllegalStateException("Solo se pueden registrar insumos mientras la consulta está en curso (EN_ATENCION).");
+        }
+
         Producto producto = productoRepository.findById(productoId)
                 .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado"));
 
@@ -234,6 +251,11 @@ public class CitaService {
     public void revertirInsumo(Long insumoId) {
         ConsultaInsumo insumo = insumoRepository.findById(insumoId)
                 .orElseThrow(() -> new IllegalArgumentException("Registro de insumo no encontrado"));
+
+        if (!insumo.getConsultaClinica().getCita().getEstado().equals("EN_ATENCION")) {
+            throw new IllegalStateException("Solo se pueden retirar insumos mientras la consulta está en curso (EN_ATENCION).");
+        }
+
         Producto producto = insumo.getProducto();
         BigDecimal cantUsada = insumo.getCantidadUsada();
 
@@ -269,8 +291,42 @@ public class CitaService {
     @Transactional
     public Cita finalizarCita(String citaId) {
         Cita cita = citaRepository.findById(citaId).orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
+
+        if (!cita.getEstado().equals("EN_ATENCION")) {
+            throw new IllegalStateException("Solo se puede finalizar una cita que está EN_ATENCION. Estado actual: " + cita.getEstado());
+        }
+
         consultaRepository.findByCitaId(citaId).orElseThrow(() -> new IllegalStateException("No se puede finalizar sin anamnesis."));
         cita.setEstado("FINALIZADA");
+        return citaRepository.save(cita);
+    }
+
+    // --- NUEVO: CANCELACIÓN DE CITA ---
+    @Transactional
+    public Cita cancelarCita(String citaId) {
+        Cita cita = citaRepository.findById(citaId)
+                .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
+
+        List<String> estadosCancelables = List.of("AGENDADA", "EN_ESPERA");
+        if (!estadosCancelables.contains(cita.getEstado())) {
+            throw new IllegalStateException("No se puede cancelar una cita en estado " + cita.getEstado() + ".");
+        }
+
+        cita.setEstado("CANCELADA");
+        return citaRepository.save(cita);
+    }
+
+    // --- NUEVO: MARCAR NO ASISTIÓ (NO-SHOW) ---
+    @Transactional
+    public Cita marcarNoShow(String citaId) {
+        Cita cita = citaRepository.findById(citaId)
+                .orElseThrow(() -> new IllegalArgumentException("Cita no encontrada"));
+
+        if (!cita.getEstado().equals("AGENDADA")) {
+            throw new IllegalStateException("Solo se puede marcar 'No Asistió' a citas en estado AGENDADA. Estado actual: " + cita.getEstado());
+        }
+
+        cita.setEstado("NO_ASISTIO");
         return citaRepository.save(cita);
     }
 

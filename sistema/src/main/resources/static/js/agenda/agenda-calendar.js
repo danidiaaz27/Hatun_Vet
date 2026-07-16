@@ -45,6 +45,8 @@ function obtenerClaseEstado(estado) {
     if (estado === 'FINALIZADA') return 'bg-secondary';
     if (estado === 'COBRADA') return 'bg-cobrada';
     if (estado === 'PAGO_PARCIAL') return 'bg-pago-parcial';
+    if (estado === 'CANCELADA') return 'bg-cancelada';
+    if (estado === 'NO_ASISTIO') return 'bg-no-show';
 
     return 'bg-agendada';
 }
@@ -59,18 +61,26 @@ function obtenerTituloCita(cita) {
     return `${mascotaNombre} (${duenoNombre}) - ${cita.motivoPrincipal}`;
 }
 
+function formatearEstado(estado) {
+    const nombres = {
+        EN_ESPERA: 'En Espera',
+        EN_ATENCION: 'En Atención',
+        FINALIZADA: 'Finalizada',
+        COBRADA: 'Cobrada',
+        PAGO_PARCIAL: 'Pago Parcial',
+        CANCELADA: 'Cancelada',
+        NO_ASISTIO: 'No Asistió'
+    };
+    return nombres[estado] || estado;
+}
+
 function manejarClickEvento(info) {
     const estado = info.event.extendedProps.estado;
 
     if (estado === 'AGENDADA') {
-        document.getElementById('citaIdCheckIn').value = info.event.id;
-        document.getElementById('lblMotivoCheckIn').innerText =
-            `Motivo: ${info.event.title}`;
-        document.getElementById('checkAvisoCosto').checked = false;
-
-        modalCheckIn.show();
+        abrirModalGestionCita(info.event);
         return;
     }
 
-    Swal.fire('Información', `Esta cita ya se encuentra en estado: ${estado}`, 'info');
+    Swal.fire('Información', `Esta cita ya se encuentra en estado: ${formatearEstado(estado)}`, 'info');
 }

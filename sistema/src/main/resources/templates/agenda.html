@@ -8,6 +8,179 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <link th:href="@{/css/main.css}" rel="stylesheet">
+    <style>
+        /* ── Eventos del calendario ── */
+        .fc-event {
+            cursor: pointer;
+            border-radius: 6px !important;
+            border: none !important;
+            padding: 3px 6px !important;
+            font-size: 12px !important;
+        }
+
+        .bg-agendada {
+            background-color: #0A3D91 !important;
+            color: #fff !important;
+        }
+
+        .bg-espera {
+            background-color: #f59e0b !important;
+            color: #fff !important;
+        }
+
+        .bg-atencion {
+            background-color: #1a6e40 !important;
+            color: #fff !important;
+        }
+
+        .fc-event.bg-secondary {
+            background-color: #6b7a99 !important;
+            color: #fff !important;
+        }
+
+        .bg-cobrada {
+            background-color: #10b981 !important;
+            color: #fff !important;
+        }
+
+        .bg-pago-parcial {
+            background-color: #0ea5e9 !important;
+            color: #fff !important;
+        }
+
+        .bg-cancelada {
+            background-color: #adb5bd !important;
+            color: #fff !important;
+            text-decoration: line-through;
+        }
+
+        .bg-no-show {
+            background-color: #b91c1c !important;
+            color: #fff !important;
+        }
+
+        /* ── Toolbar del calendario ── */
+        .fc .fc-toolbar-title {
+            font-size: 17px !important;
+            font-weight: 700 !important;
+            color: #1a2035;
+        }
+
+        .fc .fc-button {
+            background: #fff !important;
+            border: 1.5px solid rgba(10, 61, 145, 0.18) !important;
+            color: #1a2035 !important;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            padding: 6px 14px !important;
+            box-shadow: none !important;
+            transition: all .15s;
+        }
+
+        .fc .fc-button:hover {
+            background: var(--vet-blue, #0A3D91) !important;
+            color: #fff !important;
+            border-color: var(--vet-blue) !important;
+        }
+
+        .fc .fc-button-active,
+        .fc .fc-button-primary:not(:disabled).fc-button-active {
+            background: var(--vet-blue, #0A3D91) !important;
+            color: #fff !important;
+            border-color: var(--vet-blue) !important;
+        }
+
+        .fc .fc-today-button {
+            text-transform: capitalize;
+        }
+
+        .fc-theme-standard td,
+        .fc-theme-standard th {
+            border-color: rgba(10, 61, 145, 0.08) !important;
+        }
+
+        .fc .fc-timegrid-slot {
+            height: 40px !important;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            font-weight: 700;
+            color: #1a2035;
+            font-size: 13px;
+            padding: 8px 4px;
+        }
+
+        .fc .fc-timegrid-axis {
+            font-size: 11px;
+            color: #8a9bc0;
+        }
+
+        .fc-day-today {
+            background: rgba(10, 61, 145, 0.04) !important;
+        }
+
+        /* ── Autocompletado ── */
+        .autocomplete-suggestions {
+            position: absolute;
+            background: white;
+            border: 1.5px solid rgba(10, 61, 145, 0.15);
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 8px 24px rgba(10, 61, 145, 0.12);
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 24px);
+            z-index: 1050;
+            margin-top: 2px;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .autocomplete-suggestion-item {
+            cursor: pointer;
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0f4fa;
+            font-size: 13.5px;
+        }
+
+        .autocomplete-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-suggestion-item:hover {
+            background: rgba(10, 61, 145, 0.06);
+            color: #0A3D91;
+            font-weight: 600;
+        }
+
+        .x-small {
+            font-size: 0.75rem;
+        }
+
+        /* Slot picker */
+        .slot-btn {
+            background: #fff;
+            border: 1.5px solid rgba(10, 61, 145, 0.20);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a2035;
+            cursor: pointer;
+            transition: all .15s;
+        }
+
+        .slot-btn:hover {
+            border-color: var(--vet-blue);
+            color: var(--vet-blue);
+        }
+
+        .slot-btn.active {
+            background: var(--vet-blue);
+            color: #fff;
+            border-color: var(--vet-blue);
+        }
+    </style>
     <link th:href="@{/css/agenda.css}" rel="stylesheet">
 </head>
 
@@ -299,13 +472,17 @@
         </div>
     </div>
 
-    <!-- ═══ MODAL CHECK-IN ═══ -->
+    <!-- ═══ MODAL GESTIONAR CITA (Check-in / Cancelar / No Asistió) ═══ -->
     <div class="modal fade" id="modalCheckIn" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
                 <div class="modal-header text-white" style="background: var(--vet-blue);">
+<<<<<<< HEAD
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-check-fill me-2"></i> Gestionar Cita
+=======
                     <h5 class="modal-title fw-bold">
                         <i class="bi bi-person-check-fill me-2"></i> Recepción de Paciente
+>>>>>>> origin/Mejoras-visuales
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -330,11 +507,26 @@
                         </label>
                     </div>
                 </div>
+<<<<<<< HEAD
+                <div class="modal-footer justify-content-between" style="background:#f0f4fa;">
+                    <button type="button" id="btnCancelarCita" class="btn btn-outline-danger fw-bold">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar Cita
+=======
 
                 <div class="modal-footer justify-content-center" style="background:#f0f4fa;">
                     <button type="button" id="btnProcesarCheckIn" class="btn-primary-vet px-5">
                         <i class="bi bi-box-arrow-in-right me-1"></i> Marcar Llegada (Pasar a Espera)
+>>>>>>> origin/Mejoras-visuales
                     </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="btnNoAsistio" class="btn btn-outline-secondary fw-bold"
+                            style="display:none;">
+                            <i class="bi bi-person-x me-1"></i> No Asistió
+                        </button>
+                        <button type="button" id="btnProcesarCheckIn" class="btn-primary-vet px-4">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Marcar Llegada
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -352,7 +544,5 @@
     <script th:src="@{/js/agenda/agenda-slots.js}"></script>
     <script th:src="@{/js/agenda/agenda-citas-checkin.js}"></script>
     <script th:src="@{/js/agenda/agenda-main.js}"></script>
-
 </body>
-
 </html>

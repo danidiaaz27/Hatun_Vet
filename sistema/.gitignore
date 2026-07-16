@@ -37,3 +37,6 @@ sistema/.env
 
 # Ignorar configuraciones con credenciales
 sistema/src/main/resources/application.yml
+
+# En tu archivo .gitignore agrega:
+sistema/src/main/resources/application-local.yml

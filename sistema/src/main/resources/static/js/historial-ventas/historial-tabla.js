@@ -7,6 +7,7 @@ function inicializarTablaHistorial() {
                 return json.data;
             }
         },
+        // CORRECCIÓN: Forzamos el ordenamiento por la primera columna (Fecha y Hora) en forma descendente ('desc')
         order: [[0, 'desc']],
         columns: obtenerColumnasHistorial(),
         language: {
@@ -57,6 +58,18 @@ function obtenerColumnasHistorial() {
 function renderAccionesVenta(data, type, row) {
     const links = crearLinksComprobante(row);
 
+    // CORRECCIÓN: Si es una Nota de Venta local, los links de la API externa no servirán.
+    // Ocultamos o deshabilitamos los botones si el tipo de comprobante no corresponde a Boleta/Factura.
+    const esNotaVenta = row.tipoComprobante === '00' || row.serie === 'NV01';
+    
+    const botonTicket = esNotaVenta 
+        ? `<button class="btn btn-outline-danger" title="Ver Ticket" onclick="reimprimirTicketLocalPOS(${row.id})"><i class="bi bi-receipt"></i></button>`
+        : `<a href="${links.ticket}" target="_blank" class="btn btn-outline-danger" title="Ver Ticket"><i class="bi bi-receipt"></i></a>`;
+
+    const botonA4 = esNotaVenta 
+        ? '' 
+        : `<a href="${links.a4}" target="_blank" class="btn btn-outline-danger" title="Ver A4"><i class="bi bi-file-earmark-pdf"></i></a>`;
+
     return `
         <div class="btn-group btn-group-sm">
             <button data-id="${row.id}"
@@ -65,20 +78,9 @@ function renderAccionesVenta(data, type, row) {
                 <i class="bi bi-eye-fill"></i> Productos
             </button>
 
-            <a href="${links.ticket}" target="_blank"
-                class="btn btn-outline-danger" title="Ver Ticket">
-                <i class="bi bi-receipt"></i>
-            </a>
-
-            <a href="${links.a4}" target="_blank"
-                class="btn btn-outline-danger" title="Ver A4">
-                <i class="bi bi-file-earmark-pdf"></i>
-            </a>
-
-            <a href="${links.xml}" target="_blank"
-                class="btn btn-outline-secondary" title="Ver XML">
-                <i class="bi bi-filetype-xml"></i>
-            </a>
-        </div>
+            ${botonTicket}
+            ${botonA4}
+            
+            </div>
     `;
 }

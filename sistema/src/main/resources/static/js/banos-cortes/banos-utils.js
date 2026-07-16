@@ -58,7 +58,9 @@ function badgeEstado(estado) {
         PAGO_PARCIAL:
             '<span class="badge-estado" style="background:#e3f2fd; color:#0d47a1; border-radius:50px; padding:4px 13px; font-size:12px; font-weight:600; border:1px solid #90caf9;">💳 Pago Parcial</span>',
         PAGADO:
-            '<span class="badge-estado" style="background:#e2f0d9; color:#385723; border-radius:50px; padding:4px 13px; font-size:12px; font-weight:600; border:1.5px solid #385723;">💰 PAGADO</span>'
+            '<span class="badge-estado" style="background:#e2f0d9; color:#385723; border-radius:50px; padding:4px 13px; font-size:12px; font-weight:600; border:1.5px solid #385723;">💰 PAGADO</span>',
+        CANCELADO:
+            '<span class="badge-estado" style="background:#f8d7da; color:#842029; border-radius:50px; padding:4px 13px; font-size:12px; font-weight:600; border:1px solid #f5c2c7;">✖ Cancelado</span>'
     };
 
     return mapa[estado] ||

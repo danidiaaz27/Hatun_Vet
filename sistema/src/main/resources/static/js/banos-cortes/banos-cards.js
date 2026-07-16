@@ -74,7 +74,17 @@ function obtenerAccionesServicio(row) {
                 </button>
             </div>`;
     }
-    if (row.estado === 'TERMINADO') {
+    if (row.estado === 'CANCELADO') {
+        return `
+            <div class="grooming-card-actions">
+                <button class="btn btn-outline-secondary" disabled>
+                    <i class="bi bi-x-circle me-1"></i> Cancelado
+                </button>
+            </div>`;
+    }
+    // NOTA: TERMINADO y PAGO_PARCIAL ya no permiten "Iniciar/Finalizar" de nuevo,
+    // solo van a Caja, ya que la transición hacia atrás no es válida en el backend.
+    if (row.estado === 'TERMINADO' || row.estado === 'PAGO_PARCIAL') {
         return `
             <div class="grooming-card-actions">
                 <button class="btn btn-outline-primary w-100"
@@ -87,13 +97,18 @@ function obtenerAccionesServicio(row) {
     if (row.estado === 'EN_PROCESO') {
         return `
             <div class="grooming-card-actions">
-                <button class="btn text-white btn-cambiar-estado w-100"
-                    style="background:#1a6e40;"
+                <button class="btn text-white btn-cambiar-estado"
+                    style="background:#1a6e40; flex:2;"
                     data-id="${row.id}" data-estado="TERMINADO">
                     <i class="bi bi-check-circle me-1"></i> Finalizar
                 </button>
+                <button class="btn btn-outline-danger btn-cancelar-servicio"
+                    style="flex:1;" data-id="${row.id}" title="Cancelar servicio">
+                    <i class="bi bi-x-lg"></i>
+                </button>
             </div>`;
     }
+    // PENDIENTE
     return `
         <div class="grooming-card-actions">
             <button class="btn btn-outline-secondary btn-cambiar-estado"
@@ -104,6 +119,10 @@ function obtenerAccionesServicio(row) {
                 style="background:#1a6e40;"
                 data-id="${row.id}" data-estado="TERMINADO">
                 <i class="bi bi-check-circle me-1"></i> Finalizar
+            </button>
+            <button class="btn btn-outline-danger btn-cancelar-servicio"
+                data-id="${row.id}" title="Cancelar servicio">
+                <i class="bi bi-x-lg"></i>
             </button>
         </div>`;
 }

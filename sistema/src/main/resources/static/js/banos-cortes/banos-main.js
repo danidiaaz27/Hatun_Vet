@@ -16,6 +16,7 @@ $(document).ready(function () {
     cargarServicios();
     iniciarPaginacionYFiltro();
     iniciarCambioEstado();
+    iniciarCancelarServicio();
     iniciarBusquedaMascotas();
     iniciarCatalogoServicios();
     iniciarNuevoServicio();

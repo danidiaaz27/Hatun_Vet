@@ -12,18 +12,38 @@ function iniciarClientePOS() {
 function configurarTipoDocumento() {
     const tipo = $('#tipoDoc').val();
     const esDni = tipo === '1';
+    const esRuc = tipo === '6';
+    const esNotaVenta = tipo === '0';
 
-    $('#numDoc')
-        .val('')
-        .attr('maxlength', esDni ? '8' : '11')
-        .attr('placeholder', esDni ? 'DNI (8 dígitos)' : 'RUC (11 dígitos)');
+    // Limpiamos el valor del número para evitar cruce de datos viejos
+    $('#numDoc').val('');
 
-    $('#nombreCliente').val('');
+    if (esDni) {
+        $('#numDoc').attr('maxlength', '8').attr('placeholder', 'DNI (8 dígitos)');
+    } else if (esRuc) {
+        $('#numDoc').attr('maxlength', '11').attr('placeholder', 'RUC (11 dígitos)');
+    } else if (esNotaVenta) {
+        $('#numDoc').attr('maxlength', '15').attr('placeholder', 'N° Doc (Nota de Venta)');
+    }
+
+    // Al cambiar de tipo de documento, siempre limpiamos el nombre y liberamos el bloqueo de edición
+    $('#nombreCliente').val('').prop('readOnly', false);
 }
 
 function buscarClienteDocumento() {
     const tipoDoc = $('#tipoDoc').val();
     const numDoc = $('#numDoc').val().trim();
+
+    // Si es Nota de Venta, no es necesario consultar a la API externa de SUNAT/RENIEC
+    if (tipoDoc === '0') {
+        Swal.fire({
+            title: 'Nota de Venta',
+            text: 'Para Notas de Venta puede escribir el nombre del cliente directamente en el campo inferior.',
+            icon: 'info',
+            confirmButtonColor: '#0A3D91'
+        });
+        return;
+    }
 
     if (!validarDocumentoVenta(tipoDoc, numDoc)) return;
 
@@ -33,7 +53,10 @@ function buscarClienteDocumento() {
     );
 
     fetch(`/ventas/api/consultar-cliente?tipoDoc=${tipoDoc}&numero=${numDoc}`)
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) throw new Error('Respuesta de red no conforme');
+            return r.json();
+        })
         .then(res => manejarRespuestaCliente(res, tipoDoc))
         .catch(() =>
             Swal.fire('Error', 'Fallo al consultar documento.', 'error')
@@ -71,10 +94,16 @@ function validarDocumentoVenta(tipoDoc, numDoc) {
 }
 
 function manejarRespuestaCliente(res, tipoDoc) {
+    // DECLARACIÓN CRUCIAL: Capturamos el elemento del DOM para poder usarlo abajo
+    const inputNombre = $('#nombreCliente');
+
     const info = res.datos || res.data;
 
     if (res.success && info) {
-        $('#nombreCliente').val(obtenerNombreClienteDocumento(info, tipoDoc));
+        // Colocamos el nombre generado
+        inputNombre.val(obtenerNombreClienteDocumento(info, tipoDoc));
+        // BLOQUEO: No se puede borrar ni agregar caracteres al nombre generado de RENIEC/SUNAT
+        inputNombre.prop('readOnly', true);
         return;
     }
 
@@ -84,7 +113,8 @@ function manejarRespuestaCliente(res, tipoDoc) {
         'info'
     );
 
-    $('#nombreCliente').val('');
+    // Si no se encuentra, limpiamos y permitimos escribir manualmente
+    inputNombre.val('').prop('readOnly', false);
 }
 
 function obtenerNombreClienteDocumento(info, tipoDoc) {

@@ -71,10 +71,29 @@ function manejarRespuestaNuevaCita(res, form) {
     document.getElementById('contenedorSlots').innerHTML = '';
     slotSeleccionado = null;
 }
+
 function iniciarCheckIn() {
     document.getElementById('btnProcesarCheckIn')
         .addEventListener('click', procesarCheckIn);
+    document.getElementById('btnNoAsistio')
+        .addEventListener('click', confirmarNoShow);
+    document.getElementById('btnCancelarCita')
+        .addEventListener('click', confirmarCancelacion);
 }
+
+function abrirModalGestionCita(event) {
+    document.getElementById('citaIdCheckIn').value = event.id;
+    document.getElementById('lblMotivoCheckIn').innerText = `Motivo: ${event.title}`;
+    document.getElementById('checkAvisoCosto').checked = false;
+
+    // "No Asistió" solo tiene sentido si la hora programada ya pasó
+    const fechaProgramada = event.start;
+    const yaVencida = fechaProgramada && fechaProgramada.getTime() < Date.now();
+    document.getElementById('btnNoAsistio').style.display = yaVencida ? 'inline-flex' : 'none';
+
+    modalCheckIn.show();
+}
+
 function procesarCheckIn() {
     if (!document.getElementById('checkAvisoCosto').checked) {
         Swal.fire('Atención',
@@ -108,5 +127,71 @@ function cambiarEstadoBotonCheckIn(btn, procesando) {
     btn.disabled = procesando;
     btn.innerText = procesando
         ? 'Procesando...'
-        : 'Marcar Llegada (Pasar a Espera)';
+        : 'Marcar Llegada';
+}
+
+// --- NUEVO: NO ASISTIÓ ---
+function confirmarNoShow() {
+    const idCita = document.getElementById('citaIdCheckIn').value;
+    Swal.fire({
+        title: '¿Marcar como No Asistió?',
+        text: 'Esta acción liberará el horario y quedará registrado que el paciente no llegó.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, no asistió',
+        cancelButtonText: 'Volver'
+    }).then(result => {
+        if (result.isConfirmed) procesarNoShow(idCita);
+    });
+}
+
+function procesarNoShow(idCita) {
+    fetch(`/api/citas/${idCita}/no-show`, { method: 'POST' })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                modalCheckIn.hide();
+                calendar.refetchEvents();
+                Swal.fire('Registrado', res.message, 'success');
+                return;
+            }
+            Swal.fire('Error', res.message, 'error');
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Error', 'No se pudo procesar la acción.', 'error');
+        });
+}
+
+// --- NUEVO: CANCELAR CITA ---
+function confirmarCancelacion() {
+    const idCita = document.getElementById('citaIdCheckIn').value;
+    Swal.fire({
+        title: '¿Cancelar esta cita?',
+        text: 'El horario quedará disponible nuevamente para otros pacientes.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, cancelar cita',
+        cancelButtonText: 'Volver'
+    }).then(result => {
+        if (result.isConfirmed) procesarCancelacion(idCita);
+    });
+}
+
+function procesarCancelacion(idCita) {
+    fetch(`/api/citas/${idCita}/cancelar`, { method: 'POST' })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                modalCheckIn.hide();
+                calendar.refetchEvents();
+                Swal.fire('Cancelada', res.message, 'success');
+                return;
+            }
+            Swal.fire('Error', res.message, 'error');
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Error', 'No se pudo cancelar la cita.', 'error');
+        });
 }
