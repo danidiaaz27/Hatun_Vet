@@ -1,5 +1,6 @@
 package com.hatunvet.sistema.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,30 +14,33 @@ import java.util.Map;
 @Service
 public class FacturacionService {
 
-    private final String API_URL = "https://miapi.cloud/apifact/invoice/create";
-    private final String CLAVE_SECRETA = "miap-7ci-u47-raa";
+    @Value("${miapi.url}")
+    private String apiUrl;
+
+    @Value("${miapi.secret}")
+    private String claveSecreta;
 
     public Map<String, Object> enviarAMiapicloud(Map<String, Object> payload) {
-        // Mantenemos la clave en el cuerpo por si acaso
-        payload.put("claveSecreta", CLAVE_SECRETA);
+        // Mantenemos la clave en el cuerpo usando la variable inyectada
+        payload.put("claveSecreta", claveSecreta);
 
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // ¡LA SOLUCIÓN! Enviamos tu clave como un Token de Autorización Bearer
-        headers.set("Authorization", "Bearer " + CLAVE_SECRETA);
+        // Enviamos tu clave de forma segura desde las propiedades configuradas
+        headers.set("Authorization", "Bearer " + claveSecreta);
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
         try {
-            // Intentamos enviar la factura
-            ResponseEntity<Map> response = restTemplate.postForEntity(API_URL, request, Map.class);
+            // Intentamos enviar la factura apuntando a la URL inyectada
+            ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, request, Map.class);
             return response.getBody();
 
         } catch (HttpClientErrorException e) {
             // Si Miapicloud o la SUNAT rechazan la factura (ej. 401, 400),
-            // atrapamos el mensaje real y te lo mostramos en pantalla.
+            // atrapamos el mensaje real y lo enviamos en la excepción.
             throw new RuntimeException("Miapicloud responde: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Fallo en la red: " + e.getMessage());

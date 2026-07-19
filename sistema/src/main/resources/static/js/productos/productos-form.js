@@ -56,6 +56,7 @@ function crearFormDataProducto() {
 
     return formData;
 }
+
 function agregarDatosFraccionables(formData) {
     const esFraccionable = $('#fraccionable').is(':checked');
     const esServicio = $('#esServicio').is(':checked');
@@ -81,4 +82,56 @@ function agregarImagenProducto(formData) {
     if (fileInput.files.length > 0) {
         formData.append('imagenFile', fileInput.files[0]);
     }
+}
+
+function actualizarEstadoCodigoProducto(esServicio) {
+    const campoCodigo = $('#codigo');
+    const modoEdicion = $('#id').val() !== '';
+
+    if (esServicio) {
+        campoCodigo.prop('readonly', false).attr('placeholder', 'Ingrese código del servicio');
+        return;
+    }
+
+    campoCodigo.prop('readonly', true).removeAttr('placeholder');
+
+    if (!modoEdicion) {
+        generarYAsignarCodigoProducto();
+    }
+}
+
+function generarYAsignarCodigoProducto() {
+    fetch(`${API_BASE}/listar`)
+        .then(r => r.json())
+        .then(res => {
+            const productos = res.data || [];
+            $('#codigo').val(calcularSiguienteCodigoProducto(productos));
+        })
+        .catch(() => {
+            $('#codigo').val('');
+        });
+}
+
+function calcularSiguienteCodigoProducto(productos) {
+    const regex = /^([A-Za-z]+)(\d+)$/;
+    let maxNumero = 0;
+    let prefijo = 'PROD';
+    let ancho = 3;
+
+    productos
+        .filter(p => !p.esServicio)
+        .forEach(p => {
+            const match = (p.codigo || '').match(regex);
+            if (!match) return;
+
+            const numero = parseInt(match[2], 10);
+            if (numero > maxNumero) {
+                maxNumero = numero;
+                prefijo = match[1];
+                ancho = match[2].length;
+            }
+        });
+
+    const siguienteNumero = String(maxNumero + 1).padStart(ancho, '0');
+    return `${prefijo}${siguienteNumero}`;
 }

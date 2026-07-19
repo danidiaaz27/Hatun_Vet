@@ -8,6 +8,9 @@ function limpiarFormularioProveedor() {
     $('#id').val('');
 
     $('#estado').val('true');
+
+    $('#comprobanteFile').val('');
+    $('#lblComprobanteActual').text('');
 }
 
 function abrirModalProveedor(titulo) {

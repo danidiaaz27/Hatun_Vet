@@ -1,6 +1,7 @@
 function iniciarEventosProducto() {
     $('#fraccionable').change(alternarFraccionable);
     $('#esServicio').change(alternarServicio);
+    iniciarRestriccionesProducto();
 }
 
 function alternarFraccionable() {
@@ -19,6 +20,8 @@ function alternarFraccionable() {
 }
 
 function alternarServicio() {
+    actualizarEstadoCodigoProducto(this.checked);
+
     if (this.checked) {
         $('#grupoStock').hide();
         $('#stock').prop('required', false).val(0);
@@ -49,4 +52,35 @@ function validarImagenProducto() {
     }
 
     return true;
+}
+
+function iniciarRestriccionesProducto() {
+    const camposSinNegativos = ['precio', 'stock', 'capacidadTotal', 'precioFraccionado'];
+
+    camposSinNegativos.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.addEventListener('keydown', function (e) {
+            if (e.key === '-' || e.key === 'Minus') e.preventDefault();
+        });
+
+        el.addEventListener('input', function () {
+            if (this.value.includes('-')) {
+                this.value = this.value.replace(/-/g, '');
+            }
+        });
+
+        el.addEventListener('paste', function (e) {
+            const texto = (e.clipboardData || window.clipboardData).getData('text');
+            if (texto.includes('-')) e.preventDefault();
+        });
+    });
+
+    const unidadMedidaEl = document.getElementById('unidadMedida');
+    if (unidadMedidaEl) {
+        unidadMedidaEl.addEventListener('input', function () {
+            this.value = this.value.replace(/-/g, '');
+        });
+    }
 }

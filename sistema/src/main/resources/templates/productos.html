@@ -22,6 +22,16 @@
         </header>
 
         <div class="card card-custom p-4 bg-white">
+
+            <div class="btn-group mb-3" role="group" aria-label="Filtro tipo de producto">
+                <button type="button" id="btnFiltroProductos" class="btn btn-outline-primary active">
+                    <i class="bi bi-box-seam me-1"></i> Productos
+                </button>
+                <button type="button" id="btnFiltroServicios" class="btn btn-outline-primary">
+                    <i class="bi bi-scissors me-1"></i> Servicios
+                </button>
+            </div>
+
             <table id="tablaProductos" class="table table-hover w-100 align-middle">
                 <thead class="table-light">
                 <tr>
@@ -55,7 +65,8 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label text-muted fw-bold">Código *:</label>
-                            <input type="text" id="codigo" class="form-control" maxlength="20" placeholder="Ej: PROD001" required>
+                            <input type="text" id="codigo" class="form-control" maxlength="20" placeholder="Ej: PROD001" required readonly>
+                            <small class="text-secondary" id="ayudaCodigo">Se genera automáticamente. Si marca "¿Es un servicio?" podrá ingresarlo manualmente.</small>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label text-muted fw-bold">Nombre del Producto *:</label>

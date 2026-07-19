@@ -14,6 +14,8 @@ $(document).ready(function () {
 
     inicializarTablaProductos();
 
+    iniciarFiltroTipoProducto();
+
     iniciarFormularioProducto();
 
     iniciarEdicionProducto();

@@ -29,6 +29,9 @@ public class Proveedor {
     @Column(length = 120)
     private String contacto;
 
+    @Column(length = 255)
+    private String comprobante;
+
     @Column(nullable = false)
     private boolean estado = true;
 
@@ -86,6 +89,14 @@ public class Proveedor {
 
     public void setContacto(String contacto) {
         this.contacto = contacto;
+    }
+
+    public String getComprobante() {
+        return comprobante;
+    }
+
+    public void setComprobante(String comprobante) {
+        this.comprobante = comprobante;
     }
 
     public boolean isEstado() {

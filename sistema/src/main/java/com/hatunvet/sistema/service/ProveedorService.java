@@ -5,6 +5,7 @@ import com.hatunvet.sistema.repository.ProveedorRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,9 +14,11 @@ import java.util.Optional;
 public class ProveedorService {
 
     private final ProveedorRepository proveedorRepository;
+    private final FileStorageService fileStorageService;
 
-    public ProveedorService(ProveedorRepository proveedorRepository) {
+    public ProveedorService(ProveedorRepository proveedorRepository, FileStorageService fileStorageService) {
         this.proveedorRepository = proveedorRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     @Transactional(readOnly = true)
@@ -29,7 +32,7 @@ public class ProveedorService {
     }
 
     @Transactional
-    public Proveedor guardar(Proveedor proveedor) {
+    public Proveedor guardar(Proveedor proveedor, MultipartFile comprobanteFile) {
         // Limpiamos los espacios en blanco
         proveedor.setNombre(proveedor.getNombre() != null ? proveedor.getNombre().trim() : null);
         proveedor.setRuc(proveedor.getRuc() != null ? proveedor.getRuc().trim() : null);
@@ -71,7 +74,37 @@ public class ProveedorService {
             throw new IllegalArgumentException("Ya existe un proveedor registrado con ese RUC.");
         }
 
+        procesarComprobante(proveedor, comprobanteFile);
+
         return proveedorRepository.save(proveedor);
+    }
+
+    private void procesarComprobante(Proveedor proveedor, MultipartFile comprobanteFile) {
+        if (comprobanteFile != null && !comprobanteFile.isEmpty()) {
+            String contentType = comprobanteFile.getContentType();
+            String nombreOriginal = comprobanteFile.getOriginalFilename() != null
+                    ? comprobanteFile.getOriginalFilename().toLowerCase()
+                    : "";
+
+            boolean esPdf = "application/pdf".equals(contentType) || nombreOriginal.endsWith(".pdf");
+
+            if (!esPdf) {
+                throw new IllegalArgumentException("El comprobante debe ser un archivo PDF.");
+            }
+
+            String nombreArchivo = fileStorageService.guardarArchivo(comprobanteFile);
+            proveedor.setComprobante(nombreArchivo);
+            return;
+        }
+
+        // No se subió un archivo nuevo: si es una edición, conservamos el comprobante existente
+        if (proveedor.getId() != null) {
+            proveedorRepository.findById(proveedor.getId()).ifPresent(p -> {
+                if (proveedor.getComprobante() == null) {
+                    proveedor.setComprobante(p.getComprobante());
+                }
+            });
+        }
     }
 
     @Transactional
