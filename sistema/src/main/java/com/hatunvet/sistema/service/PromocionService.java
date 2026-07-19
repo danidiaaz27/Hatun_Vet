@@ -44,7 +44,33 @@ public class PromocionService {
         if (promocion.getFechaFin().isBefore(promocion.getFechaInicio())) {
             throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la de inicio.");
         }
+
+        validarTipoNoDuplicadoEnRango(promocion);
+
         return promocionRepository.save(promocion);
+    }
+
+    private void validarTipoNoDuplicadoEnRango(Promocion promocion) {
+        // Solo validamos cruce contra otras promociones ACTIVAS.
+        // Si la que se está guardando queda INACTIVA, no genera conflicto.
+        if (!"ACTIVO".equalsIgnoreCase(promocion.getEstado())) {
+            return;
+        }
+
+        List<Promocion> coincidencias = promocionRepository.findActivasPorTipoEnRango(
+                promocion.getTipo(),
+                promocion.getFechaInicio(),
+                promocion.getFechaFin()
+        );
+
+        boolean existeConflicto = coincidencias.stream()
+                .anyMatch(p -> promocion.getId() == null || !p.getId().equals(promocion.getId()));
+
+        if (existeConflicto) {
+            throw new IllegalArgumentException(
+                    "Ya existe una promoción activa del mismo tipo que se cruza con ese rango de fechas."
+            );
+        }
     }
 
     @Transactional
