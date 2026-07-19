@@ -122,8 +122,21 @@ public class VentaService {
         }
 
         String tipoDoc = (String) comprobante.get("tipoDoc");
-        String serie = tipoDoc.equals("01") ? "F001" : "B001";
-        int correlativo = (int) ventaRepository.count() + 1;
+
+        // PUNTO: la Nota de Venta (documento interno) tiene su propia serie y su propio
+        // correlativo, independiente de Boletas y Facturas electrónicas.
+        String serie;
+        if ("01".equals(tipoDoc)) {
+            serie = "F001"; // Factura
+        } else if ("03".equals(tipoDoc)) {
+            serie = "B001"; // Boleta
+        } else {
+            serie = "NV01"; // Nota de Venta interna
+        }
+
+        // Antes se usaba ventaRepository.count() (contador global mezclando los 3 tipos
+        // de documento). Ahora el correlativo es propio de cada serie.
+        int correlativo = (int) ventaRepository.countBySerie(serie) + 1;
 
         comprobante.put("serie", serie);
         comprobante.put("correlativo", String.valueOf(correlativo));
@@ -189,14 +202,42 @@ public class VentaService {
             venta.addDetalle(detalle);
         }
 
+        // PUNTO (fix): las líneas de "Descuento General" / "Compra Mínima" que se ven
+        // en el carrito del POS (ej. "DSC-GEN", "DSC-001") NO son productos reales, así
+        // que NUNCA deben mandarse dentro de "items" (por eso tiraba "Producto no
+        // encontrado"). El frontend ahora las excluye de "items" y manda su monto total
+        // aparte en "descuentoGeneral"; acá se resta del total ya calculado, ajustando
+        // la base imponible y el IGV proporcionalmente para que sigan sumando el total.
+        BigDecimal descuentoGeneral = BigDecimal.ZERO;
+        Object descuentoGeneralObj = payload.get("descuentoGeneral");
+        if (descuentoGeneralObj != null) {
+            try {
+                descuentoGeneral = new BigDecimal(descuentoGeneralObj.toString());
+            } catch (NumberFormatException e) {
+                descuentoGeneral = BigDecimal.ZERO;
+            }
+        }
+
+        if (descuentoGeneral.compareTo(BigDecimal.ZERO) > 0) {
+            totalVenta = totalVenta.subtract(descuentoGeneral);
+            if (totalVenta.compareTo(BigDecimal.ZERO) < 0) {
+                totalVenta = BigDecimal.ZERO;
+            }
+            totalBase = totalVenta.divide(new BigDecimal("1.18"), 2, RoundingMode.HALF_UP);
+            totalIgv = totalVenta.subtract(totalBase);
+        }
+
         venta.setOpGravadas(totalBase);
         venta.setIgv(totalIgv);
         venta.setTotal(totalVenta);
-        venta.setEstado("FACTURADO");
+
+        boolean esNotaVenta = "00".equals(tipoDoc);
+        venta.setEstado(esNotaVenta ? "NOTA_VENTA" : "FACTURADO");
 
         ventaRepository.save(venta);
 
         // CONEXIÓN AUTOMÁTICA A CAJA: Se registra el ingreso del total de la venta
+        // (ya con el descuento general aplicado, porque venta.getTotal() se calculó arriba)
         cajaService.registrarIngresoAutomatizado(
                 venta.getTotal(),
                 "Venta POS N° " + venta.getSerie() + "-" + venta.getCorrelativo(),
@@ -205,41 +246,59 @@ public class VentaService {
                 banoCorteAsociado
         );
 
-        Map<String, Object> respuestaApi = new HashMap<>();
-        try {
-            respuestaApi = facturacionService.enviarAMiapicloud(payload);
-            if (respuestaApi != null) {
-                if (respuestaApi.containsKey("success") && Boolean.FALSE.equals(respuestaApi.get("success"))) {
-                    venta.setEstado("ERROR_FACTURACION");
-                    ventaRepository.save(venta);
-                    throw new RuntimeException("Error en facturación electrónica: " + respuestaApi.get("message"));
-                }
-                if (respuestaApi.containsKey("respuesta")) {
-                    Map<String, Object> interna = (Map<String, Object>) respuestaApi.get("respuesta");
-                    if (interna.containsKey("success") && Boolean.FALSE.equals(interna.get("success"))) {
-                        venta.setEstado("RECHAZADO_SUNAT");
-                        ventaRepository.save(venta);
-                        throw new RuntimeException("SUNAT rechazó el comprobante: " + interna.get("message"));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            // El API de facturación falló por red/timeout, pero la venta local es válida y debe quedar persistida.
-            venta.setEstado("PENDIENTE_ENVIO");
-            ventaRepository.save(venta);
-            
-            // Construimos una respuesta de fallback simulada para que el frontend del POS no aborte la transacción
+        Map<String, Object> respuestaApi;
+
+        if (esNotaVenta) {
+            // PUNTO: la Nota de Venta es un documento interno (ticket informativo),
+            // NO es un comprobante de pago electrónico, así que NO se envía a
+            // Miapicloud/SUNAT.
             respuestaApi = new HashMap<>();
             respuestaApi.put("success", true);
-            
-            Map<String, Object> respuestaSimulada = new HashMap<>();
-            respuestaSimulada.put("success", true);
-            respuestaSimulada.put("pdf-ticket", "#");
-            respuestaSimulada.put("pdf-a4", "#");
-            respuestaSimulada.put("message", "Guardado localmente. Error de conexión con servidor de facturación: " + e.getMessage());
-            
-            respuestaApi.put("respuesta", respuestaSimulada);
+            respuestaApi.put("esNotaVenta", true);
+            respuestaApi.put("message", "Nota de Venta registrada localmente.");
+        } else {
+            respuestaApi = new HashMap<>();
+            try {
+                respuestaApi = facturacionService.enviarAMiapicloud(payload);
+                if (respuestaApi != null) {
+                    if (respuestaApi.containsKey("success") && Boolean.FALSE.equals(respuestaApi.get("success"))) {
+                        venta.setEstado("ERROR_FACTURACION");
+                        ventaRepository.save(venta);
+                        throw new RuntimeException("Error en facturación electrónica: " + respuestaApi.get("message"));
+                    }
+                    if (respuestaApi.containsKey("respuesta")) {
+                        Map<String, Object> interna = (Map<String, Object>) respuestaApi.get("respuesta");
+                        if (interna.containsKey("success") && Boolean.FALSE.equals(interna.get("success"))) {
+                            venta.setEstado("RECHAZADO_SUNAT");
+                            ventaRepository.save(venta);
+                            throw new RuntimeException("SUNAT rechazó el comprobante: " + interna.get("message"));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // El API de facturación falló por red/timeout, pero la venta local es válida y debe quedar persistida.
+                venta.setEstado("PENDIENTE_ENVIO");
+                ventaRepository.save(venta);
+
+                // Construimos una respuesta de fallback simulada para que el frontend del POS no aborte la transacción
+                respuestaApi = new HashMap<>();
+                respuestaApi.put("success", true);
+
+                Map<String, Object> respuestaSimulada = new HashMap<>();
+                respuestaSimulada.put("success", true);
+                respuestaSimulada.put("pdf-ticket", "#");
+                respuestaSimulada.put("pdf-a4", "#");
+                respuestaSimulada.put("message", "Guardado localmente. Error de conexión con servidor de facturación: " + e.getMessage());
+
+                respuestaApi.put("respuesta", respuestaSimulada);
+            }
         }
+
+        // Info real del comprobante persistido (serie/correlativo verdaderos), para que
+        // el frontend pueda imprimir el ticket de Nota de Venta con el número correcto.
+        respuestaApi.put("ventaId", venta.getId());
+        respuestaApi.put("ventaSerie", venta.getSerie());
+        respuestaApi.put("ventaCorrelativo", venta.getCorrelativo());
 
         return respuestaApi;
     }

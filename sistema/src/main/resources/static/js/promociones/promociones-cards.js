@@ -133,7 +133,8 @@ function badgeTipoPromocion(tipo) {
         PROMO_3X2: '3x2',
         COMPRA_MINIMA: 'Compra mínima',
         REGALO: 'Regalo',
-        CATEGORIA: 'Categoría'
+        CATEGORIA: 'Categoría',
+        GENERAL: 'Descuento General'
     };
 
     return `<span class="promo-badge">${map[tipo] || tipo}</span>`;
@@ -142,6 +143,11 @@ function valorPrincipalPromo(promo) {
     if (promo.tipo === 'PORCENTUAL' || promo.tipo === 'CATEGORIA') {
         return `<strong>${parseFloat(promo.valor).toFixed(0)}%</strong>
                 <span>de descuento</span>`;
+    }
+
+    if (promo.tipo === 'GENERAL') {
+        return `<strong>${parseFloat(promo.valor).toFixed(0)}%</strong>
+                <span>de descuento sobre el total</span>`;
     }
 
     if (promo.tipo === 'MONTO_FIJO') {
@@ -169,6 +175,7 @@ function valorPrincipalPromo(promo) {
     return `<strong>-</strong>`;
 }
 function textoAmbitoPromo(promo) {
+    if (promo.tipo === 'GENERAL') return 'Total del pedido (POS)';
     if (promo.producto) return promo.producto.nombre;
     if (promo.categoria) return promo.categoria.nombre;
     if (promo.productoRegalo) return promo.productoRegalo.nombre;
@@ -182,6 +189,7 @@ function badgeEstadoPromo(estado) {
 }
 function iconoPromo(tipo) {
     if (tipo === 'PORCENTUAL' || tipo === 'CATEGORIA') return 'bi-ticket-perforated';
+    if (tipo === 'GENERAL') return 'bi-percent';
     if (tipo === 'PROMO_2X1' || tipo === 'PROMO_3X2') return 'bi-bag-heart';
     if (tipo === 'REGALO') return 'bi-gift';
     if (tipo === 'COMPRA_MINIMA') return 'bi-cart-check';
@@ -190,6 +198,7 @@ function iconoPromo(tipo) {
 }
 function claseIconoPromo(tipo) {
     if (tipo === 'PORCENTUAL' || tipo === 'CATEGORIA') return 'icon-blue';
+    if (tipo === 'GENERAL') return 'icon-red';
     if (tipo === 'PROMO_2X1' || tipo === 'PROMO_3X2') return 'icon-green';
     if (tipo === 'REGALO') return 'icon-orange';
     if (tipo === 'COMPRA_MINIMA') return 'icon-purple';

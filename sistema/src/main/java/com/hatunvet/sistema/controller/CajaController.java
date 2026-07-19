@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/caja")
@@ -49,7 +50,7 @@ public class CajaController {
         return res;
     }
 
-    // NUEVO: Endpoint para el botón Buscar
+    // Endpoint para el botón Buscar del Monitor de Caja
     @GetMapping("/api/filtrar")
     @ResponseBody
     public Map<String, Object> filtrarMonitor(
@@ -60,10 +61,23 @@ public class CajaController {
         
         Map<String, Object> res = new HashMap<>();
         try {
+            // CORREGIDO: antes se filtraba en TODA la tabla de movimientos, sin
+            // importar la sesión de caja. Eso podía mezclar movimientos de
+            // sesiones ya cerradas con el balance de la sesión actual (que usa
+            // el monto de apertura de HOY). El Monitor de Caja es sobre la
+            // sesión activa, así que el filtro debe quedar acotado a ella.
+            Optional<CajaSesion> sesionActivaOpt = cajaService.obtenerSesionActiva();
+            if (sesionActivaOpt.isEmpty()) {
+                res.put("success", false);
+                res.put("message", "No hay una caja abierta para filtrar movimientos.");
+                return res;
+            }
+
             LocalDateTime inicio = (fechaDesde != null && !fechaDesde.isEmpty()) ? LocalDateTime.parse(fechaDesde + "T00:00:00") : null;
             LocalDateTime fin = (fechaHasta != null && !fechaHasta.isEmpty()) ? LocalDateTime.parse(fechaHasta + "T23:59:59") : null;
             
-            List<CajaMovimiento> movimientos = movimientoRepository.filtrarMovimientosMonitor(inicio, fin, tipo, medioPago);
+            List<CajaMovimiento> movimientos = movimientoRepository.filtrarMovimientosMonitor(
+                    sesionActivaOpt.get().getId(), inicio, fin, tipo, medioPago);
             
             res.put("success", true);
             res.put("data", movimientos);

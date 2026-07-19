@@ -14,14 +14,19 @@ public interface CajaMovimientoRepository extends JpaRepository<CajaMovimiento, 
     
     List<CajaMovimiento> findBySesionIdOrderByFechaMovimientoDesc(String sesionId);
 
-    // NUEVO: Consulta dinámica para el Monitor de Caja (Filtros)
+    // CORREGIDO: antes esta consulta buscaba en TODAS las sesiones (abiertas y
+    // cerradas, de cualquier fecha), lo que mezclaba movimientos de sesiones ya
+    // cerradas con el balance de la sesión actual. Ahora el Monitor de Caja
+    // solo filtra dentro de la sesión activa, igual que /api/estado.
     @Query("SELECT m FROM CajaMovimiento m WHERE " +
+           "m.sesion.id = :sesionId AND " +
            "(:fechaDesde IS NULL OR m.fechaMovimiento >= :fechaDesde) AND " +
            "(:fechaHasta IS NULL OR m.fechaMovimiento <= :fechaHasta) AND " +
            "(:tipo IS NULL OR :tipo = '' OR m.tipo = :tipo) AND " +
            "(:medioPago IS NULL OR :medioPago = '' OR m.medioPago = :medioPago) " +
            "ORDER BY m.fechaMovimiento DESC")
     List<CajaMovimiento> filtrarMovimientosMonitor(
+           @Param("sesionId") String sesionId,
            @Param("fechaDesde") LocalDateTime fechaDesde,
            @Param("fechaHasta") LocalDateTime fechaHasta,
            @Param("tipo") String tipo,

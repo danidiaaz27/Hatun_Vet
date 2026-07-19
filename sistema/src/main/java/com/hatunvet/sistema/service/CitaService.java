@@ -5,6 +5,7 @@ import com.hatunvet.sistema.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,8 +55,18 @@ public class CitaService {
             throw new IllegalArgumentException("La fecha y hora programada es obligatoria.");
         }
 
-        String vetId = cita.getVeterinario().getId();
         LocalDateTime fechaHora = cita.getFechaHoraProgramada();
+        LocalDateTime ahora = LocalDateTime.now();
+
+        // 0. Validar rango de fecha permitido (no en el pasado, no más de 3 meses adelante)
+        if (fechaHora.toLocalDate().isBefore(ahora.toLocalDate())) {
+            throw new IllegalArgumentException("No se puede agendar una cita para una fecha anterior a hoy.");
+        }
+        if (fechaHora.isAfter(ahora.plusMonths(3))) {
+            throw new IllegalArgumentException("No se puede agendar una cita con más de 3 meses de anticipación.");
+        }
+
+        String vetId = cita.getVeterinario().getId();
 
         // 1. Validar Horario Laboral Semanal (solo si el médico tiene algún horario configurado en BD)
         int diaSemanaJava = fechaHora.getDayOfWeek().getValue(); // 1 = Lunes, 7 = Domingo
@@ -139,6 +150,13 @@ public class CitaService {
         if (!cita.getEstado().equals("EN_ATENCION")) {
             throw new IllegalStateException("Solo se puede registrar la anamnesis mientras la cita está EN_ATENCION. Estado actual: " + cita.getEstado());
         }
+
+        // Validar rango de las fechas opcionales de seguimiento (no antes de hoy, no más de 3 meses)
+        LocalDate hoy = LocalDate.now();
+        LocalDate maxFecha = hoy.plusMonths(3);
+        validarRangoFechaOpcional(datosClinicos.getFechaProximaCita(), hoy, maxFecha, "la Próxima Cita");
+        validarRangoFechaOpcional(datosClinicos.getFechaProximaVacuna(), hoy, maxFecha, "la Próxima Vacuna");
+        validarRangoFechaOpcional(datosClinicos.getFechaProximaDesparasitacion(), hoy, maxFecha, "la Próxima Desparasitación");
         
         Optional<ConsultaClinica> consultaOpt = consultaRepository.findByCitaId(citaId);
         ConsultaClinica consulta;
@@ -151,7 +169,6 @@ public class CitaService {
         
         consulta.setPesoKg(datosClinicos.getPesoKg());
         consulta.setTemperaturaC(datosClinicos.getTemperaturaC());
-        consulta.setFrecuenciaCardiaca(datosClinicos.getFrecuenciaCardiaca());
         consulta.setSintomas(datosClinicos.getSintomas());
         consulta.setDiagnosticoPresuntivo(datosClinicos.getDiagnosticoPresuntivo());
         consulta.setTratamientoIndicado(datosClinicos.getTratamientoIndicado());
@@ -162,6 +179,18 @@ public class CitaService {
         consulta.setFechaProximaDesparasitacion(datosClinicos.getFechaProximaDesparasitacion());
         
         return consultaRepository.save(consulta);
+    }
+
+    private void validarRangoFechaOpcional(LocalDate fecha, LocalDate hoy, LocalDate maxFecha, String etiqueta) {
+        if (fecha == null) {
+            return;
+        }
+        if (fecha.isBefore(hoy)) {
+            throw new IllegalArgumentException("La fecha de " + etiqueta + " no puede ser anterior a hoy.");
+        }
+        if (fecha.isAfter(maxFecha)) {
+            throw new IllegalArgumentException("La fecha de " + etiqueta + " no puede ser mayor a 3 meses desde hoy.");
+        }
     }
 
     public Optional<ConsultaClinica> obtenerConsultaPorCita(String citaId) {
@@ -301,7 +330,7 @@ public class CitaService {
         return citaRepository.save(cita);
     }
 
-    // --- NUEVO: CANCELACIÓN DE CITA ---
+    // --- CANCELACIÓN DE CITA ---
     @Transactional
     public Cita cancelarCita(String citaId) {
         Cita cita = citaRepository.findById(citaId)
@@ -316,7 +345,7 @@ public class CitaService {
         return citaRepository.save(cita);
     }
 
-    // --- NUEVO: MARCAR NO ASISTIÓ (NO-SHOW) ---
+    // --- MARCAR NO ASISTIÓ (NO-SHOW) ---
     @Transactional
     public Cita marcarNoShow(String citaId) {
         Cita cita = citaRepository.findById(citaId)

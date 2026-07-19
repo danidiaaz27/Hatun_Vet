@@ -27,15 +27,31 @@ function guardarNuevaCita(e) {
     });
 }
 function validarFechaCita(fecha) {
+    if (!fecha) {
+        Swal.fire('Atención', 'Debe seleccionar una fecha para la cita.', 'warning');
+        return false;
+    }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const selectedDate = new Date(`${fecha}T00:00:00`);
+
     if (selectedDate < today) {
         Swal.fire('Atención',
             'No se puede agendar una cita para un día anterior a hoy.',
             'warning');
         return false;
     }
+
+    const maxDate = new Date(today);
+    maxDate.setMonth(maxDate.getMonth() + 3);
+
+    if (selectedDate > maxDate) {
+        Swal.fire('Atención',
+            'No se puede agendar una cita con más de 3 meses de anticipación.',
+            'warning');
+        return false;
+    }
+
     return true;
 }
 function validarDatosCita(mascotaVal, medicoVal) {
@@ -130,7 +146,7 @@ function cambiarEstadoBotonCheckIn(btn, procesando) {
         : 'Marcar Llegada';
 }
 
-// --- NUEVO: NO ASISTIÓ ---
+// --- NO ASISTIÓ ---
 function confirmarNoShow() {
     const idCita = document.getElementById('citaIdCheckIn').value;
     Swal.fire({
@@ -163,7 +179,7 @@ function procesarNoShow(idCita) {
         });
 }
 
-// --- NUEVO: CANCELAR CITA ---
+// --- CANCELAR CITA ---
 function confirmarCancelacion() {
     const idCita = document.getElementById('citaIdCheckIn').value;
     Swal.fire({

@@ -36,6 +36,10 @@ function actualizarCamposPromocion() {
         case 'CATEGORIA':
             mostrarCamposCategoria();
             break;
+
+        case 'GENERAL':
+            mostrarCamposGeneral();
+            break;
     }
 }
 
@@ -43,8 +47,17 @@ function ocultarCamposPromocion() {
     $('#divValor,#divCompraMinima,#divProducto,#divCategoria,#divProductoRegalo')
         .addClass('d-none');
 
+    // CORREGIDO: antes solo se quitaba el "required" pero el valor seleccionado
+    // (ej. un producto de una promo 2x1) quedaba guardado en el select oculto.
+    // Si luego cambiabas el tipo, ese producto viejo se seguía mandando en el
+    // payload sin que se viera en pantalla. Ahora también se limpia el valor.
+    // (Esto no rompe la edición: en cargarPromocionEnModal() los valores reales
+    // se vuelven a asignar justo después de disparar el 'change' de tipo).
     $('#valor,#compraMinima,#productoId,#categoriaId,#productoRegaloId')
-        .prop('required', false);
+        .prop('required', false)
+        .val('');
+
+    $('#valor').removeAttr('max');
 }
 
 function mostrarCamposPorcentual() {
@@ -52,7 +65,8 @@ function mostrarCamposPorcentual() {
     $('#lblValor').text('Porcentaje de descuento (%) *');
     $('#valor')
         .prop('required', true)
-        .attr('placeholder', 'Ej. 15');
+        .attr('placeholder', 'Ej. 15')
+        .attr('max', 100);
 }
 
 function mostrarCamposMontoFijo() {
@@ -85,7 +99,22 @@ function mostrarCamposCategoria() {
 
     $('#valor')
         .prop('required', true)
-        .attr('placeholder', 'Ej. 20');
+        .attr('placeholder', 'Ej. 20')
+        .attr('max', 100);
+}
+
+function mostrarCamposGeneral() {
+    // Descuento General: solo pide el porcentaje. No requiere producto ni
+    // categoría porque se aplica sobre el TOTAL del pedido en el POS, no
+    // producto por producto.
+    $('#divValor').removeClass('d-none');
+
+    $('#lblValor').text('Porcentaje de descuento general sobre el TOTAL (%) *');
+
+    $('#valor')
+        .prop('required', true)
+        .attr('placeholder', 'Ej. 10')
+        .attr('max', 100);
 }
 
 function abrirModalNuevaPromocion() {

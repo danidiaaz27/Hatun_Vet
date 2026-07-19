@@ -30,24 +30,24 @@ function procesarVentaPOS() {
 
 function validarDatosCobro() {
     const tipoDoc = $('#tipoDoc').val();
+
+    // Nota de Venta es un documento interno y ya no exige DNI/Nombre (los campos
+    // quedan bloqueados con un valor genérico, ver ventas-cliente.js). Si viene de
+    // una cita/grooming importado, los campos ya vienen con datos reales y
+    // bloqueados, así que tampoco hace falta volver a validarlos aquí.
+    if (tipoDoc === '0') return true;
+
     const numDoc = $('#numDoc').val().trim();
     const nombre = $('#nombreCliente').val().trim();
 
-    if (tipoDoc !== '0') {
-        if (tipoDoc === '1' && numDoc.length !== 8) {
-            Swal.fire('DNI Inválido', 'Debe tener 8 dígitos.', 'error');
-            return false;
-        }
+    if (tipoDoc === '1' && numDoc.length !== 8) {
+        Swal.fire('DNI Inválido', 'Debe tener 8 dígitos.', 'error');
+        return false;
+    }
 
-        if (tipoDoc === '6' && numDoc.length !== 11) {
-            Swal.fire('RUC Inválido', 'Debe tener 11 dígitos.', 'error');
-            return false;
-        }
-    } else {
-        if (!numDoc) {
-            Swal.fire('Documento requerido', 'Ingresa un número de referencia o documento.', 'warning');
-            return false;
-        }
+    if (tipoDoc === '6' && numDoc.length !== 11) {
+        Swal.fire('RUC Inválido', 'Debe tener 11 dígitos.', 'error');
+        return false;
     }
 
     if (!nombre) {
@@ -57,16 +57,43 @@ function validarDatosCobro() {
 
     return true;
 }
+
 function crearPayloadVenta() {
     return {
         citaId: importCitaId,
         banoCorteId: importBanoCorteId,
         abonoGrooming: calcularAbonoGrooming(),
         abonoCita: calcularAbonoCita(),
+        // CORREGIDO: las líneas de descuento (Compra Mínima, Descuento General) NO
+        // son productos reales (no existen en la tabla de productos), así que no
+        // deben mandarse dentro de "items" o el backend tira "Producto no
+        // encontrado". Se excluyen aquí y su monto se manda aparte.
+        descuentoGeneral: calcularDescuentoGeneralTotal(),
         cliente: crearClienteVenta(),
         comprobante: crearComprobanteVenta(),
-        items: carrito.map(crearItemApiVenta)
+        items: carrito
+            .filter(item => !esLineaDeDescuento(item))
+            .map(crearItemApiVenta)
     };
+}
+
+function esLineaDeDescuento(item) {
+    // Una línea de descuento es un ítem "virtual" generado por una promoción
+    // (isPromoGift) con precio negativo. Los regalos (isPromoGift con precio 0)
+    // sí son productos reales y deben seguir mandándose para descontar stock.
+    return item.isPromoGift && item.precio < 0;
+}
+
+function calcularDescuentoGeneralTotal() {
+    let total = 0;
+
+    carrito.forEach(item => {
+        if (esLineaDeDescuento(item)) {
+            total += Math.abs(item.precio * item.cantidad);
+        }
+    });
+
+    return parseFloat(total.toFixed(2));
 }
 
 function crearClienteVenta() {
@@ -91,9 +118,19 @@ function crearComprobanteVenta() {
         tipoOperacion: '0101',
         tipoDoc: tipoDocComprobante,
         tipoMoneda: 'PEN',
-        tipoPago: metodo === 'yape' ? 'Yape' : 'Contado',
+        tipoPago: obtenerTipoPagoMiapicloud(metodo),
+        // CORREGIDO: antes no se enviaba "medioPago", así que el backend siempre
+        // registraba el ingreso en Caja como "EFECTIVO" sin importar el método real.
+        medioPago: metodo.toUpperCase(),
         observacion: tipoDocSel === '0' ? 'Nota de Venta Interna HatunVet' : 'Generado desde POS HatunVet'
     };
+}
+
+function obtenerTipoPagoMiapicloud(metodo) {
+    // CORREGIDO: antes "plin" no estaba contemplado y caía en "Contado".
+    if (metodo === 'yape') return 'Yape';
+    if (metodo === 'plin') return 'Plin';
+    return 'Contado';
 }
 
 function crearItemApiVenta(item) {
@@ -143,10 +180,12 @@ function manejarRespuestaVenta(data) {
     const tipoDocSel = $('#tipoDoc').val();
 
     if (data.success) {
-        // SI ES NOTA DE VENTA: Mostramos el modal de aviso con el botón de imprimir
+        // SI ES NOTA DE VENTA: Mostramos el modal de aviso con el botón de imprimir.
+        // No pasa por Miapicloud, así que el número de comprobante viene directo del
+        // backend (venta.serie + venta.correlativo reales, no un valor simulado).
         if (tipoDocSel === '0') {
-            const nroNota = data.venta?.id || data.data?.id || Math.floor(Math.random() * 90000) + 10000;
-            
+            const numeroNota = obtenerNumeroNotaVenta(data);
+
             Swal.fire({
                 title: '¡Venta Realizada!',
                 text: 'La Nota de Venta se registró correctamente en el sistema.',
@@ -160,7 +199,9 @@ function manejarRespuestaVenta(data) {
             }).then(choice => {
                 if (choice.isConfirmed) {
                     // Si da clic en Imprimir, recién se genera e imprime el ticket
-                    imprimirTicketNotaVentaLocal(nroNota);
+                    // (distinto al de Boleta/Factura, ya que no es un comprobante
+                    // de pago electrónico que viajó por API).
+                    imprimirTicketNotaVentaLocal(numeroNota);
                 }
                 // Limpiamos el carrito al finalizar todo
                 resetearPOSVenta();
@@ -180,6 +221,16 @@ function manejarRespuestaVenta(data) {
         data.message || 'La API o SUNAT rechazó el comprobante.',
         'error'
     );
+}
+
+function obtenerNumeroNotaVenta(data) {
+    // El backend devuelve todo dentro de la clave "miapicloud" (ver VentaController).
+    const serie = data.miapicloud?.ventaSerie;
+    const correlativo = data.miapicloud?.ventaCorrelativo;
+
+    if (!serie || !correlativo) return 'S/N';
+
+    return `${serie}-${String(correlativo).padStart(6, '0')}`;
 }
 
 function mostrarVentaExitosa(res) {
@@ -211,7 +262,21 @@ function finalizarRespuestaVenta(choice, res, esOffline) {
     resetearPOSVenta();
 }
 
-function imprimirTicketNotaVentaLocal(nroNota) {
+// ───────────────────────────────────────────────────────────
+// TICKET NOTA DE VENTA: formateado por defecto para rollo térmico
+// de 80mm. La clave es declarar "@page { size: 80mm auto; }" para
+// que el navegador ya no ofrezca A4/Carta como tamaño de papel al
+// imprimir, sino el ancho del ticket. Así no hay que estar
+// cambiando el tamaño de papel cada vez que se imprime.
+//
+// NOTA IMPORTANTE: esto funciona de forma consistente en navegadores
+// basados en Chromium (Chrome/Edge), que es lo más común en un POS.
+// Si además configuras en el sistema operativo la impresora térmica
+// con un perfil de papel "80mm / continuo" como predeterminado, el
+// diálogo de impresión ya la va a preseleccionar automáticamente sin
+// que tengas que tocar nada.
+// ───────────────────────────────────────────────────────────
+function imprimirTicketNotaVentaLocal(numeroNota) {
     const clienteNombre = $('#nombreCliente').val().trim();
     const clienteDoc = $('#numDoc').val().trim();
     const metodoPago = $('#metodoPago').val().toUpperCase();
@@ -226,41 +291,66 @@ function imprimirTicketNotaVentaLocal(nroNota) {
         const totalItem = item.precio * item.cantidad;
         itemsHtml += `
             <tr>
-                <td style="padding: 5px 0; font-size: 12px;">${item.nombre}<br><small>${item.cantidad} x S/ ${item.precio.toFixed(2)}</small></td>
-                <td style="text-align: right; padding: 5px 0; font-size: 12px; vertical-align: bottom;">S/ ${totalItem.toFixed(2)}</td>
+                <td style="padding: 3px 0; font-size: 11px;">${item.nombre}<br><small>${item.cantidad} x S/ ${item.precio.toFixed(2)}</small></td>
+                <td style="text-align: right; padding: 3px 0; font-size: 11px; vertical-align: bottom; white-space: nowrap;">S/ ${totalItem.toFixed(2)}</td>
             </tr>
         `;
     });
 
-    const ventanaImpresion = window.open('', '_blank', 'width=350,height=600');
-    
+    const ventanaImpresion = window.open('', '_blank', 'width=380,height=650');
+
     ventanaImpresion.document.write(`
         <html>
         <head>
-            <title>Nota de Venta N° ${nroNota}</title>
+            <title>Nota de Venta N° ${numeroNota}</title>
             <style>
-                @page { margin: 0; }
-                body { font-family: 'Courier New', Courier, monospace; width: 280px; margin: 10px; color: #000; background: #fff; }
+                /* Papel térmico 80mm por defecto: el navegador ya no debería
+                   ofrecer A4/Carta como opción principal al imprimir. */
+                @page {
+                    size: 80mm auto;
+                    margin: 0;
+                }
+
+                * { box-sizing: border-box; }
+
+                html, body {
+                    margin: 0;
+                    padding: 0;
+                    background: #fff;
+                }
+
+                body {
+                    font-family: 'Courier New', Courier, monospace;
+                    width: 76mm;
+                    margin: 0 auto;
+                    padding: 3mm 2mm;
+                    color: #000;
+                }
+
                 .text-center { text-align: center; }
-                .linea-separadora { border-top: 1px dashed #000; margin: 8px 0; }
-                table { width: 100%; border-collapse: collapse; }
-                .total-table td { font-size: 13px; }
+                .linea-separadora { border-top: 1px dashed #000; margin: 6px 0; }
+                table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                .total-table td { font-size: 12px; }
                 .bold { font-weight: bold; }
+
+                @media print {
+                    html, body { width: 76mm; }
+                }
             </style>
         </head>
         <body>
             <div class="text-center">
-                <h3 style="margin: 0; font-size: 16px;">HATUNVET S.A.C.</h3>
-                <p style="margin: 3px 0; font-size: 12px;">Servicios Veterinarios Integrales</p>
-                <p style="margin: 2px 0; font-size: 11px;">Chiclayo, Lambayeque, Perú</p>
+                <h3 style="margin: 0; font-size: 15px;">HATUNVET S.A.C.</h3>
+                <p style="margin: 3px 0; font-size: 11px;">Servicios Veterinarios Integrales</p>
+                <p style="margin: 2px 0; font-size: 10px;">Chiclayo, Lambayeque, Perú</p>
                 <div class="linea-separadora"></div>
-                <h4 style="margin: 5px 0; font-size: 14px;">NOTA DE VENTA INTERNA</h4>
-                <p style="margin: 2px 0; font-size: 12px;" class="bold">N° NV-${String(nroNota).padStart(6, '0')}</p>
+                <h4 style="margin: 4px 0; font-size: 13px;">NOTA DE VENTA INTERNA</h4>
+                <p style="margin: 2px 0; font-size: 11px;" class="bold">N° ${numeroNota}</p>
             </div>
             
             <div class="linea-separadora"></div>
             
-            <div style="font-size: 11px; line-height: 1.4;">
+            <div style="font-size: 10px; line-height: 1.4;">
                 <div><span class="bold">Fecha:</span> ${fechaActual}</div>
                 <div><span class="bold">Cliente:</span> ${clienteNombre}</div>
                 <div><span class="bold">N° Doc:</span> ${clienteDoc}</div>
@@ -272,8 +362,8 @@ function imprimirTicketNotaVentaLocal(nroNota) {
             <table>
                 <thead>
                     <tr>
-                        <th style="text-align: left; font-size: 11px; padding-bottom: 5px;">DESCRIPCIÓN</th>
-                        <th style="text-align: right; font-size: 11px; padding-bottom: 5px;">TOTAL</th>
+                        <th style="text-align: left; font-size: 10px; padding-bottom: 4px;">DESCRIPCIÓN</th>
+                        <th style="text-align: right; font-size: 10px; padding-bottom: 4px;">TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -286,17 +376,16 @@ function imprimirTicketNotaVentaLocal(nroNota) {
             <table class="total-table">
                 <tr><td>Op. Gravada:</td><td style="text-align: right;">S/ ${subtotal}</td></tr>
                 <tr><td>I.G.V. (18%):</td><td style="text-align: right;">S/ ${igv}</td></tr>
-                <tr class="bold" style="font-size: 15px;">
-                    <td style="padding-top: 5px;">TOTAL A PAGAR:</td>
-                    <td style="text-align: right; padding-top: 5px;">S/ ${total}</td>
+                <tr class="bold" style="font-size: 14px;">
+                    <td style="padding-top: 4px;">TOTAL A PAGAR:</td>
+                    <td style="text-align: right; padding-top: 4px;">S/ ${total}</td>
                 </tr>
             </table>
             
             <div class="linea-separadora"></div>
             
-            <div class="text-center" style="font-size: 11px; margin-top: 15px;">
+            <div class="text-center" style="font-size: 10px; margin-top: 12px;">
                 <p style="margin: 0;">¡Gracias por confiar en HatunVet!</p>
-                <p style="margin: 4px 0 0 0;">Este documento no es un comprobante de pago electrónico.</p>
             </div>
             
             <script>

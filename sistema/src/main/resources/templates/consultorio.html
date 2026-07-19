@@ -356,7 +356,7 @@
                             <!-- Vitales -->
                             <div class="vitals-row">
                                 <div class="row g-3">
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="vital-input-group">
                                             <span class="vital-label required"><i class="bi bi-box-seam"></i> Peso (Kg)
                                                 *</span>
@@ -364,12 +364,12 @@
                                                 <span
                                                     style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
                                                 <input type="number" id="pesoKg" placeholder="Ingrese el peso"
-                                                    step="0.01" min="0.1" required>
+                                                    step="0.01" min="0.1" inputmode="decimal" required>
                                                 <span class="vital-unit">kg</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="vital-input-group">
                                             <span class="vital-label required"><i class="bi bi-thermometer-half"></i>
                                                 Temperatura (°C) *</span>
@@ -377,21 +377,8 @@
                                                 <span
                                                     style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
                                                 <input type="number" id="tempC" placeholder="Ingrese la temperatura"
-                                                    step="0.1" min="10" max="45" required>
+                                                    step="0.1" min="10" max="45" inputmode="decimal" required>
                                                 <span class="vital-unit">°C</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="vital-input-group">
-                                            <span class="vital-label"><i class="bi bi-heart-pulse"></i> Frec.
-                                                Cardíaca</span>
-                                            <div class="vital-input-inner">
-                                                <span
-                                                    style="padding:0 8px; color:rgba(255,255,255,0.4); font-size:13px;">+</span>
-                                                <input type="number" id="frecCard" placeholder="Ingrese la frecuencia"
-                                                    min="0">
-                                                <span class="vital-unit">bpm</span>
                                             </div>
                                         </div>
                                     </div>
@@ -458,6 +445,10 @@
                                             class="form-control form-control-sm">
                                     </div>
                                 </div>
+                                <small class="d-block mt-2 text-muted">
+                                    <i class="bi bi-info-circle-fill me-1"></i>
+                                    Las fechas no pueden ser anteriores a hoy ni mayores a 3 meses.
+                                </small>
                             </div>
 
                             <!-- Acciones -->

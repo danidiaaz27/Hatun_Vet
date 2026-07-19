@@ -83,6 +83,7 @@
                                 <label class="form-label small fw-bold text-muted">Tipo de Promoción *</label>
                                 <select id="tipo" class="form-select form-select-sm" required>
                                     <option value="">-- Seleccionar --</option>
+                                    <option value="GENERAL">Descuento General (%) sobre el Total del Pedido</option>
                                     <option value="PORCENTUAL">Descuento Porcentual (%)</option>
                                     <option value="MONTO_FIJO">Descuento por Monto Fijo (S/)</option>
                                     <option value="PROMO_2X1">Paga 1 Lleva 2 (2x1)</option>
@@ -101,7 +102,7 @@
 
                             <!-- Campos dinámicos según el tipo seleccionado -->
 
-                            <!-- 1. Valor (Para descuento porcentual o monto fijo) -->
+                            <!-- 1. Valor (Para descuento porcentual, monto fijo o general) -->
                             <div class="col-md-6 d-none" id="divValor">
                                 <label class="form-label small fw-bold text-muted" id="lblValor">Valor del Descuento
                                     *</label>

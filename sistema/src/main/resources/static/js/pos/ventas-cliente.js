@@ -14,16 +14,36 @@ function configurarTipoDocumento() {
     const esDni = tipo === '1';
     const esRuc = tipo === '6';
     const esNotaVenta = tipo === '0';
+    const hayImportacion = Boolean(importCitaId || importBanoCorteId);
+
+    // Si ya hay una cita médica o un servicio de grooming importado, esos datos de
+    // cliente ya son válidos (vienen de un registro previo) y NO deben borrarse ni
+    // volver a ser editables, sin importar a qué tipo de documento se cambie.
+    if (hayImportacion) {
+        $('#numDoc').prop('readOnly', true);
+        $('#nombreCliente').prop('readOnly', true);
+        $('#btnBuscarDoc').prop('disabled', true);
+        return;
+    }
+
+    if (esNotaVenta) {
+        // Nota de Venta: es un documento interno, NO requiere identificar al
+        // cliente. Los campos quedan bloqueados (grises) con un valor genérico
+        // y ya no son obligatorios para completar la venta.
+        $('#numDoc').attr('maxlength', '15').val('00000000').prop('readOnly', true);
+        $('#nombreCliente').val('Cliente Varios').prop('readOnly', true);
+        $('#btnBuscarDoc').prop('disabled', true);
+        return;
+    }
 
     // Limpiamos el valor del número para evitar cruce de datos viejos
-    $('#numDoc').val('');
+    $('#numDoc').val('').prop('readOnly', false);
+    $('#btnBuscarDoc').prop('disabled', false);
 
     if (esDni) {
         $('#numDoc').attr('maxlength', '8').attr('placeholder', 'DNI (8 dígitos)');
     } else if (esRuc) {
         $('#numDoc').attr('maxlength', '11').attr('placeholder', 'RUC (11 dígitos)');
-    } else if (esNotaVenta) {
-        $('#numDoc').attr('maxlength', '15').attr('placeholder', 'N° Doc (Nota de Venta)');
     }
 
     // Al cambiar de tipo de documento, siempre limpiamos el nombre y liberamos el bloqueo de edición
@@ -34,11 +54,11 @@ function buscarClienteDocumento() {
     const tipoDoc = $('#tipoDoc').val();
     const numDoc = $('#numDoc').val().trim();
 
-    // Si es Nota de Venta, no es necesario consultar a la API externa de SUNAT/RENIEC
+    // Nota de Venta no requiere consultar RENIEC/SUNAT (el campo ya está bloqueado)
     if (tipoDoc === '0') {
         Swal.fire({
             title: 'Nota de Venta',
-            text: 'Para Notas de Venta puede escribir el nombre del cliente directamente en el campo inferior.',
+            text: 'Las Notas de Venta no requieren registrar datos del cliente.',
             icon: 'info',
             confirmButtonColor: '#0A3D91'
         });

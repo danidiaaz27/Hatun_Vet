@@ -32,8 +32,13 @@ public class CajaMovimiento {
     @Column(nullable = false, length = 255)
     private String descripcion;
 
+    // CORREGIDO (comentario): los valores reales que se guardan aquí son
+    // "EFECTIVO", "YAPE" o "PLIN" (individuales, en mayúsculas). Antes decía
+    // "YAPE/PLIN" combinado, pero ese valor combinado nunca se guarda así en
+    // la práctica; solo se usaba (incorrectamente) como opción de filtro en
+    // caja.html, lo que hacía que el filtro nunca encontrara resultados.
     @Column(name = "medio_pago", length = 30)
-    private String medioPago; // "EFECTIVO", "TARJETA", "YAPE/PLIN"
+    private String medioPago; // "EFECTIVO", "YAPE", "PLIN"
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_venta", nullable = true)

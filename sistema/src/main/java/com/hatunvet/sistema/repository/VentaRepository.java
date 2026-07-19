@@ -14,6 +14,10 @@ public interface VentaRepository extends JpaRepository<Venta, String> {
 
     List<Venta> findAllByOrderByFechaEmisionDesc();
 
+    // NUEVO: correlativo independiente por serie (F001, B001, NV01), en vez de un
+    // contador global que mezclaba Boletas, Facturas y Notas de Venta.
+    long countBySerie(String serie);
+
     // Sincronizado para devolver BigDecimal (Punto 4)
     @Query("SELECT COALESCE(SUM(v.total), 0) FROM Venta v WHERE DATE(v.fechaEmision) = CURRENT_DATE AND v.estado != 'ANULADO'")
     BigDecimal sumVentasHoy();

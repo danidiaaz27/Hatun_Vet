@@ -151,8 +151,20 @@
         .doc-row select, .doc-row input { background: #f0f4fa; border: 1.5px solid rgba(10,61,145,0.12); border-radius: 8px; padding: 7px 8px; font-size: 12px; font-family: inherit; outline: none; }
         .doc-row select:focus, .doc-row input:focus { border-color: var(--vet-blue, #0A3D91); }
 
+        /* NUEVO: estado visual "bloqueado" (Nota de Venta o datos importados de
+           cita/grooming). Sin esta regla, un input readonly se veía igual que uno
+           editable y no quedaba claro que estaba bloqueado. */
+        .cliente-field:read-only,
+        .doc-row input:read-only {
+            background: #e9edf5;
+            color: #6b7a99;
+            border-color: rgba(10,61,145,0.08);
+            cursor: not-allowed;
+        }
+
         .btn-buscar-doc { background: var(--vet-blue, #0A3D91); border: none; border-radius: 8px; color: #fff; padding: 7px 11px; cursor: pointer; flex-shrink: 0; font-size: 13px; }
         .btn-buscar-doc:hover { background: #072d6b; }
+        .btn-buscar-doc:disabled { background: #c8d3e8; cursor: not-allowed; }
 
         /* Select método de pago */
         .metodo-label { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #8a9bc0; margin-bottom: 5px; display: block; }

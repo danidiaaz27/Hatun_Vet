@@ -3,7 +3,74 @@ function iniciarFormularioAnamnesis() {
         .addEventListener('submit', guardarAnamnesis);
     document.getElementById('btnFinalizarConsulta')
         .addEventListener('click', confirmarFinalizarConsulta);
+
+    bloquearSimbolosNumericos(document.getElementById('pesoKg'));
+    bloquearSimbolosNumericos(document.getElementById('tempC'));
 }
+
+// --- NUEVO: bloquea símbolos no numéricos (e, E, +, -) en campos numéricos ---
+function bloquearSimbolosNumericos(input) {
+    if (!input) return;
+
+    input.addEventListener('keydown', function(e) {
+        if (['e', 'E', '+', '-'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    input.addEventListener('input', function() {
+        const valorLimpio = this.value.replace(/[^0-9.]/g, '');
+        if (valorLimpio !== this.value) {
+            this.value = valorLimpio;
+        }
+    });
+
+    input.addEventListener('paste', function(e) {
+        const texto = (e.clipboardData || window.clipboardData).getData('text');
+        if (/[^0-9.]/.test(texto)) {
+            e.preventDefault();
+        }
+    });
+}
+
+// --- NUEVO: validación de fechas opcionales (no antes de hoy, no más de 3 meses) ---
+function validarFechasAnamnesis() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const maxFecha = new Date(hoy);
+    maxFecha.setMonth(maxFecha.getMonth() + 3);
+
+    const campos = [
+        { id: 'fechaProximaCita', label: 'la Próxima Cita' },
+        { id: 'fechaProximaVacuna', label: 'la Próxima Vacuna' },
+        { id: 'fechaProximaDesparasitacion', label: 'la Próxima Desparasitación' }
+    ];
+
+    for (const campo of campos) {
+        const valor = document.getElementById(campo.id).value;
+        if (!valor) continue;
+
+        const fecha = new Date(`${valor}T00:00:00`);
+
+        if (fecha < hoy) {
+            Swal.fire('Atención',
+                `La fecha de ${campo.label} no puede ser anterior a hoy.`,
+                'warning');
+            return false;
+        }
+
+        if (fecha > maxFecha) {
+            Swal.fire('Atención',
+                `La fecha de ${campo.label} no puede ser mayor a 3 meses desde hoy.`,
+                'warning');
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function cargarConsultaActiva(citaId) {
     fetch(`${API_URL}/${citaId}/consulta`)
         .then(r => r.json())
@@ -21,7 +88,6 @@ function cargarConsultaActiva(citaId) {
 function cargarDatosConsulta(data) {
     document.getElementById('pesoKg').value = data.pesoKg || '';
     document.getElementById('tempC').value = data.temperaturaC || '';
-    document.getElementById('frecCard').value = data.frecuenciaCardiaca || '';
     document.getElementById('sintomas').value = data.sintomas || '';
     document.getElementById('diagnostico').value =
         data.diagnosticoPresuntivo || '';
@@ -45,6 +111,9 @@ function limpiarFormularioConsulta(citaId) {
 }
 function guardarAnamnesis(e) {
     e.preventDefault();
+
+    if (!validarFechasAnamnesis()) return;
+
     const btn = document.getElementById('btnGuardarAnamnesis');
     btn.disabled = true;
     btn.innerText = 'Guardando...';
@@ -60,8 +129,6 @@ function crearPayloadAnamnesis() {
     return {
         pesoKg: parseFloat(document.getElementById('pesoKg').value),
         temperaturaC: parseFloat(document.getElementById('tempC').value),
-        frecuenciaCardiaca:
-            parseInt(document.getElementById('frecCard').value) || null,
         sintomas: document.getElementById('sintomas').value,
         diagnosticoPresuntivo: document.getElementById('diagnostico').value,
         tratamientoIndicado: document.getElementById('tratamiento').value,

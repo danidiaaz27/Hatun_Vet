@@ -59,10 +59,19 @@ function iniciarUtilidadesAgenda() {
         this.value = this.value.replace(/[0-9]/g, '');
     });
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
+
+    const maxCita = new Date(today);
+    maxCita.setMonth(maxCita.getMonth() + 3);
+    const maxCitaStr = maxCita.toISOString().split('T')[0];
 
     const fechaCitaEl = document.getElementById('fechaCita');
-    if (fechaCitaEl) fechaCitaEl.setAttribute('min', todayStr);
+    if (fechaCitaEl) {
+        fechaCitaEl.setAttribute('min', todayStr);
+        fechaCitaEl.setAttribute('max', maxCitaStr);
+    }
 
     const regFechaNacEl = document.getElementById('regFechaNac');
     if (regFechaNacEl) regFechaNacEl.setAttribute('max', todayStr);

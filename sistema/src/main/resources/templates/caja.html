@@ -343,10 +343,14 @@
 
                         <div class="col-md-2">
                             <label class="form-label kpi-title">Canal / Medio</label>
+                            <!-- CORREGIDO: antes existía la opción combinada "YAPE/PLIN", pero
+                                 el POS nunca guarda ese valor combinado (guarda "YAPE" o "PLIN"
+                                 por separado), así que ese filtro nunca traía resultados. -->
                             <select id="filtroMedio" class="form-select">
                                 <option value="">Todos</option>
                                 <option value="EFECTIVO">Efectivo / Caja</option>
-                                <option value="YAPE/PLIN">Yape / Plin</option>
+                                <option value="YAPE">Yape</option>
+                                <option value="PLIN">Plin</option>
                             </select>
                         </div>
 
@@ -524,9 +528,13 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Medio Pago</label>
+                            <!-- CORREGIDO: separado en EFECTIVO / YAPE / PLIN para que
+                                 coincida exactamente con lo que guarda el POS y así el
+                                 filtro del Monitor sí encuentre estos movimientos. -->
                             <select id="medioPagoManual" class="form-select" required>
                                 <option value="EFECTIVO">EFECTIVO</option>
-                                <option value="YAPE/PLIN">YAPE/PLIN</option>
+                                <option value="YAPE">YAPE</option>
+                                <option value="PLIN">PLIN</option>
                             </select>
                         </div>
 
