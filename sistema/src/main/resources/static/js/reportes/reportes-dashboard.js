@@ -9,6 +9,7 @@ function cargarDashboard() {
 
             pintarKPIs(res.kpis);
             pintarStockCritico(res.petshop.stockCritico);
+            pintarTopProductos(res.topProductos || []);
 
             dibujarGraficoEspecies(res.peluqueria.porEspecie);
             dibujarGraficoServicios(res.peluqueria.porServicio);
@@ -59,4 +60,27 @@ function crearFilaStockCritico(prod) {
             </td>
         </tr>
     `;
+}
+
+// NUEVO: Top 5 productos más vendidos (llega como lista de [nombre, cantidad])
+function pintarTopProductos(top) {
+    const cont = $('#listaTopProductos');
+    cont.empty();
+
+    if (!top.length) {
+        cont.html('<div class="text-center text-muted py-4">Aún no hay ventas registradas.</div>');
+        return;
+    }
+
+    top.forEach((item, i) => {
+        cont.append(`
+            <div class="top-producto-row">
+                <div class="d-flex align-items-center text-truncate" style="max-width:70%;">
+                    <span class="top-producto-rank">${i + 1}</span>
+                    <span class="text-truncate">${item[0]}</span>
+                </div>
+                <span class="fw-bold text-primary">${item[1]} und.</span>
+            </div>
+        `);
+    });
 }

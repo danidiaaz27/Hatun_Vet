@@ -4,6 +4,7 @@ import com.hatunvet.sistema.model.Proveedor;
 import com.hatunvet.sistema.service.ProveedorService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,10 +51,13 @@ public class ProveedoresController {
 
     @PostMapping("/api/guardar")
     @ResponseBody
-    public Map<String, Object> apiGuardar(@RequestBody Proveedor proveedor) {
+    public Map<String, Object> apiGuardar(
+            @ModelAttribute Proveedor proveedor,
+            @RequestParam(value = "comprobanteFile", required = false) MultipartFile comprobanteFile) {
+
         Map<String, Object> response = new HashMap<>();
         try {
-            proveedorService.guardar(proveedor);
+            proveedorService.guardar(proveedor, comprobanteFile);
             response.put("success", true);
             response.put("message", "Proveedor guardado correctamente");
         } catch (IllegalArgumentException e) {

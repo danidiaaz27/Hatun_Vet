@@ -1,3 +1,39 @@
+let filtroTipoProducto = 'productos';
+
+$.fn.dataTable.ext.search.push(function (settings, searchData, dataIndex) {
+    if (settings.nTable.id !== 'tablaProductos') return true;
+
+    const fila = dataTable.row(dataIndex).data();
+    if (!fila) return true;
+
+    if (filtroTipoProducto === 'servicios') {
+        return fila.esServicio === true;
+    }
+
+    return fila.esServicio !== true;
+});
+
+function iniciarFiltroTipoProducto() {
+    $('#btnFiltroProductos').on('click', function () {
+        filtroTipoProducto = 'productos';
+        actualizarBotonesFiltroTipo();
+        dataTable.draw();
+    });
+
+    $('#btnFiltroServicios').on('click', function () {
+        filtroTipoProducto = 'servicios';
+        actualizarBotonesFiltroTipo();
+        dataTable.draw();
+    });
+
+    actualizarBotonesFiltroTipo();
+}
+
+function actualizarBotonesFiltroTipo() {
+    $('#btnFiltroProductos').toggleClass('active', filtroTipoProducto === 'productos');
+    $('#btnFiltroServicios').toggleClass('active', filtroTipoProducto === 'servicios');
+}
+
 function inicializarTablaProductos() {
     dataTable = $('#tablaProductos').DataTable({
         ajax: {

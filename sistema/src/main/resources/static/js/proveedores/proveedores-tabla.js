@@ -62,12 +62,15 @@ function renderEstadoProveedor(estado) {
 function renderAccionesProveedor(row) {
     const iconColor = row.estado ? 'text-warning' : 'text-success';
     const iconClass = row.estado ? 'bi-eye-slash-fill' : 'bi-eye-fill';
+    const comprobanteBtn = renderBotonComprobanteProveedor(row);
 
     return `
         <div class="btn-group btn-group-sm">
             <button data-id="${row.id}" class="btn btn-light border action-edit text-primary" title="Editar">
                 <i class="bi bi-pencil-fill"></i>
             </button>
+
+            ${comprobanteBtn}
 
             <button data-id="${row.id}" class="btn btn-light border action-status ${iconColor}" title="Cambiar estado">
                 <i class="bi ${iconClass}"></i>
@@ -77,4 +80,17 @@ function renderAccionesProveedor(row) {
                 <i class="bi bi-trash-fill"></i>
             </button>
         </div>`;
+}
+
+function renderBotonComprobanteProveedor(row) {
+    if (row.comprobante) {
+        return `<a href="/uploads/${row.comprobante}" target="_blank"
+            class="btn btn-light border text-danger" title="Ver comprobante">
+            <i class="bi bi-file-earmark-pdf-fill"></i>
+        </a>`;
+    }
+
+    return `<button type="button" class="btn btn-light border text-muted" disabled title="Sin comprobante subido">
+        <i class="bi bi-file-earmark-pdf"></i>
+    </button>`;
 }

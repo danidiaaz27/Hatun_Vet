@@ -14,4 +14,12 @@ public interface PromocionRepository extends JpaRepository<Promocion, String> {
 
     @Query("SELECT p FROM Promocion p WHERE p.estado = 'ACTIVO' AND p.fechaInicio <= :fecha AND p.fechaFin >= :fecha")
     List<Promocion> findActivePromotionsByDate(@Param("fecha") LocalDate fecha);
+
+    @Query("SELECT p FROM Promocion p WHERE p.tipo = :tipo AND p.estado = 'ACTIVO' " +
+           "AND p.fechaInicio <= :fechaFin AND p.fechaFin >= :fechaInicio")
+    List<Promocion> findActivasPorTipoEnRango(
+            @Param("tipo") String tipo,
+            @Param("fechaInicio") LocalDate fechaInicio,
+            @Param("fechaFin") LocalDate fechaFin
+    );
 }

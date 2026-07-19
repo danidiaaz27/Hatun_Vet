@@ -26,6 +26,22 @@ function cargarProveedorEnModal(proveedor) {
     $('#direccion').val(proveedor.direccion || '');
     $('#contacto').val(proveedor.contacto || '');
     $('#estado').val(String(proveedor.estado));
+    $('#comprobanteFile').val('');
+
+    mostrarComprobanteActual(proveedor.comprobante);
 
     abrirModalProveedor('Editar Proveedor');
+}
+
+function mostrarComprobanteActual(comprobante) {
+    const label = $('#lblComprobanteActual');
+
+    if (comprobante) {
+        label.html(
+            `Ya existe un comprobante subido. Si adjuntas uno nuevo, lo reemplazará.`
+        );
+        return;
+    }
+
+    label.text('');
 }

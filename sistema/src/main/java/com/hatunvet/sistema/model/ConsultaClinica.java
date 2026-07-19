@@ -26,9 +26,6 @@ public class ConsultaClinica {
     @Column(name = "temperatura_c", nullable = false, precision = 4, scale = 2)
     private BigDecimal temperaturaC;
 
-    @Column(name = "frecuencia_cardiaca")
-    private Integer frecuenciaCardiaca;
-
     @Column(columnDefinition = "TEXT", nullable = false)
     private String sintomas;
 
@@ -72,8 +69,6 @@ public class ConsultaClinica {
     public void setPesoKg(BigDecimal pesoKg) { this.pesoKg = pesoKg; }
     public BigDecimal getTemperaturaC() { return temperaturaC; }
     public void setTemperaturaC(BigDecimal temperaturaC) { this.temperaturaC = temperaturaC; }
-    public Integer getFrecuenciaCardiaca() { return frecuenciaCardiaca; }
-    public void setFrecuenciaCardiaca(Integer frecuenciaCardiaca) { this.frecuenciaCardiaca = frecuenciaCardiaca; }
     public String getSintomas() { return sintomas; }
     public void setSintomas(String sintomas) { this.sintomas = sintomas; }
     public String getDiagnosticoPresuntivo() { return diagnosticoPresuntivo; }

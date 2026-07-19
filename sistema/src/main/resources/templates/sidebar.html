@@ -103,6 +103,9 @@
                     <a th:href="@{/reportes}" class="nav-link text-white" th:classappend="${activeUri == '/reportes'} ? 'active-link' : ''">
                         Reportes y Dashboard
                     </a>
+                    <a th:href="@{/reportes/ventas}" class="nav-link text-white" th:classappend="${activeUri == '/reportes/ventas'} ? 'active-link' : ''">
+                        Reporte de Ventas
+                    </a>
                 </div>
             </div>
 
@@ -142,6 +145,37 @@
         </div>
 
     </nav>
+
+    <script>
+        (function () {
+            var sidebarEl = document.getElementById('sidebar');
+            if (!sidebarEl) return;
+
+            var STORAGE_KEY = 'sidebarScrollTop';
+
+            var savedScroll = sessionStorage.getItem(STORAGE_KEY);
+            if (savedScroll !== null) {
+                sidebarEl.scrollTop = parseInt(savedScroll, 10) || 0;
+            }
+
+            var ticking = false;
+            sidebarEl.addEventListener('scroll', function () {
+                if (!ticking) {
+                    window.requestAnimationFrame(function () {
+                        sessionStorage.setItem(STORAGE_KEY, sidebarEl.scrollTop);
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            document.querySelectorAll('#sidebar a.nav-link').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    sessionStorage.setItem(STORAGE_KEY, sidebarEl.scrollTop);
+                });
+            });
+        })();
+    </script>
 </div>
 </body>
 </html>

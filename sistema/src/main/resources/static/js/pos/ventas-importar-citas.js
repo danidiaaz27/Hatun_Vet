@@ -47,12 +47,18 @@ function crearCardCitaCobro(c) {
 }
 
 function importarCitaDirecta(citaData) {
+    // Se marca la importación ANTES de disparar el 'change' de tipoDoc, para que
+    // configurarTipoDocumento() detecte que hay datos ya validados y no los borre.
     importCitaId = citaData.citaId;
     const isRuc = citaData.clienteDocumento.length === 11;
 
     $('#tipoDoc').val(isRuc ? '6' : '1').trigger('change');
-    $('#numDoc').val(citaData.clienteDocumento);
-    $('#nombreCliente').val(citaData.clienteNombre);
+
+    // Los datos de cliente ya vienen validados desde la cita médica: se cargan y se
+    // bloquean para que no se puedan editar ni se pierdan al cambiar el tipo de
+    // documento (por ejemplo, al pasar a Nota de Venta).
+    $('#numDoc').val(citaData.clienteDocumento).prop('readOnly', true);
+    $('#nombreCliente').val(citaData.clienteNombre).prop('readOnly', true);
 
     citaData.detalles.forEach((item, index) => {
         agregarServicioCitaAlCarrito(item, citaData, index);

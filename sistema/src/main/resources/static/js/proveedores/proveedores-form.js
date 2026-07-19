@@ -18,13 +18,13 @@ function guardarProveedor(e) {
     if (!validarRucProveedor(ruc)) return;
     if (!validarTelefonoProveedor(telefono)) return;
     if (!validarContactoProveedor(contacto)) return;
+    if (!validarComprobanteProveedor()) return;
 
     mostrarSpinnerGuardarProveedor();
 
     fetch(`${API_BASE}/guardar`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(crearPayloadProveedor(ruc, telefono, contacto))
+        body: crearFormDataProveedor(ruc, telefono, contacto)
     })
         .then(r => r.json())
         .then(res => manejarRespuestaGuardarProveedor(res))
@@ -34,17 +34,41 @@ function guardarProveedor(e) {
         .finally(restaurarBotonGuardarProveedor);
 }
 
-function crearPayloadProveedor(ruc, telefono, contacto) {
-    return {
-        id: $('#id').val() || null,
-        nombre: $('#nombre').val().trim(),
-        ruc: ruc,
-        telefono: telefono,
-        correo: $('#correo').val().trim(),
-        direccion: $('#direccion').val().trim(),
-        contacto: contacto,
-        estado: $('#estado').val() === 'true'
-    };
+function crearFormDataProveedor(ruc, telefono, contacto) {
+    const formData = new FormData();
+
+    if ($('#id').val()) formData.append('id', $('#id').val());
+
+    formData.append('nombre', $('#nombre').val().trim());
+    formData.append('ruc', ruc);
+    formData.append('telefono', telefono);
+    formData.append('correo', $('#correo').val().trim());
+    formData.append('direccion', $('#direccion').val().trim());
+    formData.append('contacto', contacto);
+    formData.append('estado', $('#estado').val() === 'true');
+
+    const fileInput = document.getElementById('comprobanteFile');
+    if (fileInput.files.length > 0) {
+        formData.append('comprobanteFile', fileInput.files[0]);
+    }
+
+    return formData;
+}
+
+function validarComprobanteProveedor() {
+    const fileInput = document.getElementById('comprobanteFile');
+
+    if (fileInput.files.length === 0) return true;
+
+    const archivo = fileInput.files[0];
+    const esPdf = archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf');
+
+    if (!esPdf) {
+        Swal.fire('Validación', 'El comprobante debe ser un archivo PDF.', 'warning');
+        return false;
+    }
+
+    return true;
 }
 
 function manejarRespuestaGuardarProveedor(res) {

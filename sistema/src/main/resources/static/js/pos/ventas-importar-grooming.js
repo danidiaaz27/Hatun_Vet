@@ -44,12 +44,18 @@ function crearCardGroomingCobro(s) {
 }
 
 function importarGroomingDirecto(groomingData) {
+    // Se marca la importación ANTES de disparar el 'change' de tipoDoc, para que
+    // configurarTipoDocumento() detecte que hay datos ya validados y no los borre.
     importBanoCorteId = groomingData.id;
     const isRuc = groomingData.clienteDocumento.length === 11;
 
     $('#tipoDoc').val(isRuc ? '6' : '1').trigger('change');
-    $('#numDoc').val(groomingData.clienteDocumento);
-    $('#nombreCliente').val(groomingData.clienteNombre);
+
+    // Los datos de cliente ya vienen validados desde el servicio de grooming: se
+    // cargan y se bloquean para que no se puedan editar ni se pierdan al cambiar el
+    // tipo de documento (por ejemplo, al pasar a Nota de Venta).
+    $('#numDoc').val(groomingData.clienteDocumento).prop('readOnly', true);
+    $('#nombreCliente').val(groomingData.clienteNombre).prop('readOnly', true);
 
     agregarGroomingAlCarrito(groomingData);
     renderizarCarrito();
