@@ -57,20 +57,59 @@ public class PromocionService {
             return;
         }
 
-        List<Promocion> coincidencias = promocionRepository.findActivasPorTipoEnRango(
+        List<Promocion> candidatas = promocionRepository.findActivasPorTipoEnRango(
                 promocion.getTipo(),
                 promocion.getFechaInicio(),
                 promocion.getFechaFin()
         );
 
-        boolean existeConflicto = coincidencias.stream()
-                .anyMatch(p -> promocion.getId() == null || !p.getId().equals(promocion.getId()));
+        // GENERAL y COMPRA_MINIMA afectan el pedido completo (no un producto ni
+        // categoría en particular), así que ahí sí basta con que coincida el tipo
+        // y se crucen las fechas para que sean incompatibles entre sí.
+        boolean esAlcanceOrdenCompleto = "GENERAL".equals(promocion.getTipo())
+                || "COMPRA_MINIMA".equals(promocion.getTipo());
 
-        if (existeConflicto) {
-            throw new IllegalArgumentException(
-                    "Ya existe una promoción activa del mismo tipo que se cruza con ese rango de fechas."
-            );
+        for (Promocion existente : candidatas) {
+            // Al editar, no comparar la promoción contra sí misma.
+            if (promocion.getId() != null && promocion.getId().equals(existente.getId())) {
+                continue;
+            }
+
+            boolean choca = esAlcanceOrdenCompleto || seCruzanEnAlcance(promocion, existente);
+
+            if (choca) {
+                throw new IllegalArgumentException(
+                        "Ya existe una promoción activa (\"" + existente.getNombre() +
+                        "\") del mismo tipo que se cruza en fechas y alcance (producto/categoría)."
+                );
+            }
         }
+    }
+
+    // Determina si dos promociones del MISMO tipo realmente se pisarían en el POS,
+    // según a qué apliquen: mismo producto, misma categoría, o alguna de las dos
+    // es "general" (sin producto ni categoría), lo que significa que cubre TODO.
+    private boolean seCruzanEnAlcance(Promocion a, Promocion b) {
+        String prodA = a.getProducto() != null ? a.getProducto().getId() : null;
+        String prodB = b.getProducto() != null ? b.getProducto().getId() : null;
+        String catA = a.getCategoria() != null ? a.getCategoria().getId() : null;
+        String catB = b.getCategoria() != null ? b.getCategoria().getId() : null;
+
+        boolean aEsGeneral = prodA == null && catA == null;
+        boolean bEsGeneral = prodB == null && catB == null;
+
+        // Una promo sin producto ni categoría (ej. un PORCENTUAL "general por
+        // producto") aplica a todos los productos, así que choca con cualquier
+        // otra promoción del mismo tipo, sea cual sea su alcance específico.
+        if (aEsGeneral || bEsGeneral) {
+            return true;
+        }
+
+        if (prodA != null && prodA.equals(prodB)) {
+            return true;
+        }
+
+        return catA != null && catA.equals(catB);
     }
 
     @Transactional
