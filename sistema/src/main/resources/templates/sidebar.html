@@ -19,113 +19,114 @@
 
         <div class="mb-auto">
 
-            <a th:href="@{/dashboard}" class="nav-link text-white mb-2"
+            <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/dashboard')}"
+               th:href="@{/dashboard}" class="nav-link text-white mb-2"
                th:classappend="${activeUri == '/dashboard'} ? 'active-link' : ''">
                 <i class="bi bi-grid-1x2-fill me-2"></i> Dashboard
             </a>
 
-            <div class="menu-group">
+            <div class="menu-group" th:if="${@sidebarHelper.hasRutas(session.usuarioLogueado, session.menuOpciones, '/ventas/pos,/ventas/historial,/caja,/promociones')}">
                 <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuVentas">
                     <span><i class="bi bi-cart-check-fill me-2"></i> Ventas</span>
                     <i class="bi bi-chevron-down"></i>
                 </button>
 
                 <div class="collapse show" id="menuVentas">
-                    <a th:href="@{/ventas/pos}" class="nav-link text-white" th:classappend="${activeUri == '/ventas/pos'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/ventas/pos')}" th:href="@{/ventas/pos}" class="nav-link text-white" th:classappend="${activeUri == '/ventas/pos'} ? 'active-link' : ''">
                         Punto de Venta
                     </a>
-                    <a th:href="@{/ventas/historial}" class="nav-link text-white" th:classappend="${activeUri == '/ventas/historial'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/ventas/historial')}" th:href="@{/ventas/historial}" class="nav-link text-white" th:classappend="${activeUri == '/ventas/historial'} ? 'active-link' : ''">
                         Historial de Ventas
                     </a>
-                    <a th:href="@{/caja}" class="nav-link text-white" th:classappend="${activeUri == '/caja'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/caja')}" th:href="@{/caja}" class="nav-link text-white" th:classappend="${activeUri == '/caja'} ? 'active-link' : ''">
                         Control de Caja
                     </a>
-                    <a th:href="@{/promociones}" class="nav-link text-white" th:classappend="${activeUri == '/promociones'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/promociones')}" th:href="@{/promociones}" class="nav-link text-white" th:classappend="${activeUri == '/promociones'} ? 'active-link' : ''">
                         Promociones
                     </a>
                 </div>
             </div>
 
-            <div class="menu-group">
+            <div class="menu-group" th:if="${@sidebarHelper.hasRutas(session.usuarioLogueado, session.menuOpciones, '/agenda,/consultorio,/banos-cortes,/mascotas,/clientes')}">
                 <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuAtencion">
                     <span><i class="bi bi-heart-pulse me-2"></i> Atención Veterinaria</span>
                     <i class="bi bi-chevron-down"></i>
                 </button>
 
                 <div class="collapse show" id="menuAtencion">
-                    <a th:href="@{/agenda}" class="nav-link text-white" th:classappend="${activeUri == '/agenda'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/agenda')}" th:href="@{/agenda}" class="nav-link text-white" th:classappend="${activeUri == '/agenda'} ? 'active-link' : ''">
                         Agenda de Citas
                     </a>
-                    <a th:href="@{/consultorio}" class="nav-link text-white" th:classappend="${activeUri == '/consultorio'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/consultorio')}" th:href="@{/consultorio}" class="nav-link text-white" th:classappend="${activeUri == '/consultorio'} ? 'active-link' : ''">
                         Torre de Control
                     </a>
-                    <a th:href="@{/banos-cortes}" class="nav-link text-white" th:classappend="${activeUri == '/banos-cortes'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/banos-cortes')}" th:href="@{/banos-cortes}" class="nav-link text-white" th:classappend="${activeUri == '/banos-cortes'} ? 'active-link' : ''">
                         Baños y Cortes
                     </a>
-                    <a th:href="@{/mascotas}" class="nav-link text-white" th:classappend="${activeUri == '/mascotas'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/mascotas')}" th:href="@{/mascotas}" class="nav-link text-white" th:classappend="${activeUri == '/mascotas'} ? 'active-link' : ''">
                         Mascotas
                     </a>
-                    <a th:href="@{/clientes}" class="nav-link text-white" th:classappend="${activeUri == '/clientes'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/clientes')}" th:href="@{/clientes}" class="nav-link text-white" th:classappend="${activeUri == '/clientes'} ? 'active-link' : ''">
                         Clientes
                     </a>
                 </div>
             </div>
 
-            <div class="menu-group">
+            <div class="menu-group" th:if="${@sidebarHelper.hasRutas(session.usuarioLogueado, session.menuOpciones, '/inventario,/productos/listar,/categorias,/proveedores/listar')}">
                 <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuInventario">
                     <span><i class="bi bi-boxes me-2"></i> Inventario</span>
                     <i class="bi bi-chevron-down"></i>
                 </button>
 
                 <div class="collapse" id="menuInventario">
-                    <a th:href="@{/inventario}" class="nav-link text-white" th:classappend="${activeUri == '/inventario'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/inventario')}" th:href="@{/inventario}" class="nav-link text-white" th:classappend="${activeUri == '/inventario'} ? 'active-link' : ''">
                         Inventario
                     </a>
-                    <a th:href="@{/productos/listar}" class="nav-link text-white" th:classappend="${activeUri == '/productos/listar'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/productos/listar')}" th:href="@{/productos/listar}" class="nav-link text-white" th:classappend="${activeUri == '/productos/listar'} ? 'active-link' : ''">
                         Productos
                     </a>
-                    <a th:href="@{/categorias}" class="nav-link text-white" th:classappend="${activeUri == '/categorias'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/categorias')}" th:href="@{/categorias}" class="nav-link text-white" th:classappend="${activeUri == '/categorias'} ? 'active-link' : ''">
                         Categorías
                     </a>
-                    <a th:href="@{/proveedores/listar}" class="nav-link text-white" th:classappend="${activeUri == '/proveedores/listar'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/proveedores/listar')}" th:href="@{/proveedores/listar}" class="nav-link text-white" th:classappend="${activeUri == '/proveedores/listar'} ? 'active-link' : ''">
                         Proveedores
                     </a>
                 </div>
             </div>
 
-            <div class="menu-group">
+            <div class="menu-group" th:if="${@sidebarHelper.hasRutas(session.usuarioLogueado, session.menuOpciones, '/reportes,/reportes/ventas')}">
                 <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuReportes">
                     <span><i class="bi bi-graph-up-arrow me-2"></i> Reportes</span>
                     <i class="bi bi-chevron-down"></i>
                 </button>
 
                 <div class="collapse" id="menuReportes">
-                    <a th:href="@{/reportes}" class="nav-link text-white" th:classappend="${activeUri == '/reportes'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/reportes')}" th:href="@{/reportes}" class="nav-link text-white" th:classappend="${activeUri == '/reportes'} ? 'active-link' : ''">
                         Reportes y Dashboard
                     </a>
-                    <a th:href="@{/reportes/ventas}" class="nav-link text-white" th:classappend="${activeUri == '/reportes/ventas'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/reportes/ventas')}" th:href="@{/reportes/ventas}" class="nav-link text-white" th:classappend="${activeUri == '/reportes/ventas'} ? 'active-link' : ''">
                         Reporte de Ventas
                     </a>
                 </div>
             </div>
 
-            <div class="menu-group">
+            <div class="menu-group" th:if="${@sidebarHelper.hasRutas(session.usuarioLogueado, session.menuOpciones, '/configuracion,/usuarios/listar,/perfiles/listar,/medicos/horarios')}">
                 <button class="menu-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#menuConfig">
                     <span><i class="bi bi-gear-fill me-2"></i> Configuración</span>
                     <i class="bi bi-chevron-down"></i>
                 </button>
 
                 <div class="collapse" id="menuConfig">
-                    <a th:href="@{/configuracion}" class="nav-link text-white" th:classappend="${activeUri == '/configuracion'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/configuracion')}" th:href="@{/configuracion}" class="nav-link text-white" th:classappend="${activeUri == '/configuracion'} ? 'active-link' : ''">
                         Configuración
                     </a>
-                    <a th:href="@{/usuarios/listar}" class="nav-link text-white" th:classappend="${activeUri == '/usuarios/listar'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/usuarios/listar')}" th:href="@{/usuarios/listar}" class="nav-link text-white" th:classappend="${activeUri == '/usuarios/listar'} ? 'active-link' : ''">
                         Usuarios
                     </a>
-                    <a th:href="@{/perfiles/listar}" class="nav-link text-white" th:classappend="${activeUri == '/perfiles/listar'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/perfiles/listar')}" th:href="@{/perfiles/listar}" class="nav-link text-white" th:classappend="${activeUri == '/perfiles/listar'} ? 'active-link' : ''">
                         Perfiles
                     </a>
-                    <a th:href="@{/medicos/horarios}" class="nav-link text-white" th:classappend="${activeUri == '/medicos/horarios'} ? 'active-link' : ''">
+                    <a th:if="${@sidebarHelper.hasRuta(session.usuarioLogueado, session.menuOpciones, '/medicos/horarios')}" th:href="@{/medicos/horarios}" class="nav-link text-white" th:classappend="${activeUri == '/medicos/horarios'} ? 'active-link' : ''">
                         Horarios y Permisos
                     </a>
                 </div>
