@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: hatunvet-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: veterinaria_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  hatunvet-backend:
+    build: .
+    container_name: hatunvet-app
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  mysql_data:
